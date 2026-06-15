@@ -1,0 +1,71 @@
+<style>
+.gc-fab{position:fixed;bottom:24px;right:24px;z-index:9999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(99,102,241,.4);display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .2s}
+.gc-fab:hover{transform:scale(1.1)}
+.gc-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center}
+.gc-overlay.active{display:flex}
+.gc-modal{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;width:90%;max-width:400px;color:#e2e8f0;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.gc-modal h3{margin:0 0 8px;font-size:18px;color:#a5b4fc}
+.gc-modal p{margin:0 0 20px;font-size:13px;color:#94a3b8}
+.gc-modal input{width:100%;padding:12px 16px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#e2e8f0;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px}
+.gc-modal input:focus{border-color:#6366f1}
+.gc-modal .gc-btn{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.gc-modal .gc-btn:hover{opacity:.9}
+.gc-modal .gc-btn:disabled{opacity:.5;cursor:not-allowed}
+.gc-modal .gc-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer}
+.gc-modal .gc-msg{margin-top:12px;padding:10px;border-radius:6px;font-size:13px;display:none}
+.gc-modal .gc-msg.success{display:block;background:#065f4620;border:1px solid #065f46;color:#34d399}
+.gc-modal .gc-msg.error{display:block;background:#7f1d1d20;border:1px solid #7f1d1d;color:#f87171}
+.gc-modal .gc-info{margin-top:12px;padding:10px;border-radius:6px;background:#1e1b4b;border:1px solid #3730a3;font-size:13px;display:none}
+.gc-modal .gc-info.show{display:block}
+.gc-modal .gc-info span{color:#a5b4fc;font-weight:600}
+</style>
+
+<button class="gc-fab" onclick="document.getElementById('gcOverlay').classList.add('active')" title="兑换礼品卡">🎁</button>
+
+<div class="gc-overlay" id="gcOverlay" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="gc-modal" style="position:relative">
+    <button class="gc-close" onclick="document.getElementById('gcOverlay').classList.remove('active')">&times;</button>
+    <h3>🎁 兑换礼品卡</h3>
+    <p>输入礼品卡卡号进行兑换，余额将自动充值到您的账户</p>
+    <input type="text" id="gcCode" placeholder="请输入礼品卡卡号" autocomplete="off">
+    <div class="gc-info" id="gcInfo"></div>
+    <button class="gc-btn" id="gcBtn" onclick="gcRedeem()">兑换</button>
+    <div class="gc-msg" id="gcMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var token = localStorage.getItem('token') || '';
+  var headers = {'Content-Type':'application/json'};
+  var apiBase = window.routerBase || '/';
+
+  window.gcRedeem = async function(){
+    var code = document.getElementById('gcCode').value.trim();
+    var msg = document.getElementById('gcMsg');
+    var btn = document.getElementById('gcBtn');
+    var info = document.getElementById('gcInfo');
+    msg.className='gc-msg'; msg.style.display='none';
+    info.className='gc-info'; info.style.display='none';
+    if(!code){msg.className='gc-msg error';msg.textContent='请输入卡号';return;}
+    btn.disabled=true; btn.textContent='兑换中...';
+    try{
+      var r = await fetch(apiBase+'api/v1/user/gift-card/redeem',{method:'POST',headers:headers,body:JSON.stringify({code:code})});
+      var d = await r.json();
+      if(r.ok && d.data){
+        msg.className='gc-msg success';
+        msg.textContent='兑换成功！已充值 ¥' + (d.data.balance ? (d.data.balance/100).toFixed(2) : d.data.value || '');
+        document.getElementById('gcCode').value='';
+      } else {
+        msg.className='gc-msg error';
+        msg.textContent = d.message || d.errors || '兑换失败，请检查卡号是否正确';
+      }
+    }catch(e){
+      msg.className='gc-msg error';msg.textContent='网络错误，请重试';
+    }
+    btn.disabled=false; btn.textContent='兑换';
+  };
+
+  document.getElementById('gcCode').addEventListener('keydown',function(e){if(e.key==='Enter')gcRedeem();});
+})();
+</script>
