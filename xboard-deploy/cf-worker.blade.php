@@ -94,6 +94,14 @@
                         <div>
                             <h3 class="font-medium text-white" x-text="worker.name"></h3>
                             <p class="text-sm text-slate-400" x-text="worker.domain"></p>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <template x-for="gid in (worker.group_ids || [])" :key="gid">
+                                    <span class="text-xs px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300"
+                                          x-text="'VIP' + (gid - 1)"></span>
+                                </template>
+                                <span x-show="!worker.group_ids || worker.group_ids.length === 0"
+                                      class="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">未分配用户组</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -197,6 +205,21 @@
                        class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-brand-500">
                 <p class="text-xs text-slate-500 mt-1">Worker 将绑定到此域名，确保域名已添加到对应 CF 账号</p>
             </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">关联用户组</label>
+                <div class="flex flex-wrap gap-2 mt-1">
+                    <template x-for="g in availableGroups" :key="g.id">
+                        <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-brand-500 transition text-sm">
+                            <input type="checkbox" :value="g.id"
+                                   :checked="form.group_ids.includes(g.id)"
+                                   @change="form.group_ids = $el.checked ? [...form.group_ids, g.id] : form.group_ids.filter(v => v !== g.id)"
+                                   class="rounded border-slate-600 text-brand-500 focus:ring-brand-500">
+                            <span class="text-white" x-text="g.name"></span>
+                        </label>
+                    </template>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">选择此 Worker 提供服务给哪些 VIP 等级的用户</p>
+            </div>
         </div>
 
         <div class="mt-6 flex justify-end gap-3">
@@ -242,7 +265,13 @@ function cfWorkerApp() {
         deploying: null,
         syncing: null,
         saving: false,
-        form: { name: '', cf_account_id: '', cf_api_token: '', cf_zone_id: '', domain: '' },
+        form: { name: '', cf_account_id: '', cf_api_token: '', cf_zone_id: '', domain: '', group_ids: [] },
+        availableGroups: [
+            { id: 2, name: 'VIP1' },
+            { id: 3, name: 'VIP2' },
+            { id: 4, name: 'VIP3' },
+            { id: 5, name: 'VIP4' }
+        ],
         toast: { show: false, message: '', type: 'success' },
 
         async init() {
@@ -375,14 +404,15 @@ function cfWorkerApp() {
                 cf_account_id: worker.cf_account_id,
                 cf_api_token: '', // 不回显 token
                 cf_zone_id: worker.cf_zone_id,
-                domain: worker.domain
+                domain: worker.domain,
+                group_ids: worker.group_ids || []
             };
             this.showAddModal = true;
         },
 
         resetForm() {
             this.editingId = null;
-            this.form = { name: '', cf_account_id: '', cf_api_token: '', cf_zone_id: '', domain: '' };
+            this.form = { name: '', cf_account_id: '', cf_api_token: '', cf_zone_id: '', domain: '', group_ids: [] };
         },
 
         showToast(message, type = 'success') {

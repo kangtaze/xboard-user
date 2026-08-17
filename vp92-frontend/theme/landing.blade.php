@@ -161,7 +161,7 @@ q9_a:{'zh-CN':'VP92 提供 Android 客户端，可通过官网下载 APK 或通�
 q10_q:{'zh-CN':'免费 VPN 安全吗？为什么应该选择付费 VPN？','zh-TW':'免費 VPN 安全嗎？為什麼應該選擇付費 VPN？','en':'Are free VPNs safe? Why should I choose a paid VPN?'},
 q10_a:{'zh-CN':'大多数免费 VPN 通过出售用户浏览数据、插入广告或限制带宽来盈利，存在严重的隐私泄露风险。研究表明，超过 70% 的免费 VPN 应用包含追踪代码。VP92 采用严格的无日志政策，不记录任何用户活动数据，使用 AES-256 端到端加密保护您的所有通信。基于 Cloudflare 全球 CDN 网络构建，提供企业级安全基础设施，确保您的每一次连接都安全可靠。新用户可享 24 小时免费试用，先体验再决定。','zh-TW':'大多數免費 VPN 透過出售用戶瀏覽資料、插入廣告或限制頻寬來盈利，存在嚴重的隱私洩露風險。研究顯示，超過 70% 的免費 VPN 應用程式包含追蹤程式碼。VP92 採用嚴格的無日誌政策，不記錄任何用戶活動資料，使用 AES-256 端到端加密保護您的所有通訊。基於 Cloudflare 全球 CDN 網路建構，提供企業級安全基礎設施，確保您的每一次連線都安全可靠。新用戶可享 24 小時免費試用，先體驗再決定。','en':'Most free VPNs make money by selling user browsing data, injecting ads, or throttling bandwidth — posing serious privacy risks. Studies show over 70% of free VPN apps contain tracking code. VP92 follows a strict no-logs policy, records zero user activity, and uses AES-256 end-to-end encryption to protect all your communications. Built on the Cloudflare global CDN network with enterprise-grade security infrastructure, every connection is safe and reliable. New users get a 24-hour free trial to experience it first before deciding.'},
 contact_text:{'zh-CN':'未找到答案？','zh-TW':'未找到答案？','en':'Can\'t find your answer?'},
-contact_btn:{'zh-CN':'联系客服','zh-TW':'聯繫客服','en':'Contact Support'}
+contact_btn:{'zh-CN':'联系人工客服','zh-TW':'聯繫人工客服','en':'Contact Live Support'}
 },
 support:{
 heading:{'zh-CN':'7×24 小时极速响应客服','zh-TW':'7×24 小時極速響應客服','en':'24/7 Instant Customer Support'},
@@ -1331,7 +1331,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 <div class="text-center mt-8">
 <p class="text-sm text-on-surface-variant mb-3" data-i18n="faq.contact_text">未找到答案？</p>
-<a href="https://t.me/vp92vip_bot" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5" style="background: rgba(109,159,255,0.12); color: #6d9fff; border: 1px solid rgba(109,159,255,0.2);" onmouseover="this.style.background='rgba(109,159,255,0.2)';this.style.borderColor='rgba(109,159,255,0.4)'" onmouseout="this.style.background='rgba(109,159,255,0.12)';this.style.borderColor='rgba(109,159,255,0.2)'">
+<a href="https://t.me/vp92_01" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5" style="background: rgba(109,159,255,0.12); color: #6d9fff; border: 1px solid rgba(109,159,255,0.2);" onmouseover="this.style.background='rgba(109,159,255,0.2)';this.style.borderColor='rgba(109,159,255,0.4)'" onmouseout="this.style.background='rgba(109,159,255,0.12)';this.style.borderColor='rgba(109,159,255,0.2)'">
 <span class="material-symbols-outlined" style="font-size:20px;" data-icon="support_agent">support_agent</span>
 <span data-i18n="faq.contact_btn">联系客服</span>
 </a>

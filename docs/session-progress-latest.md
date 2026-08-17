@@ -1,7 +1,7 @@
 # VP92极速加速器 — 最新项目进度
 
 > **最后更新**: 2026-08-18
-> **状态**: ✅ 落地页多项视觉优化已完成并部署
+> **状态**: ✅ 落地页6项改进已完成并部署
 
 ---
 
@@ -13,7 +13,50 @@
 
 ---
 
-## ✅ 已完成：落地页视觉优化（2026-08-18）
+## ✅ 已完成：落地页6项改进（2026-08-18 v2）
+
+**文件**：`E:\jiedian\vp92-frontend\theme\landing.blade.php`
+**所有改动已部署到服务器** ✅
+
+### 1. 套餐卡片重排序
+- 从 VIP1→VIP3→VIP2 改为 **VIP1→VIP2→VIP3**（价格升序）
+- VIP3 保持"推荐方案"高亮样式（border-2 + st-plan-recommended + 主色按钮）
+- FAQ Q5 答案同步更新顺序
+
+### 2. Stats 数据值修正（基于实际订阅数据）
+- CDN 节点：300+ → **90+ 加速节点**（I18N: stats.nodes）
+- 覆盖国家：30+ → **7+ 覆盖地区**（I18N: stats.countries）
+- 在线率：99.9% 保持不变（I18N: stats.uptime）
+- Why Choose 节点卡片标题：30+ → **90+ 全球优质节点**
+- Why Choose 节点卡片描述更新为七大区域准确列表
+- FAQ Q9 答案中 "30+ 节点" → "90+ 节点"
+- 新增 I18N `stats` section
+
+### 3. CRO 试用降低门槛文案
+- 套餐区域标题下方新增绿色 ✓ "无需信用卡，无需绑定支付即可免费试用"
+- 带绿色 verified_user 图标
+- 新增 I18N `plans.no_credit` 三语翻译
+
+### 4. iOS 下载引导改善
+- 当无原生 iOS 应用时，显示"推荐使用 Shadowrocket、SingBox 或 Streisand，登录后复制订阅链接即可一键导入节点"
+- 新增 I18N `device.ios_guide` 三语翻译
+- ⚠️ 服务器当前已配置 $ios_download_url（Shadowrocket App Store 链接），所以实际显示的是下载按钮
+
+### 5. FAQ 平滑展开/收起动画
+- CSS：`.faq-content` 使用 `max-height: 0 → 500px` + `opacity: 0 → 1` 过渡动画
+- JS：`toggleFaq()` 从 `hidden` class 切换改为 `faq-open` class 切换
+- 动画时间：max-height 0.4s cubic-bezier, opacity 0.3s ease, padding 0.3s ease
+- 已验证：展开/收起均有平滑过渡效果
+
+### 6. FAQ 底部联系客服按钮
+- "未找到答案？" + "联系客服" 圆角按钮
+- 链接到 Telegram Bot: https://t.me/vp92vip_bot
+- 半透明蓝色背景 + 边框 + hover 效果
+- 新增 I18N `faq.contact_text` / `faq.contact_btn` 三语翻译
+
+---
+
+## ✅ 已完成：落地页视觉优化（2026-08-18 v1）
 
 **文件**：`E:\jiedian\vp92-frontend\theme\landing.blade.php`
 **所有改动已部署到服务器** ✅
@@ -22,30 +65,18 @@
 - `cloud_queue`、`public`、`speed`、`card_giftcard` 四个 Material Symbols 图标
 - 从 `FILL 0`（空心轮廓）→ `FILL 1`（实心填充），`wght 400`→`wght 300`，`opsz 24`→`opsz 40`
 - 尺寸从 `text-3xl`（30px）→ `2.25rem`（36px），在 64px 容器中比例更好
-- CSS 通过 `.why-icon-wrap .material-symbols-outlined` 选择器单独控制，不影响其他位置的 Material Symbols 图标
 
 ### 2. Why Choose 标题修正
-- I18N `why.heading` 三语更新：
-  - zh-CN: `为什么选择 VP92极速`
-  - zh-TW: `為什麼選擇 VP92極速`
-  - en: `Why Choose VP92 Turbo`
-- 移除标题下方的装饰线 `<div class="why-heading-line"></div>`
+- I18N `why.heading` 三语更新：VP92极速 / VP92極速 / VP92 Turbo
+- 移除标题下方的装饰线
 
 ### 3. FAQ 卡片化重设计
-- 容器从 `max-w-[860px] flex flex-col gap-3` → `max-w-[1000px] grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4`
-- 新增 CSS：卡片毛玻璃背景（`backdrop-filter: blur(12px)`）、悬浮提升效果、蓝色高亮边框
-- JS `toggleFaq()` 简化：移除 `btn.style.background` 修改，改用 `item.style.borderColor/boxShadow` 高亮
-- FAQ 回答区域 `padding-left` 通过 CSS `!important` 覆盖为 0，适配卡片宽度
+- grid 布局，毛玻璃背景，悬浮效果
 
 ### 4. Footer 品牌更新
-- 从 `<span class="material-symbols-outlined" data-icon="speed">speed</span> + "VP92"
-- 改为 `<img src="/img/logo.svg">` + "VP92极速"
+- logo.svg + "VP92极速"
 
-### 5. 流媒体图标区域（⚠️ 未改）
-- 用户明确要求**保持原样**，不要更换
-- 原图标保留：WhatsApp、X、Instagram、Facebook、Netflix、Twitch、YouTube、TikTok
-- 原 CSS（`.stream-icon` + hover 颜色）全部还原
-- **如果用户以后想改流媒体图标，需要用户明确同意后再改**
+### 5. 流媒体图标区域（用户要求保持原样）
 
 ---
 
@@ -57,32 +88,35 @@
 |------|----------|------|
 | Material Symbols 基础设置 | 247-249 | `.material-symbols-outlined` FILL 0 |
 | Why 图标覆盖 | 251-254 | `.why-icon-wrap .material-symbols-outlined` FILL 1 |
-| Why Choose 标题 + 图标 | 1053-1060 | 4 张彩色特征卡片 |
-| FAQ 容器 + 10 个问题 | 1089-1258 | `#faq-accordion` grid |
-| FAQ 卡片 CSS | 465-518 | 新增的卡片样式 |
-| Footer logo | 1413-1417 | logo.svg + VP92极速 |
-| toggleFaq JS | 1491-1520 | FAQ 展开/收起逻辑 |
+| Plans 套餐卡片 | ~787-912 | VIP1→VIP2→VIP3 顺序 |
+| CRO 试用文案 | ~786 | 无需信用卡绿色提示 |
+| Stats 行 | ~1060-1073 | 90+ / 7+ / 99.9% |
+| Why Choose 标题+图标 | ~1053-1120 | 4 张彩色卡片 + Stats |
+| FAQ 容器 + 10 问题 | ~1167-1330 | grid + contact CTA |
+| FAQ 卡片 CSS | ~473-535 | 卡片样式 + 动画 CSS |
+| Footer logo | ~1413-1417 | logo.svg + VP92极速 |
+| toggleFaq JS | ~1490-1522 | faq-open 平滑动画 |
+| Stats animation JS | ~2320-2360 | IntersectionObserver |
 
-### I18N 翻译键
+### 新增 I18N 键
 
-| 键 | 当前值 |
-|----|--------|
-| `why.heading` | 为什么选择 VP92极速 / 為什麼選擇 VP92極速 / Why Choose VP92 Turbo |
-| `footer.description` | 为极致速度而生...（未改） |
+| 键 | zh-CN | zh-TW | en |
+|----|-------|-------|----|
+| `stats.nodes` | 加速节点 | 加速節點 | Proxy Nodes |
+| `stats.countries` | 覆盖地区 | 覆蓋地區 | Regions |
+| `stats.uptime` | 在线率 | 在線率 | Uptime |
+| `plans.no_credit` | 无需信用卡... | 無需信用卡... | No credit card... |
+| `device.ios_guide` | 推荐使用Shadowrocket... | 推薦使用Shadowrocket... | Use Shadowrocket... |
+| `faq.contact_text` | 未找到答案？ | 未找到答案？ | Can't find...? |
+| `faq.contact_btn` | 联系客服 | 聯繫客服 | Contact Support |
 
 ---
 
 ## ✅ 已完成：FAQ Q9/Q10 JSON-LD 更新（2026-08-17）
 
-`window.I18N_JSONLD.faq` 三语言各 6 个问题 = 18 个 Question 条目，页面共 10 个 FAQ。
-
 ---
 
 ## ✅ 已完成：Why Choose 彩色卡片重设计（2026-08-17）
-
-- 标题区："核心优势"badge + 渐变装饰线（⚠️ 后续用户要求移除下划线，已移除）
-- Stats 行：300+ CDN 节点 / 30+ 国家 / 99.9% 在线率，IntersectionObserver 计数动画
-- 4 张彩色卡片：蓝(Cloudflare)/绿(节点)/琥珀(不限速)/紫(免费试用)，hover 左边框变亮 + shadow
 
 ---
 
@@ -101,7 +135,7 @@
 1. **数据库自动备份** — 设计完成但未实施
 2. **VIP2/3 Worker XBOARD_ORIGIN 可选更新** — 低优先级
 3. **GitHub Actions workflow** — private repo，建议禁用
-4. **git commit + push** — 本地文件已修改，需要 commit 推送到 `my master`（`github.com/kangtaze/xboard-ze.git`）
+4. **git commit + push** — 本地文件已修改，需要 commit 推送到 `my master`
 
 ---
 
@@ -115,13 +149,7 @@
 
 ### 落地页部署
 ```bash
-# 1. 本地构建前端（如果需要）
-cd E:\jiedian\vp92-frontend && npx vite build
-
-# 2. 上传到服务器
 scp -i C:/Users/Administrator/.ssh/id_ed25519 E:\jiedian\vp92-frontend\theme\landing.blade.php root@154.3.38.212:/tmp/landing.blade.php
-
-# 3. 部署到容器
 ssh root@154.3.38.212 "docker cp /tmp/landing.blade.php xboard:/www/theme/VP92/landing.blade.php && cp /www/theme/VP92/landing.blade.php /www/public/theme/VP92/landing.blade.php 2>/dev/null; docker exec xboard sh -c 'php artisan view:clear && php artisan cache:clear && php artisan octane:reload'"
 ```
 
