@@ -91,7 +91,8 @@ service_multiplatform:{'zh-CN':'支持多平台使用','zh-TW':'支持多平台�
 service_support:{'zh-CN':'7×24小时技术支持','zh-TW':'7×24小時技術支援','en':'24/7 Technical Support'},
 btn_select:{'zh-CN':'选择此方案','zh-TW':'選擇此方案','en':'Select Plan'},
 btn_subscribe:{'zh-CN':'立即订阅','zh-TW':'立即訂閱','en':'Subscribe Now'},
-recommended:{'zh-CN':'推荐方案','zh-TW':'推薦方案','en':'Recommended'}
+recommended:{'zh-CN':'推荐方案','zh-TW':'推薦方案','en':'Recommended'},
+no_credit:{'zh-CN':'无需信用卡，无需绑定支付即可免费试用','zh-TW':'無需信用卡，無需綁定支付即可免費試用','en':'No credit card required — start your free trial instantly'}
 },
 device:{
 heading:{'zh-CN':'您的所有设备都将受到保护','zh-TW':'您的所有設備都將受到保護','en':'All Your Devices Protected'},
@@ -102,6 +103,7 @@ android_client:{'zh-CN':'Android 客户端','zh-TW':'Android 用戶端','en':'An
 ios_client:{'zh-CN':'iOS 客户端','zh-TW':'iOS 用戶端','en':'iOS Client'},
 btn_download:{'zh-CN':'立即下载','zh-TW':'立即下載','en':'Download'},
 btn_coming_soon:{'zh-CN':'敬请期待','zh-TW':'敬請期待','en':'Coming Soon'},
+ios_guide:{'zh-CN':'推荐使用 Shadowrocket、SingBox 或 Streisand，登录后复制订阅链接即可一键导入节点。','zh-TW':'推薦使用 Shadowrocket、SingBox 或 Streisand，登入後複製訂閱連結即可一鍵導入節點。','en':'Use Shadowrocket, SingBox, or Streisand. Copy your subscription link after login to import nodes.'},
 version_latest:{'zh-CN':'最新版本','zh-TW':'最新版本','en':'Latest Version'}
 },
 streaming:{
@@ -118,14 +120,19 @@ formats:{
 heading:{'zh-CN':'通用订阅格式','zh-TW':'通用訂閱格式','en':'Universal Subscription Formats'},
 subtitle:{'zh-CN':'支持所有主流第三方内核，灵活配置','zh-TW':'支持所有主流第三方內核，靈活配置','en':'Supports all major third-party kernels with flexible configuration'}
 },
+stats:{
+nodes:{'zh-CN':'加速节点','zh-TW':'加速節點','en':'Proxy Nodes'},
+countries:{'zh-CN':'覆盖地区','zh-TW':'覆蓋地區','en':'Regions'},
+uptime:{'zh-CN':'在线率','zh-TW':'在線率','en':'Uptime'}
+},
 why:{
 heading:{'zh-CN':'为什么选择 VP92极速','zh-TW':'為什麼選擇 VP92極速','en':'Why Choose VP92 Turbo'},
 badge:{'zh-CN':'核心优势','zh-TW':'核心優勢','en':'Core Advantages'},
 subtitle:{'zh-CN':'专注于为您提供最优质的全球网络加速体验','zh-TW':'專注於為您提供最優質的全球網路加速體驗','en':'Focused on delivering the best global network acceleration experience'},
 cf_title:{'zh-CN':'Cloudflare 全球边缘网络','zh-TW':'Cloudflare 全球邊緣網路','en':'Cloudflare Global Edge Network'},
 cf_desc:{'zh-CN':'VP92 基于 Cloudflare 全球 CDN 网络构建，利用遍布全球 300+ 数据中心的边缘计算能力，自动为您选择最优路径。无论您身在何处，都能获得低延迟、高稳定性的连接体验。相比传统加速方案，Cloudflare 网络能提供更快的响应速度和更强的抗 DDoS 能力，确保您的网络访问始终畅通无阻。','zh-TW':'VP92 基於 Cloudflare 全球 CDN 網路建構，利用遍布全球 300+ 資料中心的邊緣計算能力，自動為您選擇最優路徑。無論您身在何處，都能獲得低延遲、高穩定性的連線體驗。相比傳統加速方案，Cloudflare 網路能提供更快的回應速度和更強的抗 DDoS 能力，確保您的網路存取始終暢通無阻。','en':'VP92 is built on the Cloudflare global CDN network, leveraging edge computing across 300+ data centers worldwide to automatically select the optimal route for you. Wherever you are, you will get low-latency, high-stability connections. Compared to traditional acceleration solutions, the Cloudflare network delivers faster response times and stronger DDoS protection, ensuring your internet access remains uninterrupted.'},
-nodes_title:{'zh-CN':'30+ 全球优质节点','zh-TW':'30+ 全球優質節點','en':'30+ Premium Global Nodes'},
-nodes_desc:{'zh-CN':'覆盖亚洲、北美、欧洲、大洋洲四大区域，包括香港、日本东京、韩国首尔、新加坡、美国洛杉矶、美国纽约、英国伦敦、德国法兰克福、澳大利亚悉尼等热门城市节点。每个节点均经过严格测速筛选，确保为您提供最优质的网络体验。智能路由技术会根据您的实际网络状况，自动匹配最佳节点，实现真正的"一键即达"。','zh-TW':'覆蓋亞洲、北美、歐洲、大洋洲四大區域，包括香港、日本東京、韓國首爾、新加坡、美國洛杉磯、美國紐約、英國倫敦、德國法蘭克福、澳大利亞雪梨等熱門城市節點。每個節點均經過嚴格測速篩選，確保為您提供最優質的網路體驗。智慧路由技術會根據您的實際網路狀況，自動匹配最佳節點，實現真正的"一鍵即達"。','en':'Covering four major regions across Asia, North America, Europe, and Oceania, including popular city nodes such as Hong Kong, Tokyo, Seoul, Singapore, Los Angeles, New York, London, Frankfurt, and Sydney. Every node is carefully tested and selected to ensure the best network experience. Our smart routing technology automatically matches the best node based on your actual network conditions for truly one-click connectivity.'},
+nodes_title:{'zh-CN':'90+ 全球优质节点','zh-TW':'90+ 全球優質節點','en':'90+ Premium Global Nodes'},
+nodes_desc:{'zh-CN':'覆盖日本、新加坡、美国、德国、香港、韩国、台湾七大区域共90+优质节点。每个节点均经过严格测速筛选，确保为您提供最优质的网络体验。智能路由技术会根据您的实际网络状况，自动匹配最佳节点，实现真正的"一键即达"。','zh-TW':'覆蓋日本、新加坡、美國、德國、香港、韓國、台灣七大區域共90+優質節點。每個節點均經過嚴格測速篩選，確保為您提供最優質的網路體驗。智慧路由技術會根據您的實際網路狀況，自動匹配最佳節點，實現真正的"一鍵即達"。','en':'Covering 7 major regions including Japan, Singapore, United States, Germany, Hong Kong, Korea, and Taiwan with 90+ premium nodes. Every node is carefully tested and selected to ensure the best network experience. Our smart routing technology automatically matches the best node based on your actual network conditions for truly one-click connectivity.'},
 speed_title:{'zh-CN':'不限速极致体验','zh-TW':'不限速極致體驗','en':'Unthrottled Ultimate Experience'},
 speed_desc:{'zh-CN':'VP92 不限制用户的连接速度，您的实际网速取决于本地带宽。最高可支持 3000Mbps 的极速连接，无论您是观看 4K/8K 高清视频、进行大型在线游戏、还是进行大文件传输，VP92 都能提供流畅稳定的网络体验。我们采用先进的网络优化协议，有效降低延迟和丢包率，让每一比特数据都高速传输。','zh-TW':'VP92 不限制用戶的連線速度，您的實際網速取決於本地頻寬。最高可支援 3000Mbps 的極速連線，無論您是觀看 4K/8K 高清影片、進行大型線上遊戲、還是進行大檔案傳輸，VP92 都能提供流暢穩定的網路體驗。我們採用先進的網路優化協議，有效降低延遲和封包遺失率，讓每一個位元資料都高速傳輸。','en':'VP92 does not throttle your connection speed — your actual speed depends on your local bandwidth. Supporting speeds up to 3000Mbps, whether you are watching 4K/8K video, playing online games, or transferring large files, VP92 delivers a smooth and stable experience. We use advanced network optimization protocols to effectively reduce latency and packet loss, ensuring every bit of data is transmitted at high speed.'},
 trial_title:{'zh-CN':'免费试用零风险','zh-TW':'免費試用零風險','en':'Free Trial, Zero Risk'},
@@ -142,7 +149,7 @@ q3_a:{'zh-CN':'VP92 采用端到端加密传输，使用行业标准的加密协
 q4_q:{'zh-CN':'如何联系 VP92 客服？','zh-TW':'如何聯繫 VP92 客服？','en':'How can I contact VP92 customer support?'},
 q4_a:{'zh-CN':'VP92 提供 7×24 小时客户支持服务，多种联系方式随时为您服务：Telegram 即时消息（推荐，响应最快）、WhatsApp 在线客服、Facebook、X (Twitter)、Instagram 社交媒体。此外，我们还提供 AI 智能客服，可以即时解答常见问题。无论是账户问题、技术故障还是使用咨询，我们的技术团队都会第一时间为您处理。','zh-TW':'VP92 提供 7×24 小時客戶支援服務，多種聯繫方式隨時為您服務：Telegram 即時消息（推薦，回應最快）、WhatsApp 線上客服、Facebook、X (Twitter)、Instagram 社群媒體。此外，我們還提供 AI 智慧客服，可以即時解答常見問題。無論是帳戶問題、技術故障還是使用諮詢，我們的技術團隊都會第一時間為您處理。','en':'VP92 provides 24/7 customer support through multiple channels: Telegram instant messaging (recommended, fastest response), WhatsApp live support, Facebook, X (Twitter), and Instagram. Additionally, we offer an AI smart assistant that can instantly answer common questions. Whether it is account issues, technical problems, or usage inquiries, our technical team will address them promptly.'},
 q5_q:{'zh-CN':'VP92提供哪些订阅套餐？','zh-TW':'VP92提供哪些訂閱套餐？','en':'What subscription plans does VP92 offer?'},
-q5_a:{'zh-CN':'VP92 提供三种灵活的订阅套餐：基础版（VIP1，28元/月起）、专业版（VIP2，38元/月起）和旗舰版（VIP3，58元/月起）。所有套餐均包含：每月流量重置、多平台使用、7×24小时技术支持、不限速连接。支持月付、季付、半年付、年付四种计费周期，年付可享受更大折扣。新用户注册即送 24 小时免费试用，无需付费即可体验全部功能。','zh-TW':'VP92 提供三種靈活的訂閱套餐：基礎版（VIP1，28元/月起）、專業版（VIP2，38元/月起）和旗艦版（VIP3，58元/月起）。所有套餐均包含：每月流量重置、多平台使用、7×24 小時技術支援、不限速連線。支援月付、季付、半年付、年付四種計費週期，年付可享受更大折扣。新用戶註冊即送 24 小時免費試用，無需付費即可體驗全部功能。','en':'VP92 offers three flexible subscription plans: Basic (VIP1, from 28 CNY/month), Pro (VIP2, from 38 CNY/month), and Flagship (VIP3, from 58 CNY/month). All plans include: monthly traffic reset, multi-platform support, 24/7 technical support, and unthrottled connections. Supports monthly, quarterly, semi-annual, and annual billing cycles, with annual plans offering greater discounts. New users get 24 hours free trial upon registration.'},
+q5_a:{'zh-CN':'VP92 提供三种灵活的订阅套餐：基础版（VIP1，28元/月起）、专业版（VIP2，38元/月起）和旗舰版（VIP3，58元/月起，推荐）。所有套餐均包含：每月流量重置、多平台使用、7×24小时技术支持、不限速连接。支持月付、季付、半年付、年付四种计费周期，年付可享受更大折扣。新用户注册即送 24 小时免费试用，无需付费即可体验全部功能。','zh-TW':'VP92 提供三種靈活的訂閱套餐：基礎版（VIP1，28元/月起）、專業版（VIP2，38元/月起）和旗艦版（VIP3，58元/月起，推薦）。所有套餐均包含：每月流量重置、多平台使用、7×24 小時技術支援、不限速連線。支援月付、季付、半年付、年付四種計費週期，年付可享受更大折扣。新用戶註冊即送 24 小時免費試用，無需付費即可體驗全部功能。','en':'VP92 offers three flexible subscription plans: Basic (VIP1, from 28 CNY/month), Pro (VIP2, from 38 CNY/month), and Flagship (VIP3, from 58 CNY/month, recommended). All plans include: monthly traffic reset, multi-platform support, 24/7 technical support, and unthrottled connections. Supports monthly, quarterly, semi-annual, and annual billing cycles, with annual plans offering greater discounts. New users get 24 hours free trial upon registration.'},
 q6_q:{'zh-CN':'如何开始使用 VP92？','zh-TW':'如何開始使用 VP92？','en':'How do I get started with VP92?'},
 q6_a:{'zh-CN':'只需 3 步即可开始使用：第一步，在官网注册账户（只需邮箱和密码）；第二步，下载对应平台的客户端（Windows、Android 或 iOS）；第三步，登录客户端，一键连接即可畅享全球网络。注册后您将获得 24 小时免费试用时长，可以充分体验服务效果后再选择适合的订阅套餐。详细的图文教程可以在"使用教程"页面查看。','zh-TW':'只需 3 步即可開始使用：第一步，在官網註冊帳戶（只需信箱和密碼）；第二步，下載對應平台的用戶端（Windows、Android 或 iOS）；第三步，登入用戶端，一鍵連線即可暢享全球網路。註冊後您將獲得 24 小時免費試用時長，可以充分體驗服務效果後再選擇適合的訂閱套餐。詳細的圖文教程可以在"使用教學"頁面查看。','en':'Get started in just 3 steps: First, register an account on our website (email and password only); Second, download the client for your platform (Windows, Android, or iOS); Third, log in and connect with one click to enjoy the global internet. After registration, you get 24 hours of free trial to fully experience the service before choosing a plan. Detailed step-by-step tutorials are available on the Tutorial page.'},
 q7_q:{'zh-CN':'VP92可以解锁哪些流媒体服务？','zh-TW':'VP92可以解鎖哪些流媒體服務？','en':'Which streaming services can VP92 unlock?'},
@@ -150,9 +157,11 @@ q7_a:{'zh-CN':'VP92 可以解锁全球主流流媒体服务，包括：视频平
 q8_q:{'zh-CN':'流量用完了怎么办？','zh-TW':'流量用完了怎麼辦？','en':'What happens when I use up my traffic?'},
 q8_a:{'zh-CN':'VP92 的流量按月自动重置，每月初您的流量额度会恢复到满额，无需额外操作。如果您在当月内流量不够用，可以随时升级到更高级别的套餐以获取更多流量，也可以购买额外流量包（如有）。我们建议根据您的实际使用需求选择合适的套餐——轻度使用建议选择基础版，重度使用（视频、游戏）建议选择旗舰版以获得最佳体验。','zh-TW':'VP92 的流量按月自動重置，每月初您的流量額度會恢復到滿額，無需額外操作。如果您在當月內流量不夠用，可以隨時升級到更高級別的套餐以獲取更多流量，也可以購買額外流量包（如有）。我們建議根據您的實際使用需求選擇合適的套餐——輕度使用建議選擇基礎版，重度使用（影片、遊戲）建議選擇旗艦版以獲得最佳體驗。','en':'VP92 traffic resets automatically every month — your allowance is restored to full at the beginning of each month with no extra action needed. If you run out of traffic within the month, you can upgrade to a higher plan at any time for more data. We recommend choosing a plan based on your actual usage: Basic for light users, Flagship for heavy users (video streaming, gaming) for the best experience.'},
 q9_q:{'zh-CN':'VP92 在 Android 上怎么使用？','zh-TW':'VP92 在 Android 上怎麼使用？','en':'How do I use VP92 on Android?'},
-q9_a:{'zh-CN':'VP92 提供 Android 客户端，可通过官网下载 APK 或通过 Google Play 安装。安装后注册账号即可获得 24 小时免费试用，支持一键连接全球 30+ 节点。应用体积小巧，运行流畅，支持后台常驻和网络自动重连，让您随时保持安全连接。无论您使用的是华为、小米、三星还是其他品牌的 Android 手机，VP92 都能完美兼容。','zh-TW':'VP92 提供 Android 客戶端，可透過官網下載 APK 或透過 Google Play 安裝。安裝後註冊帳號即可獲得 24 小時免費試用，支援一鍵連線全球 30+ 節點。應用程式體積小巧，運作流暢，支援後台常駐和網路自動重連，讓您隨時保持安全連線。無論您使用的是華為、小米、三星還是其他品牌的 Android 手機，VP92 都能完美相容。','en':'VP92 offers an Android client available for download as an APK from our website or via Google Play. After installation, simply register an account to get 24 hours of free trial and connect to 30+ global nodes with one tap. The app is lightweight, runs smoothly, and supports always-on background connection with auto-reconnect. VP92 is fully compatible with all Android devices including Huawei, Xiaomi, Samsung, and more.'},
+q9_a:{'zh-CN':'VP92 提供 Android 客户端，可通过官网下载 APK 或通过 Google Play 安装。安装后注册账号即可获得 24 小时免费试用，支持一键连接全球 90+ 节点。应用体积小巧，运行流畅，支持后台常驻和网络自动重连，让您随时保持安全连接。无论您使用的是华为、小米、三星还是其他品牌的 Android 手机，VP92 都能完美兼容。','zh-TW':'VP92 提供 Android 客戶端，可透過官網下載 APK 或透過 Google Play 安裝。安裝後註冊帳號即可獲得 24 小時免費試用，支援一鍵連線全球 90+ 節點。應用程式體積小巧，運作流暢，支援後台常駐和網路自動重連，讓您隨時保持安全連線。無論您使用的是華為、小米、三星還是其他品牌的 Android 手機，VP92 都能完美相容。','en':'VP92 offers an Android client available for download as an APK from our website or via Google Play. After installation, simply register an account to get 24 hours of free trial and connect to 90+ global nodes with one tap. The app is lightweight, runs smoothly, and supports always-on background connection with auto-reconnect. VP92 is fully compatible with all Android devices including Huawei, Xiaomi, Samsung, and more.'},
 q10_q:{'zh-CN':'免费 VPN 安全吗？为什么应该选择付费 VPN？','zh-TW':'免費 VPN 安全嗎？為什麼應該選擇付費 VPN？','en':'Are free VPNs safe? Why should I choose a paid VPN?'},
-q10_a:{'zh-CN':'大多数免费 VPN 通过出售用户浏览数据、插入广告或限制带宽来盈利，存在严重的隐私泄露风险。研究表明，超过 70% 的免费 VPN 应用包含追踪代码。VP92 采用严格的无日志政策，不记录任何用户活动数据，使用 AES-256 端到端加密保护您的所有通信。基于 Cloudflare 全球 CDN 网络构建，提供企业级安全基础设施，确保您的每一次连接都安全可靠。新用户可享 24 小时免费试用，先体验再决定。','zh-TW':'大多數免費 VPN 透過出售用戶瀏覽資料、插入廣告或限制頻寬來盈利，存在嚴重的隱私洩露風險。研究顯示，超過 70% 的免費 VPN 應用程式包含追蹤程式碼。VP92 採用嚴格的無日誌政策，不記錄任何用戶活動資料，使用 AES-256 端到端加密保護您的所有通訊。基於 Cloudflare 全球 CDN 網路建構，提供企業級安全基礎設施，確保您的每一次連線都安全可靠。新用戶可享 24 小時免費試用，先體驗再決定。','en':'Most free VPNs make money by selling user browsing data, injecting ads, or throttling bandwidth — posing serious privacy risks. Studies show over 70% of free VPN apps contain tracking code. VP92 follows a strict no-logs policy, records zero user activity, and uses AES-256 end-to-end encryption to protect all your communications. Built on the Cloudflare global CDN network with enterprise-grade security infrastructure, every connection is safe and reliable. New users get a 24-hour free trial to experience it first before deciding.'}
+q10_a:{'zh-CN':'大多数免费 VPN 通过出售用户浏览数据、插入广告或限制带宽来盈利，存在严重的隐私泄露风险。研究表明，超过 70% 的免费 VPN 应用包含追踪代码。VP92 采用严格的无日志政策，不记录任何用户活动数据，使用 AES-256 端到端加密保护您的所有通信。基于 Cloudflare 全球 CDN 网络构建，提供企业级安全基础设施，确保您的每一次连接都安全可靠。新用户可享 24 小时免费试用，先体验再决定。','zh-TW':'大多數免費 VPN 透過出售用戶瀏覽資料、插入廣告或限制頻寬來盈利，存在嚴重的隱私洩露風險。研究顯示，超過 70% 的免費 VPN 應用程式包含追蹤程式碼。VP92 採用嚴格的無日誌政策，不記錄任何用戶活動資料，使用 AES-256 端到端加密保護您的所有通訊。基於 Cloudflare 全球 CDN 網路建構，提供企業級安全基礎設施，確保您的每一次連線都安全可靠。新用戶可享 24 小時免費試用，先體驗再決定。','en':'Most free VPNs make money by selling user browsing data, injecting ads, or throttling bandwidth — posing serious privacy risks. Studies show over 70% of free VPN apps contain tracking code. VP92 follows a strict no-logs policy, records zero user activity, and uses AES-256 end-to-end encryption to protect all your communications. Built on the Cloudflare global CDN network with enterprise-grade security infrastructure, every connection is safe and reliable. New users get a 24-hour free trial to experience it first before deciding.'},
+contact_text:{'zh-CN':'未找到答案？','zh-TW':'未找到答案？','en':'Can\'t find your answer?'},
+contact_btn:{'zh-CN':'联系客服','zh-TW':'聯繫客服','en':'Contact Support'}
 },
 support:{
 heading:{'zh-CN':'7×24 小时极速响应客服','zh-TW':'7×24 小時極速響應客服','en':'24/7 Instant Customer Support'},
@@ -503,6 +512,15 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
       padding-top: 0;
     }
     #faq-accordion .faq-content {
+      padding: 0 1.125rem 0;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.3s ease;
+    }
+    #faq-accordion .faq-content.faq-open {
+      max-height: 500px;
+      opacity: 1;
       padding: 0 1.125rem 1rem;
     }
     html:not(.dark) #faq-accordion .faq-item {
@@ -783,6 +801,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="text-center mb-stack-xl">
 <h2 class="font-headline-lg text-headline-lg" data-i18n="plans.heading">选择适合您的加速方案</h2>
 <p class="font-body-md text-on-surface-variant" data-i18n="plans.subtext">所有订阅均包含 24小时免费试用 体验</p>
+<p class="text-sm text-on-surface-variant mt-2 flex items-center justify-center gap-1.5" data-i18n="plans.no_credit"><span class="material-symbols-outlined" style="font-size:18px;color:#34d399;" data-icon="verified_user">verified_user</span>无需信用卡，无需绑定支付即可免费试用</p>
 </div>
 <div class="grid md:grid-cols-3 gap-gutter items-stretch">
 <!-- VIP 1 -->
@@ -826,6 +845,47 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 <button onclick="openSubscribeModal('VIP 1')" class="w-full py-3 text-sm font-semibold border border-on-surface hover:bg-surface-container-low transition-colors" data-i18n="plans.btn_select">选择此方案</button>
 </div>
+<!-- VIP 2 -->
+<div class="st-plan-card border border-outline-variant p-6 flex flex-col bg-surface-container-lowest">
+<div class="st-plan-header text-center mb-5 pb-5 border-b border-outline-variant">
+<img src="/vip-banners/VIP2.png" alt="VIP2" class="st-plan-img" />
+<span class="text-xs font-semibold text-primary tracking-wider uppercase" data-i18n="plans.tier_pro">专业版</span>
+<h3 class="text-lg font-semibold text-on-surface mt-1">VIP 2 <span data-i18n="plans.subscription">订阅</span></h3>
+<div class="st-plan-price mt-2"><span class="st-plan-price-val">¥38</span><span class="st-plan-price-unit" data-i18n="plans.per_month">/月起</span></div>
+</div>
+<div class="st-plan-features space-y-3 mb-6 flex-1">
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface">1000GB <span class="text-on-surface-variant" data-i18n="plans.traffic_monthly">每月流量</span></span>
+</div>
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface">100+ <span class="text-on-surface-variant" data-i18n="plans.country_routes">国家线路</span></span>
+</div>
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface"><span data-i18n="plans.support">支持</span><span class="text-on-surface-variant">ChatGPT、Gemini、MJ</span><span class="text-on-surface-variant" data-i18n="plans.ai_tools">等AI工具</span></span>
+</div>
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface"><span data-i18n="plans.support">支持</span><span class="text-on-surface-variant">Netflix、Disney+、YouTube</span><span class="text-on-surface-variant" data-i18n="plans.streaming_8k">等8K流媒体</span></span>
+</div>
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface" data-i18n="plans.bandwidth_2000">用户本地带宽<span class="font-semibold text-on-surface">2000M</span>，速度可达<span class="font-semibold text-on-surface">2000Mbps</span></span>
+</div>
+<div class="st-plan-row flex items-start gap-2.5">
+<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
+<span class="text-sm text-on-surface" data-i18n="plans.unlimited_devices">无限在线设备</span>
+</div>
+</div>
+<div class="st-plan-service text-xs text-on-surface-variant space-y-1.5 mb-5 pt-4 border-t border-outline-variant">
+<p>· <span data-i18n="plans.service_traffic_reset">流量按月重置</span></p>
+<p>· <span data-i18n="plans.service_multiplatform">支持多平台使用</span></p>
+<p>· <span data-i18n="plans.service_support">7×24小时技术支持</span></p>
+</div>
+<button onclick="openSubscribeModal('VIP 2')" class="w-full py-3 text-sm font-semibold border border-on-surface hover:bg-surface-container-low transition-colors" data-i18n="plans.btn_select">选择此方案</button>
+</div>
 <!-- VIP 3 Recommended -->
 <div class="st-plan-card st-plan-recommended border-2 border-primary p-6 flex flex-col bg-surface-container-lowest relative">
 <div class="absolute top-0 right-0 bg-primary text-on-primary px-3 py-1 text-xs font-semibold" data-i18n="plans.recommended">推荐方案</div>
@@ -867,47 +927,6 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <p>· <span data-i18n="plans.service_support">7×24小时技术支持</span></p>
 </div>
 <button onclick="openSubscribeModal('VIP 3')" class="w-full py-3 text-sm font-semibold bg-primary text-on-primary hover:bg-on-primary-fixed-variant transition-all" data-i18n="plans.btn_subscribe">立即订阅</button>
-</div>
-<!-- VIP 2 -->
-<div class="st-plan-card border border-outline-variant p-6 flex flex-col bg-surface-container-lowest">
-<div class="st-plan-header text-center mb-5 pb-5 border-b border-outline-variant">
-<img src="/vip-banners/VIP2.png" alt="VIP2" class="st-plan-img" />
-<span class="text-xs font-semibold text-primary tracking-wider uppercase" data-i18n="plans.tier_pro">专业版</span>
-<h3 class="text-lg font-semibold text-on-surface mt-1">VIP 2 <span data-i18n="plans.subscription">订阅</span></h3>
-<div class="st-plan-price mt-2"><span class="st-plan-price-val">¥38</span><span class="st-plan-price-unit" data-i18n="plans.per_month">/月起</span></div>
-</div>
-<div class="st-plan-features space-y-3 mb-6 flex-1">
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface">1000GB <span class="text-on-surface-variant" data-i18n="plans.traffic_monthly">每月流量</span></span>
-</div>
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface">100+ <span class="text-on-surface-variant" data-i18n="plans.country_routes">国家线路</span></span>
-</div>
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface"><span data-i18n="plans.support">支持</span><span class="text-on-surface-variant">ChatGPT、Gemini、MJ</span><span class="text-on-surface-variant" data-i18n="plans.ai_tools">等AI工具</span></span>
-</div>
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface"><span data-i18n="plans.support">支持</span><span class="text-on-surface-variant">Netflix、Disney+、YouTube</span><span class="text-on-surface-variant" data-i18n="plans.streaming_8k">等8K流媒体</span></span>
-</div>
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface" data-i18n="plans.bandwidth_2000">用户本地带宽<span class="font-semibold text-on-surface">2000M</span>，速度可达<span class="font-semibold text-on-surface">2000Mbps</span></span>
-</div>
-<div class="st-plan-row flex items-start gap-2.5">
-<span class="text-primary text-sm mt-0.5 flex-shrink-0">✅</span>
-<span class="text-sm text-on-surface" data-i18n="plans.unlimited_devices">无限在线设备</span>
-</div>
-</div>
-<div class="st-plan-service text-xs text-on-surface-variant space-y-1.5 mb-5 pt-4 border-t border-outline-variant">
-<p>· <span data-i18n="plans.service_traffic_reset">流量按月重置</span></p>
-<p>· <span data-i18n="plans.service_multiplatform">支持多平台使用</span></p>
-<p>· <span data-i18n="plans.service_support">7×24小时技术支持</span></p>
-</div>
-<button onclick="openSubscribeModal('VIP 2')" class="w-full py-3 text-sm font-semibold border border-on-surface hover:bg-surface-container-low transition-colors" data-i18n="plans.btn_select">选择此方案</button>
 </div>
 </div>
 </div>
@@ -981,7 +1000,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
         <div class="dl-card-version">{{ $ios_version ?? '最新版本' }}</div>
         <div class="dl-card-url">{{ $ios_download_url }}</div>
         @else
-        <div class="dl-card-version text-muted" data-i18n="device.btn_coming_soon">即将推出</div>
+        <div class="dl-card-version text-muted" style="font-size:0.8rem; line-height:1.5;" data-i18n="device.ios_guide">推荐使用 Shadowrocket、SingBox 或 Streisand，登录后复制订阅链接即可一键导入节点。</div>
         @endisset
     </div>
     @isset($ios_download_url)
@@ -1059,12 +1078,12 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <!-- Stats row -->
 <div class="grid grid-cols-3 gap-4 md:gap-6 mb-14">
 <div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
-<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="300" data-suffix="+">0</div>
-<div class="text-sm font-medium text-on-surface-variant">CDN 节点</div>
+<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="90" data-suffix="+">0</div>
+<div class="text-sm font-medium text-on-surface-variant" data-i18n="stats.nodes">加速节点</div>
 </div>
 <div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
-<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="30" data-suffix="+">0</div>
-<div class="text-sm font-medium text-on-surface-variant">覆盖国家</div>
+<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="7" data-suffix="+">0</div>
+<div class="text-sm font-medium text-on-surface-variant" data-i18n="stats.countries">覆盖地区</div>
 </div>
 <div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
 <div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="99.9" data-suffix="%" data-decimal="true">0</div>
@@ -1089,8 +1108,8 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <span class="material-symbols-outlined text-3xl" style="color:#34d399;" data-icon="public">public</span>
 </div>
 <div>
-<h3 class="font-headline-md text-headline-md mb-2" style="font-size:1.15rem;" data-i18n="why.nodes_title">30+ 全球优质节点</h3>
-<p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="why.nodes_desc">覆盖亚洲、北美、欧洲、大洋洲四大区域，智能路由自动匹配最佳节点。</p>
+<h3 class="font-headline-md text-headline-md mb-2" style="font-size:1.15rem;" data-i18n="why.nodes_title">90+ 全球优质节点</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="why.nodes_desc">覆盖日本、新加坡、美国、德国、香港、韩国、台湾七大区域，智能路由自动匹配最佳节点。</p>
 </div>
 </div>
 </div>
@@ -1158,7 +1177,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q1_a">VP92极速加速器是一款专业的全球网络加速服务...</p>
 </div>
@@ -1174,7 +1193,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q2_a">VP92 支持 Windows、Android、iOS 三大主流平台...</p>
 </div>
@@ -1190,7 +1209,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q3_a">VP92 采用端到端加密传输...</p>
 </div>
@@ -1206,7 +1225,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q4_a">VP92 提供 7×24 小时客户支持服务...</p>
 </div>
@@ -1222,7 +1241,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q5_a">VP92 提供三种灵活的订阅套餐...</p>
 </div>
@@ -1238,7 +1257,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q6_a">只需 3 步即可开始使用...</p>
 </div>
@@ -1254,7 +1273,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q7_a">VP92 可以解锁全球主流流媒体服务...</p>
 </div>
@@ -1270,7 +1289,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q8_a">VP92 的流量按月自动重置...</p>
 </div>
@@ -1286,7 +1305,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q9_a">VP92 提供 Android 客户端，可通过官网下载 APK 或通过 Google Play 安装。安装后注册账号即可获得 24 小时免费试用，支持一键连接全球 30+ 节点。应用体积小巧，运行流畅，支持后台常驻和网络自动重连，让您随时保持安全连接。</p>
 </div>
@@ -1302,12 +1321,20 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </span>
 <span class="material-symbols-outlined faq-icon transition-transform duration-300 flex-shrink-0" style="color: #6d9fff; font-size: 22px;">expand_more</span>
 </button>
-<div class="faq-content hidden">
+<div class="faq-content">
 <div class="px-4 md:px-5 pb-4 md:pb-5 pl-[4.5rem] md:pl-[5.25rem]">
 <p class="font-body-md text-on-surface-variant leading-relaxed text-sm" data-i18n="faq.q10_a">大多数免费 VPN 通过出售用户浏览数据、插入广告或限制带宽来盈利，存在严重的隐私泄露风险。VP92 采用严格的无日志政策，不记录任何用户活动数据，使用 AES-256 端到端加密保护您的所有通信。基于 Cloudflare 全球 CDN 网络构建，提供企业级安全基础设施，确保您的每一次连接都安全可靠。</p>
 </div>
 </div>
 </div>
+</div>
+</div>
+<div class="text-center mt-8">
+<p class="text-sm text-on-surface-variant mb-3" data-i18n="faq.contact_text">未找到答案？</p>
+<a href="https://t.me/vp92vip_bot" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5" style="background: rgba(109,159,255,0.12); color: #6d9fff; border: 1px solid rgba(109,159,255,0.2);" onmouseover="this.style.background='rgba(109,159,255,0.2)';this.style.borderColor='rgba(109,159,255,0.4)'" onmouseout="this.style.background='rgba(109,159,255,0.12)';this.style.borderColor='rgba(109,159,255,0.2)'">
+<span class="material-symbols-outlined" style="font-size:20px;" data-icon="support_agent">support_agent</span>
+<span data-i18n="faq.contact_btn">联系客服</span>
+</a>
 </div>
 </div>
 </section>
@@ -1492,11 +1519,11 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
             const content = item.querySelector('.faq-content');
             const icon = btn.querySelector('.faq-icon');
             const numBadge = btn.querySelector('span:first-child');
-            const isOpen = !content.classList.contains('hidden');
+            const isOpen = content.classList.contains('faq-open');
             // Close all other items
             document.querySelectorAll('.faq-item').forEach(other => {
                 if (other !== item) {
-                    other.querySelector('.faq-content').classList.add('hidden');
+                    other.querySelector('.faq-content').classList.remove('faq-open');
                     other.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
                     other.querySelector('.faq-toggle span:first-child').style.background = 'rgba(109,159,255,0.12)';
                     other.querySelector('.faq-toggle span:first-child').style.color = '#6d9fff';
@@ -1505,14 +1532,14 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
                 }
             });
             if (isOpen) {
-                content.classList.add('hidden');
+                content.classList.remove('faq-open');
                 icon.style.transform = 'rotate(0deg)';
                 numBadge.style.background = 'rgba(109,159,255,0.12)';
                 numBadge.style.color = '#6d9fff';
                 item.style.borderColor = '';
                 item.style.boxShadow = '';
             } else {
-                content.classList.remove('hidden');
+                content.classList.add('faq-open');
                 icon.style.transform = 'rotate(180deg)';
                 numBadge.style.background = '#6d9fff';
                 numBadge.style.color = '#0a1a3a';
