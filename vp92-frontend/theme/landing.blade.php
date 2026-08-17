@@ -119,7 +119,7 @@ heading:{'zh-CN':'通用订阅格式','zh-TW':'通用訂閱格式','en':'Univers
 subtitle:{'zh-CN':'支持所有主流第三方内核，灵活配置','zh-TW':'支持所有主流第三方內核，靈活配置','en':'Supports all major third-party kernels with flexible configuration'}
 },
 why:{
-heading:{'zh-CN':'为什么选择 VP92','zh-TW':'為什麼選擇 VP92','en':'Why Choose VP92'},
+heading:{'zh-CN':'为什么选择 VP92极速','zh-TW':'為什麼選擇 VP92極速','en':'Why Choose VP92 Turbo'},
 badge:{'zh-CN':'核心优势','zh-TW':'核心優勢','en':'Core Advantages'},
 subtitle:{'zh-CN':'专注于为您提供最优质的全球网络加速体验','zh-TW':'專注於為您提供最優質的全球網路加速體驗','en':'Focused on delivering the best global network acceleration experience'},
 cf_title:{'zh-CN':'Cloudflare 全球边缘网络','zh-TW':'Cloudflare 全球邊緣網路','en':'Cloudflare Global Edge Network'},
@@ -246,6 +246,11 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Why Choose card icons: filled + larger for crisp rendering */
+        .why-icon-wrap .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 40;
+            font-size: 2.25rem !important;
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.8);
@@ -456,6 +461,61 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     }
     html:not(.dark) [data-section="faq"] .faq-content .text-on-surface-variant {
       color: #424656 !important;
+    }
+
+    /* === FAQ Card Grid Layout === */
+    #faq-accordion .faq-item {
+      border-radius: 0.875rem;
+      border: 1px solid rgba(46,49,72,0.45);
+      background: rgba(22,24,34,0.55);
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+    #faq-accordion .faq-item:hover {
+      border-color: rgba(109,159,255,0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+    }
+    #faq-accordion .faq-toggle {
+      padding: 1rem 1.125rem;
+      border-radius: 0;
+    }
+    #faq-accordion .faq-toggle > span:first-child {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.625rem;
+      font-size: 0.8rem;
+    }
+    #faq-accordion .faq-toggle > span:nth-child(2) {
+      gap: 0.375rem;
+      align-items: center;
+    }
+    #faq-accordion .faq-category {
+      font-size: 0.65rem;
+      padding: 0.125rem 0.5rem;
+    }
+    #faq-accordion .faq-toggle .font-headline-sm {
+      font-size: 0.9rem;
+    }
+    #faq-accordion .faq-content > div {
+      padding-left: 0 !important;
+      padding-top: 0;
+    }
+    #faq-accordion .faq-content {
+      padding: 0 1.125rem 1rem;
+    }
+    html:not(.dark) #faq-accordion .faq-item {
+      background: rgba(255,255,255,0.85);
+      border-color: rgba(200,205,220,0.5);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    html:not(.dark) #faq-accordion .faq-item:hover {
+      border-color: rgba(109,159,255,0.3);
+      box-shadow: 0 8px 24px rgba(109,159,255,0.1);
+    }
+    html:not(.dark) #faq-accordion .faq-content .text-on-surface-variant {
+      color: #555 !important;
     }
 
     /* Card hover glow (both themes) */
@@ -994,7 +1054,6 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <span data-i18n="why.badge">核心优势</span>
 </div>
 <h2 class="font-headline-lg text-headline-lg mb-3" style="font-size:2.2rem; letter-spacing:-0.02em;" data-i18n="why.heading">为什么选择 VP92</h2>
-<div class="why-heading-line"></div>
 <p class="font-body-md text-on-surface-variant max-w-xl mx-auto" style="font-size:1rem;" data-i18n="why.subtitle">专注于为您提供最优质的全球网络加速体验</p>
 </div>
 <!-- Stats row -->
@@ -1083,12 +1142,12 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </section>
 <!-- Section: FAQ -->
 <section data-section="faq" class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #111827 50%, #0c1220 100%);">
-<div class="max-w-[860px] mx-auto relative z-10">
+<div class="max-w-[1000px] mx-auto relative z-10">
 <div class="text-center mb-10">
 <h2 class="font-headline-lg text-headline-lg mb-3" style="font-size:2rem;" data-i18n="faq.heading">常见问题</h2>
 <p class="text-on-surface-variant text-sm">快速了解 VP92 极速加速器</p>
 </div>
-<div class="flex flex-col gap-3" id="faq-accordion">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4" id="faq-accordion">
 <!-- Q1 - 关于 -->
 <div class="faq-item rounded-xl overflow-hidden border transition-all duration-300" style="border-color: rgba(46,49,72,0.6); background: rgba(22,24,34,0.5); backdrop-filter: blur(8px);">
 <button class="faq-toggle w-full flex items-center gap-4 p-4 md:p-5 text-left transition-all duration-300 rounded-xl hover:bg-opacity-80" style="background: transparent;" onclick="toggleFaq(this)">
@@ -1353,8 +1412,8 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex flex-col md:flex-row justify-between items-start gap-stack-xl mb-stack-xl">
 <div class="max-w-xs">
 <div class="flex items-center gap-stack-sm mb-stack-md">
-<span class="material-symbols-outlined text-primary text-headline-md" data-icon="speed">speed</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">VP92</span>
+<img src="/img/logo.svg" alt="VP92极速加速器" style="height:32px;width:auto;object-fit:contain;" data-i18n-alt="nav.brand_alt">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">VP92极速</span>
 </div>
 <p class="font-body-md text-on-surface-variant" data-i18n="footer.description">为极致速度而生，致力于提供全球最稳定、最安全的加速体验。</p>
 </div>
@@ -1439,30 +1498,26 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
                 if (other !== item) {
                     other.querySelector('.faq-content').classList.add('hidden');
                     other.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
-                    const otherBtn = other.querySelector('.faq-toggle');
-                    otherBtn.style.background = 'transparent';
-                    otherBtn.querySelector('span:first-child').style.background = 'rgba(109,159,255,0.12)';
-                    otherBtn.querySelector('span:first-child').style.color = '#6d9fff';
-                    other.style.borderColor = document.documentElement.classList.contains('dark') ? 'rgba(46,49,72,0.6)' : 'rgba(200,205,220,0.5)';
-                    other.style.boxShadow = 'none';
+                    other.querySelector('.faq-toggle span:first-child').style.background = 'rgba(109,159,255,0.12)';
+                    other.querySelector('.faq-toggle span:first-child').style.color = '#6d9fff';
+                    other.style.borderColor = '';
+                    other.style.boxShadow = '';
                 }
             });
             if (isOpen) {
                 content.classList.add('hidden');
                 icon.style.transform = 'rotate(0deg)';
-                btn.style.background = 'transparent';
                 numBadge.style.background = 'rgba(109,159,255,0.12)';
                 numBadge.style.color = '#6d9fff';
-                item.style.borderColor = document.documentElement.classList.contains('dark') ? 'rgba(46,49,72,0.6)' : 'rgba(200,205,220,0.5)';
-                item.style.boxShadow = 'none';
+                item.style.borderColor = '';
+                item.style.boxShadow = '';
             } else {
                 content.classList.remove('hidden');
                 icon.style.transform = 'rotate(180deg)';
-                btn.style.background = 'rgba(109,159,255,0.06)';
                 numBadge.style.background = '#6d9fff';
                 numBadge.style.color = '#0a1a3a';
-                item.style.borderColor = 'rgba(109,159,255,0.4)';
-                item.style.boxShadow = '0 0 24px rgba(109,159,255,0.08), inset 0 0 0 1px rgba(109,159,255,0.1)';
+                item.style.borderColor = 'rgba(109,159,255,0.35)';
+                item.style.boxShadow = '0 4px 20px rgba(109,159,255,0.1), 0 0 0 1px rgba(109,159,255,0.15)';
             }
         }
 
