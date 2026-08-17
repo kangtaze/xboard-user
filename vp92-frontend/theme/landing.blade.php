@@ -120,6 +120,7 @@ subtitle:{'zh-CN':'支持所有主流第三方内核，灵活配置','zh-TW':'�
 },
 why:{
 heading:{'zh-CN':'为什么选择 VP92','zh-TW':'為什麼選擇 VP92','en':'Why Choose VP92'},
+badge:{'zh-CN':'核心优势','zh-TW':'核心優勢','en':'Core Advantages'},
 subtitle:{'zh-CN':'专注于为您提供最优质的全球网络加速体验','zh-TW':'專注於為您提供最優質的全球網路加速體驗','en':'Focused on delivering the best global network acceleration experience'},
 cf_title:{'zh-CN':'Cloudflare 全球边缘网络','zh-TW':'Cloudflare 全球邊緣網路','en':'Cloudflare Global Edge Network'},
 cf_desc:{'zh-CN':'VP92 基于 Cloudflare 全球 CDN 网络构建，利用遍布全球 300+ 数据中心的边缘计算能力，自动为您选择最优路径。无论您身在何处，都能获得低延迟、高稳定性的连接体验。相比传统加速方案，Cloudflare 网络能提供更快的响应速度和更强的抗 DDoS 能力，确保您的网络访问始终畅通无阻。','zh-TW':'VP92 基於 Cloudflare 全球 CDN 網路建構，利用遍布全球 300+ 資料中心的邊緣計算能力，自動為您選擇最優路徑。無論您身在何處，都能獲得低延遲、高穩定性的連線體驗。相比傳統加速方案，Cloudflare 網路能提供更快的回應速度和更強的抗 DDoS 能力，確保您的網路存取始終暢通無阻。','en':'VP92 is built on the Cloudflare global CDN network, leveraging edge computing across 300+ data centers worldwide to automatically select the optimal route for you. Wherever you are, you will get low-latency, high-stability connections. Compared to traditional acceleration solutions, the Cloudflare network delivers faster response times and stronger DDoS protection, ensuring your internet access remains uninterrupted.'},
@@ -435,20 +436,6 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     html:not(.dark) [data-section="why"] .grid.grid-cols-3 > div .text-sm {
       color: #424656 !important;
     }
-    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div {
-      background: rgba(255, 255, 255, 0.85) !important;
-      border-color: rgba(200, 205, 220, 0.6) !important;
-      border-top-color: rgba(200, 205, 220, 0.6) !important;
-      border-right-color: rgba(200, 205, 220, 0.6) !important;
-      border-bottom-color: rgba(200, 205, 220, 0.6) !important;
-      backdrop-filter: blur(12px) !important;
-    }
-    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div h3 {
-      color: #191c1e !important;
-    }
-    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div p.text-on-surface-variant {
-      color: #424656 !important;
-    }
     html:not(.dark) [data-section="why"] .absolute.rounded-full {
       opacity: 0.04 !important;
     }
@@ -475,6 +462,146 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     html.dark [data-section="why"] .grid.md\:grid-cols-2 > div:hover {
       border-left-color: #6d9fff !important;
       box-shadow: 0 8px 32px rgba(109, 159, 255, 0.15) !important;
+    }
+
+    /* === Why Choose: Stats Counter Animation === */
+    .why-stat-number {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #6d9fff 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    html:not(.dark) .why-stat-number {
+      background: linear-gradient(135deg, #4a7fd4 0%, #8b6fc0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .why-stat-card {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .why-stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40%;
+      height: 2px;
+      border-radius: 1px;
+      transition: all 0.4s ease;
+    }
+    html.dark .why-stat-card::after {
+      background: linear-gradient(90deg, transparent, rgba(109,159,255,0.5), transparent);
+    }
+    html:not(.dark) .why-stat-card::after {
+      background: linear-gradient(90deg, transparent, rgba(109,159,255,0.3), transparent);
+    }
+    .why-stat-card:hover {
+      transform: translateY(-4px);
+    }
+    html.dark .why-stat-card:hover {
+      background: rgba(109,159,255,0.1) !important;
+      box-shadow: 0 12px 40px rgba(109,159,255,0.08);
+    }
+    html:not(.dark) .why-stat-card:hover {
+      background: rgba(109,159,255,0.1) !important;
+      box-shadow: 0 12px 40px rgba(109,159,255,0.06);
+    }
+    .why-stat-card:hover::after {
+      width: 60%;
+    }
+
+    /* === Why Choose: Colored Feature Cards === */
+    .why-card-blue .why-icon-wrap {
+      background: linear-gradient(135deg, rgba(109,159,255,0.25) 0%, rgba(109,159,255,0.05) 100%) !important;
+      box-shadow: 0 0 24px rgba(109,159,255,0.15) !important;
+    }
+    .why-card-blue .why-icon-wrap span { color: #6d9fff !important; }
+    .why-card-blue { border-left-color: rgba(109,159,255,0.4) !important; }
+    .why-card-blue:hover { border-left-color: #6d9fff !important; box-shadow: 0 8px 32px rgba(109,159,255,0.12) !important; }
+
+    .why-card-green .why-icon-wrap {
+      background: linear-gradient(135deg, rgba(52,211,153,0.25) 0%, rgba(52,211,153,0.05) 100%) !important;
+      box-shadow: 0 0 24px rgba(52,211,153,0.15) !important;
+    }
+    .why-card-green .why-icon-wrap span { color: #34d399 !important; }
+    .why-card-green { border-left-color: rgba(52,211,153,0.4) !important; }
+    .why-card-green:hover { border-left-color: #34d399 !important; box-shadow: 0 8px 32px rgba(52,211,153,0.12) !important; }
+
+    .why-card-amber .why-icon-wrap {
+      background: linear-gradient(135deg, rgba(251,191,36,0.25) 0%, rgba(251,191,36,0.05) 100%) !important;
+      box-shadow: 0 0 24px rgba(251,191,36,0.15) !important;
+    }
+    .why-card-amber .why-icon-wrap span { color: #fbbf24 !important; }
+    .why-card-amber { border-left-color: rgba(251,191,36,0.4) !important; }
+    .why-card-amber:hover { border-left-color: #fbbf24 !important; box-shadow: 0 8px 32px rgba(251,191,36,0.12) !important; }
+
+    .why-card-purple .why-icon-wrap {
+      background: linear-gradient(135deg, rgba(167,139,250,0.25) 0%, rgba(167,139,250,0.05) 100%) !important;
+      box-shadow: 0 0 24px rgba(167,139,250,0.15) !important;
+    }
+    .why-card-purple .why-icon-wrap span { color: #a78bfa !important; }
+    .why-card-purple { border-left-color: rgba(167,139,250,0.4) !important; }
+    .why-card-purple:hover { border-left-color: #a78bfa !important; box-shadow: 0 8px 32px rgba(167,139,250,0.12) !important; }
+
+    /* Light theme card bg overrides for colored cards */
+    html:not(.dark) .why-card-blue,
+    html:not(.dark) .why-card-green,
+    html:not(.dark) .why-card-amber,
+    html:not(.dark) .why-card-purple {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-top-color: rgba(200, 205, 220, 0.6) !important;
+      border-right-color: rgba(200, 205, 220, 0.6) !important;
+      border-bottom-color: rgba(200, 205, 220, 0.6) !important;
+      backdrop-filter: blur(12px) !important;
+    }
+    html:not(.dark) .why-card-blue h3,
+    html:not(.dark) .why-card-green h3,
+    html:not(.dark) .why-card-amber h3,
+    html:not(.dark) .why-card-purple h3 {
+      color: #191c1e !important;
+    }
+    html:not(.dark) .why-card-blue p,
+    html:not(.dark) .why-card-green p,
+    html:not(.dark) .why-card-amber p,
+    html:not(.dark) .why-card-purple p {
+      color: #424656 !important;
+    }
+
+    /* === Why Choose: Heading decoration === */
+    .why-heading-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    html.dark .why-heading-badge {
+      background: rgba(109,159,255,0.1);
+      color: #6d9fff;
+      border: 1px solid rgba(109,159,255,0.2);
+    }
+    html:not(.dark) .why-heading-badge {
+      background: rgba(109,159,255,0.08);
+      color: #4a7fd4;
+      border: 1px solid rgba(109,159,255,0.15);
+    }
+    .why-heading-line {
+      width: 48px;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #6d9fff, #a78bfa);
+      margin: 0 auto 20px;
     }
 
     /* Section transition dividers */
@@ -857,29 +984,34 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #6d9fff 0%, transparent 70%); filter: blur(80px);"></div>
 <div class="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-8 pointer-events-none" style="background: radial-gradient(circle, #a78bfa 0%, transparent 70%); filter: blur(60px);"></div>
 <div class="max-w-[1200px] mx-auto relative z-10">
-<div class="text-center mb-12">
-<h2 class="font-headline-lg text-headline-lg mb-3" style="font-size:2rem;" data-i18n="why.heading">为什么选择 VP92</h2>
-<p class="font-body-md text-on-surface-variant max-w-xl mx-auto" data-i18n="why.subtitle">专注于为您提供最优质的全球网络加速体验</p>
+<div class="text-center mb-14">
+<div class="why-heading-badge">
+<span class="material-symbols-outlined" style="font-size:16px;">verified</span>
+<span data-i18n="why.badge">核心优势</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg mb-3" style="font-size:2.2rem; letter-spacing:-0.02em;" data-i18n="why.heading">为什么选择 VP92</h2>
+<div class="why-heading-line"></div>
+<p class="font-body-md text-on-surface-variant max-w-xl mx-auto" style="font-size:1rem;" data-i18n="why.subtitle">专注于为您提供最优质的全球网络加速体验</p>
 </div>
 <!-- Stats row -->
-<div class="grid grid-cols-3 gap-4 mb-12">
-<div class="text-center p-4 rounded-xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
-<div class="text-3xl md:text-4xl font-bold mb-1" style="color:#6d9fff;">300+</div>
-<div class="text-sm text-on-surface-variant">CDN 节点</div>
+<div class="grid grid-cols-3 gap-4 md:gap-6 mb-14">
+<div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
+<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="300" data-suffix="+">0</div>
+<div class="text-sm font-medium text-on-surface-variant">CDN 节点</div>
 </div>
-<div class="text-center p-4 rounded-xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
-<div class="text-3xl md:text-4xl font-bold mb-1" style="color:#6d9fff;">30+</div>
-<div class="text-sm text-on-surface-variant">覆盖国家</div>
+<div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
+<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="30" data-suffix="+">0</div>
+<div class="text-sm font-medium text-on-surface-variant">覆盖国家</div>
 </div>
-<div class="text-center p-4 rounded-xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
-<div class="text-3xl md:text-4xl font-bold mb-1" style="color:#6d9fff;">99.9%</div>
-<div class="text-sm text-on-surface-variant">在线率</div>
+<div class="why-stat-card text-center py-6 md:py-8 px-4 rounded-2xl" style="background: rgba(109,159,255,0.06); border: 1px solid rgba(109,159,255,0.12);">
+<div class="why-stat-number text-4xl md:text-5xl font-bold mb-2" data-target="99.9" data-suffix="%" data-decimal="true">0</div>
+<div class="text-sm font-medium text-on-surface-variant">在线率</div>
 </div>
 </div>
 <div class="grid md:grid-cols-2 gap-5">
-<div class="group p-6 md:p-8 rounded-2xl border-l-4 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-color: rgba(109,159,255,0.3); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
+<div class="why-card-blue group p-6 md:p-8 rounded-2xl border-l-4 hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
 <div class="flex items-start gap-5">
-<div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(109,159,255,0.2) 0%, rgba(109,159,255,0.05) 100%); box-shadow: 0 0 20px rgba(109,159,255,0.1);">
+<div class="why-icon-wrap w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(109,159,255,0.2) 0%, rgba(109,159,255,0.05) 100%); box-shadow: 0 0 20px rgba(109,159,255,0.1);">
 <span class="material-symbols-outlined text-3xl" style="color:#6d9fff;" data-icon="cloud_queue">cloud_queue</span>
 </div>
 <div>
@@ -888,10 +1020,10 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </div>
 </div>
-<div class="group p-6 md:p-8 rounded-2xl border-l-4 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-color: rgba(109,159,255,0.3); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
+<div class="why-card-green group p-6 md:p-8 rounded-2xl border-l-4 hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
 <div class="flex items-start gap-5">
-<div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(109,159,255,0.2) 0%, rgba(109,159,255,0.05) 100%); box-shadow: 0 0 20px rgba(109,159,255,0.1);">
-<span class="material-symbols-outlined text-3xl" style="color:#6d9fff;" data-icon="public">public</span>
+<div class="why-icon-wrap w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(52,211,153,0.2) 0%, rgba(52,211,153,0.05) 100%); box-shadow: 0 0 20px rgba(52,211,153,0.1);">
+<span class="material-symbols-outlined text-3xl" style="color:#34d399;" data-icon="public">public</span>
 </div>
 <div>
 <h3 class="font-headline-md text-headline-md mb-2" style="font-size:1.15rem;" data-i18n="why.nodes_title">30+ 全球优质节点</h3>
@@ -899,10 +1031,10 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </div>
 </div>
-<div class="group p-6 md:p-8 rounded-2xl border-l-4 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-color: rgba(109,159,255,0.3); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
+<div class="why-card-amber group p-6 md:p-8 rounded-2xl border-l-4 hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
 <div class="flex items-start gap-5">
-<div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(109,159,255,0.2) 0%, rgba(109,159,255,0.05) 100%); box-shadow: 0 0 20px rgba(109,159,255,0.1);">
-<span class="material-symbols-outlined text-3xl" style="color:#6d9fff;" data-icon="speed">speed</span>
+<div class="why-icon-wrap w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 100%); box-shadow: 0 0 20px rgba(251,191,36,0.1);">
+<span class="material-symbols-outlined text-3xl" style="color:#fbbf24;" data-icon="speed">speed</span>
 </div>
 <div>
 <h3 class="font-headline-md text-headline-md mb-2" style="font-size:1.15rem;" data-i18n="why.speed_title">不限速极致体验</h3>
@@ -910,10 +1042,10 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </div>
 </div>
-<div class="group p-6 md:p-8 rounded-2xl border-l-4 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-color: rgba(109,159,255,0.3); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
+<div class="why-card-purple group p-6 md:p-8 rounded-2xl border-l-4 hover:-translate-y-1 transition-all duration-500" style="background: rgba(22,24,34,0.7); border-top: 1px solid rgba(46,49,72,0.6); border-right: 1px solid rgba(46,49,72,0.6); border-bottom: 1px solid rgba(46,49,72,0.6); backdrop-filter: blur(12px);">
 <div class="flex items-start gap-5">
-<div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(109,159,255,0.2) 0%, rgba(109,159,255,0.05) 100%); box-shadow: 0 0 20px rgba(109,159,255,0.1);">
-<span class="material-symbols-outlined text-3xl" style="color:#6d9fff;" data-icon="card_giftcard">card_giftcard</span>
+<div class="why-icon-wrap w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-500 group-hover:scale-110" style="background: linear-gradient(135deg, rgba(167,139,250,0.2) 0%, rgba(167,139,250,0.05) 100%); box-shadow: 0 0 20px rgba(167,139,250,0.1);">
+<span class="material-symbols-outlined text-3xl" style="color:#a78bfa;" data-icon="card_giftcard">card_giftcard</span>
 </div>
 <div>
 <h3 class="font-headline-md text-headline-md mb-2" style="font-size:1.15rem;" data-i18n="why.trial_title">免费试用零风险</h3>
@@ -2091,6 +2223,44 @@ html:not(.dark) .cm-toggle .cm-slider { background: #c2c6d8; }
       closeCookieSettings();
     }
   });
+})();
+
+/* === Stats Counter Animation === */
+(function() {
+  var counters = document.querySelectorAll('.why-stat-number[data-target]');
+  if (!counters.length) return;
+  var animated = false;
+
+  function animateCounters() {
+    counters.forEach(function(el) {
+      var target = parseFloat(el.getAttribute('data-target'));
+      var suffix = el.getAttribute('data-suffix') || '';
+      var isDecimal = el.getAttribute('data-decimal') === 'true';
+      var duration = 2000;
+      var start = performance.now();
+
+      function update(now) {
+        var elapsed = now - start;
+        var progress = Math.min(elapsed / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        var current = target * eased;
+        el.textContent = (isDecimal ? current.toFixed(1) : Math.floor(current)) + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    });
+  }
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !animated) {
+        animated = true;
+        animateCounters();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  counters.forEach(function(el) { observer.observe(el); });
 })();
 </script>
 </body></html>
