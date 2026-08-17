@@ -48,7 +48,8 @@ tutorial:{'zh-CN':'使用教程','zh-TW':'使用教學','en':'Tutorial'},
 download:{'zh-CN':'应用下载','zh-TW':'應用下載','en':'Downloads'},
 lang_label:{'zh-CN':'简体中文','zh-TW':'繁體中文','en':'English'},
 lang_menu_title:{'zh-CN':'选择语言','zh-TW':'選擇語言','en':'Select Language'},
-theme_title:{'zh-CN':'切换主题','zh-TW':'切換主題','en':'Toggle Theme'}
+theme_title:{'zh-CN':'切换主题','zh-TW':'切換主題','en':'Toggle Theme'},
+login:{'zh-CN':'登录','zh-TW':'登入','en':'Login'}
 },
 hero:{
 title:{'zh-CN':'VP92极速加速器','zh-TW':'VP92極速加速器','en':'VP92 Turbo Accelerator'},
@@ -169,6 +170,19 @@ link_terms:{'zh-CN':'服务条款','zh-TW':'服務條款','en':'Terms of Service
 link_privacy:{'zh-CN':'隐私政策','zh-TW':'隱私政策','en':'Privacy Policy'},
 btn_register:{'zh-CN':'免费注册','zh-TW':'免費註冊','en':'Register Free'},
 btn_learn_more:{'zh-CN':'了解更多','zh-TW':'瞭解更多','en':'Learn More'}
+},
+cookie:{
+banner_text:{'zh-CN':'我们使用 Cookie 来提升您的浏览体验、分析网站流量。点击"全部接受"即表示您同意我们使用 Cookie。','zh-TW':'我們使用 Cookie 來提升您的瀏覽體驗、分析網站流量。點擊「全部接受」即表示您同意我們使用 Cookie。','en':'We use cookies to enhance your browsing experience and analyze site traffic. By clicking Accept All, you consent to our use of cookies.'},
+accept_all:{'zh-CN':'全部接受','zh-TW':'全部接受','en':'Accept All'},
+reject_nonessential:{'zh-CN':'拒绝非必要','zh-TW':'拒絕非必要','en':'Reject Non-essential'},
+settings:{'zh-CN':'Cookie 设置','zh-TW':'Cookie 設定','en':'Cookie Settings'},
+save:{'zh-CN':'保存设置','zh-TW':'儲存設定','en':'Save Settings'},
+essential:{'zh-CN':'必要 Cookie','zh-TW':'必要 Cookie','en':'Essential Cookies'},
+essential_desc:{'zh-CN':'用于维持网站基本运行与安全，不可关闭。','zh-TW':'用於維持網站基本運行與安全，不可關閉。','en':'Required for basic site operation and security. Cannot be disabled.'},
+analytics:{'zh-CN':'分析 Cookie','zh-TW':'分析 Cookie','en':'Analytics Cookies'},
+analytics_desc:{'zh-CN':'用于 Google Analytics 等数据统计，帮助我们改善网站。','zh-TW':'用於 Google Analytics 等數據統計，幫助我們改善網站。','en':'Used for Google Analytics and similar tools to help us improve the site.'},
+marketing:{'zh-CN':'营销/广告 Cookie','zh-TW':'營銷/廣告 Cookie','en':'Marketing Cookies'},
+marketing_desc:{'zh-CN':'用于个性化广告投放和推广。','zh-TW':'用於個性化廣告投放和推廣。','en':'Used for personalized advertising and promotions.'}
 },
 mobile:{
 home:{'zh-CN':'首页','zh-TW':'首頁','en':'Home'},
@@ -381,6 +395,112 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     html.dark section.bg-on-background .text-on-surface-variant { color: #9398b0 !important; }
     html.dark section.bg-on-background .text-primary { color: #6d9fff !important; }
     html.dark section.bg-on-background .font-headline-md { color: #e2e5f0 !important; }
+
+    /* === Design Enhancements === */
+    .hero-gradient-title {
+      background: linear-gradient(135deg, #6d9fff 0%, #a78bfa 50%, #6d9fff 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: hero-gradient-shift 6s ease-in-out infinite;
+    }
+    @keyframes hero-gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .hero-cta-btn { position: relative; overflow: hidden; }
+    .hero-cta-btn:hover {
+      box-shadow: 0 8px 32px rgba(109, 159, 255, 0.4), 0 0 0 2px rgba(109, 159, 255, 0.3) !important;
+      transform: scale(1.06) !important;
+    }
+
+    /* === Light Theme Overrides for Hardcoded-Dark Sections === */
+    html:not(.dark) [data-section="why"],
+    html:not(.dark) [data-section="faq"] {
+      background: linear-gradient(180deg, #f7f9fb 0%, #f2f4f6 50%, #f7f9fb 100%) !important;
+    }
+    html:not(.dark) [data-section="why"] h2,
+    html:not(.dark) [data-section="faq"] h2 {
+      color: #191c1e !important;
+    }
+    html:not(.dark) [data-section="why"] .text-on-surface-variant,
+    html:not(.dark) [data-section="faq"] .text-on-surface-variant {
+      color: #424656 !important;
+    }
+    html:not(.dark) [data-section="why"] .grid.grid-cols-3 > div {
+      background: rgba(109,159,255,0.06) !important;
+      border-color: rgba(109,159,255,0.15) !important;
+    }
+    html:not(.dark) [data-section="why"] .grid.grid-cols-3 > div .text-sm {
+      color: #424656 !important;
+    }
+    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div {
+      background: rgba(255, 255, 255, 0.85) !important;
+      border-color: rgba(200, 205, 220, 0.6) !important;
+      border-top-color: rgba(200, 205, 220, 0.6) !important;
+      border-right-color: rgba(200, 205, 220, 0.6) !important;
+      border-bottom-color: rgba(200, 205, 220, 0.6) !important;
+      backdrop-filter: blur(12px) !important;
+    }
+    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div h3 {
+      color: #191c1e !important;
+    }
+    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div p.text-on-surface-variant {
+      color: #424656 !important;
+    }
+    html:not(.dark) [data-section="why"] .absolute.rounded-full {
+      opacity: 0.04 !important;
+    }
+    html:not(.dark) [data-section="faq"] .faq-item {
+      background: rgba(255, 255, 255, 0.85) !important;
+      border-color: rgba(200, 205, 220, 0.5) !important;
+      backdrop-filter: blur(8px) !important;
+    }
+    html:not(.dark) [data-section="faq"] .faq-item:hover {
+      border-color: rgba(109, 159, 255, 0.3) !important;
+    }
+    html:not(.dark) [data-section="faq"] .faq-toggle .font-headline-sm {
+      color: #191c1e !important;
+    }
+    html:not(.dark) [data-section="faq"] .faq-content .text-on-surface-variant {
+      color: #424656 !important;
+    }
+
+    /* Card hover glow (both themes) */
+    html:not(.dark) [data-section="why"] .grid.md\:grid-cols-2 > div:hover {
+      border-left-color: #6d9fff !important;
+      box-shadow: 0 8px 32px rgba(109, 159, 255, 0.1) !important;
+    }
+    html.dark [data-section="why"] .grid.md\:grid-cols-2 > div:hover {
+      border-left-color: #6d9fff !important;
+      box-shadow: 0 8px 32px rgba(109, 159, 255, 0.15) !important;
+    }
+
+    /* Section transition dividers */
+    section[data-section="why"]::before,
+    section[data-section="faq"]::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 64px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    html.dark section[data-section="why"]::before {
+      background: linear-gradient(to bottom, #020810, transparent);
+    }
+    html:not(.dark) section[data-section="why"]::before {
+      background: linear-gradient(to bottom, #f7f9fb, transparent);
+    }
+    html.dark section[data-section="faq"]::before {
+      background: linear-gradient(to bottom, transparent, #020810);
+    }
+    html:not(.dark) section[data-section="faq"]::before {
+      background: linear-gradient(to bottom, transparent, #f7f9fb);
+    }
   </style>
 </head>
 <body class="bg-surface text-on-surface font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
@@ -396,6 +516,11 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="/vp92-tutorial.html" data-i18n="nav.tutorial">使用教程</a>
 <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#support" data-i18n="nav.download">应用下载</a>
 </nav>
+<!-- Login Button (desktop) -->
+<a href="/auth/login" class="hidden md:inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-on-primary text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg" style="box-shadow: 0 2px 12px rgba(109,159,255,0.25);" data-i18n="nav.login">
+<span class="material-symbols-outlined" style="font-size:18px;">person</span>
+登录
+</a>
 <div class="flex items-center gap-2 shrink-0">
 <!-- Language Selector -->
 <div class="relative" id="langSelector">
@@ -420,13 +545,13 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <!-- 3D 地球 -->
 <div id="global-network-canvas" class="relative w-full overflow-hidden rounded-sm">
 <div class="z-10 max-w-4xl mx-auto text-center" style="position:relative;z-index:2;padding-top:16px;">
-<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl mb-stack-md" style="color:#e2e5f0;" data-i18n="hero.title">
+<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl mb-stack-md hero-gradient-title" data-i18n="hero.title">
                     VP92极速加速器
                 </h1>
 <p class="font-body-lg text-body-lg mb-stack-lg" style="color:#9398b0;" data-i18n="hero.subtitle">
                     全球加速节点一键连接，高速稳定，畅享全球网络
                 </p>
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105" data-i18n="hero.cta_button">
+<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
                     免费注册
                 </button>
                 <p class="font-body-sm mb-stack-xl" style="color:#666;" data-i18n="hero.trial_note">新注册用户免费体验 24 小时</p>
@@ -727,7 +852,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </section>
 <!-- Section: Why Choose VP92 -->
-<section class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #0f172a 50%, #0c1220 100%);">
+<section data-section="why" class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #0f172a 50%, #0c1220 100%);">
 <!-- Decorative glow orbs -->
 <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #6d9fff 0%, transparent 70%); filter: blur(80px);"></div>
 <div class="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-8 pointer-events-none" style="background: radial-gradient(circle, #a78bfa 0%, transparent 70%); filter: blur(60px);"></div>
@@ -821,7 +946,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </section>
 <!-- Section: FAQ -->
-<section class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #111827 50%, #0c1220 100%);">
+<section data-section="faq" class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #111827 50%, #0c1220 100%);">
 <div class="max-w-[860px] mx-auto relative z-10">
 <div class="text-center mb-10">
 <h2 class="font-headline-lg text-headline-lg mb-3" style="font-size:2rem;" data-i18n="faq.heading">常见问题</h2>
@@ -1077,6 +1202,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-tutorial.html" data-i18n="footer.link_tutorial">使用教程</a>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-terms.html" data-i18n="footer.link_terms">服务条款</a>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-privacy.html" data-i18n="footer.link_privacy">隐私政策</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary" href="javascript:void(0)" onclick="openCookieSettings()" data-i18n="cookie.settings">Cookie 设置</a>
 </div>
 </div>
 </div>
@@ -1097,9 +1223,9 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <span class="material-symbols-outlined" data-icon="home">home</span>
 <span class="text-[10px] font-label-md" data-i18n="mobile.home">首页</span>
 </a>
-<a class="flex flex-col items-center text-on-surface-variant" href="#support">
-<span class="material-symbols-outlined" data-icon="devices">devices</span>
-<span class="text-[10px] font-label-md" data-i18n="mobile.network">网络</span>
+<a class="flex flex-col items-center text-on-surface-variant" href="/auth/login">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-label-md" data-i18n="nav.login">登录</span>
 </a>
 <a class="flex flex-col items-center text-on-surface-variant" href="#plans">
 <span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
@@ -1149,7 +1275,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
                     otherBtn.style.background = 'transparent';
                     otherBtn.querySelector('span:first-child').style.background = 'rgba(109,159,255,0.12)';
                     otherBtn.querySelector('span:first-child').style.color = '#6d9fff';
-                    other.style.borderColor = 'rgba(46,49,72,0.6)';
+                    other.style.borderColor = document.documentElement.classList.contains('dark') ? 'rgba(46,49,72,0.6)' : 'rgba(200,205,220,0.5)';
                     other.style.boxShadow = 'none';
                 }
             });
@@ -1159,7 +1285,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
                 btn.style.background = 'transparent';
                 numBadge.style.background = 'rgba(109,159,255,0.12)';
                 numBadge.style.color = '#6d9fff';
-                item.style.borderColor = 'rgba(46,49,72,0.6)';
+                item.style.borderColor = document.documentElement.classList.contains('dark') ? 'rgba(46,49,72,0.6)' : 'rgba(200,205,220,0.5)';
                 item.style.boxShadow = 'none';
             } else {
                 content.classList.remove('hidden');
@@ -1729,5 +1855,242 @@ function showSubError(msg) {
 
 // Close on ESC
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSubscribeModal(); });
+</script>
+
+<!-- Cookie Consent System -->
+<style>
+/* Cookie Banner */
+#cookieBanner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+  background: rgba(22,24,34,0.95); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(109,159,255,0.15);
+  padding: 16px 24px; display: none;
+  animation: cookie-slide-up 0.4s ease-out;
+}
+html:not(.dark) #cookieBanner {
+  background: rgba(247,249,251,0.95); border-top-color: rgba(200,205,220,0.5);
+}
+@keyframes cookie-slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+#cookieBanner .cb-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+#cookieBanner .cb-text { flex: 1 1 400px; font-size: 14px; line-height: 1.5; color: #e2e5f0; }
+html:not(.dark) #cookieBanner .cb-text { color: #424656; }
+#cookieBanner .cb-btns { display: flex; gap: 8px; flex-shrink: 0; }
+#cookieBanner .cb-btns button { padding: 8px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; }
+.cb-btn-accept { background: #6d9fff; color: #0a1a3a; }
+.cb-btn-accept:hover { box-shadow: 0 4px 16px rgba(109,159,255,0.4); transform: scale(1.04); }
+.cb-btn-reject { background: transparent; color: #9398b0; border: 1px solid rgba(109,159,255,0.25) !important; }
+html:not(.dark) .cb-btn-reject { color: #424656; border-color: rgba(109,159,255,0.3) !important; }
+.cb-btn-reject:hover { border-color: #6d9fff !important; color: #6d9fff !important; }
+.cb-btn-settings { background: transparent; color: #9398b0; border: none !important; text-decoration: underline; text-underline-offset: 2px; }
+html:not(.dark) .cb-btn-settings { color: #424656; }
+
+/* Cookie Settings Modal */
+#cookieModal {
+  position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+}
+#cookieModal.cm-active { display: flex; animation: cookie-fade-in 0.25s ease-out; }
+@keyframes cookie-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.cm-panel {
+  background: #1c1e2e; border-radius: 16px; width: 90%; max-width: 520px; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5); border: 1px solid #2e3148; padding: 32px;
+  animation: cookie-modal-scale 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+html:not(.dark) .cm-panel { background: #ffffff; border-color: #e0e3e5; box-shadow: 0 24px 80px rgba(0,0,0,0.15); }
+@keyframes cookie-modal-scale { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.cm-title { font-size: 20px; font-weight: 700; color: #e2e5f0; margin-bottom: 24px; }
+html:not(.dark) .cm-title { color: #191c1e; }
+.cm-category { padding: 16px 0; border-bottom: 1px solid #2e3148; }
+html:not(.dark) .cm-category { border-bottom-color: #e6e8ea; }
+.cm-category:last-of-type { border-bottom: none; }
+.cm-cat-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cm-cat-name { font-size: 15px; font-weight: 600; color: #e2e5f0; }
+html:not(.dark) .cm-cat-name { color: #191c1e; }
+.cm-cat-desc { font-size: 13px; color: #9398b0; margin-top: 4px; line-height: 1.4; }
+html:not(.dark) .cm-cat-desc { color: #666; }
+/* Toggle switch */
+.cm-toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.cm-toggle input { opacity: 0; width: 0; height: 0; }
+.cm-toggle .cm-slider { position: absolute; inset: 0; background: #444860; border-radius: 999px; cursor: pointer; transition: 0.3s; }
+html:not(.dark) .cm-toggle .cm-slider { background: #c2c6d8; }
+.cm-toggle .cm-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+.cm-toggle input:checked + .cm-slider { background: #6d9fff; }
+.cm-toggle input:checked + .cm-slider::before { transform: translateX(20px); }
+.cm-toggle.cm-disabled .cm-slider { opacity: 0.5; cursor: not-allowed; }
+.cm-save-btn { display: block; width: 100%; margin-top: 24px; padding: 12px; border: none; border-radius: 12px; background: #6d9fff; color: #0a1a3a; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.cm-save-btn:hover { box-shadow: 0 6px 24px rgba(109,159,255,0.35); transform: scale(1.02); }
+</style>
+
+<!-- Cookie Banner -->
+<div id="cookieBanner">
+  <div class="cb-inner">
+    <div class="cb-text" data-i18n="cookie.banner_text">我们使用 Cookie 来提升您的浏览体验、分析网站流量。点击"全部接受"即表示您同意我们使用 Cookie。</div>
+    <div class="cb-btns">
+      <button class="cb-btn-accept" onclick="cookieAcceptAll()" data-i18n="cookie.accept_all">全部接受</button>
+      <button class="cb-btn-reject" onclick="cookieRejectNonEssential()" data-i18n="cookie.reject_nonessential">拒绝非必要</button>
+      <button class="cb-btn-settings" onclick="openCookieSettings()" data-i18n="cookie.settings">Cookie 设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cookie Settings Modal -->
+<div id="cookieModal">
+  <div class="cm-panel">
+    <div class="cm-title" data-i18n="cookie.settings">Cookie 设置</div>
+
+    <div class="cm-category">
+      <div class="cm-cat-header">
+        <div>
+          <div class="cm-cat-name" data-i18n="cookie.essential">必要 Cookie</div>
+          <div class="cm-cat-desc" data-i18n="cookie.essential_desc">用于维持网站基本运行与安全，不可关闭。</div>
+        </div>
+        <label class="cm-toggle cm-disabled">
+          <input type="checkbox" checked disabled>
+          <span class="cm-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="cm-category">
+      <div class="cm-cat-header">
+        <div>
+          <div class="cm-cat-name" data-i18n="cookie.analytics">分析 Cookie</div>
+          <div class="cm-cat-desc" data-i18n="cookie.analytics_desc">用于 Google Analytics 等数据统计，帮助我们改善网站。</div>
+        </div>
+        <label class="cm-toggle">
+          <input type="checkbox" id="cmAnalytics">
+          <span class="cm-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="cm-category">
+      <div class="cm-cat-header">
+        <div>
+          <div class="cm-cat-name" data-i18n="cookie.marketing">营销/广告 Cookie</div>
+          <div class="cm-cat-desc" data-i18n="cookie.marketing_desc">用于个性化广告投放和推广。</div>
+        </div>
+        <label class="cm-toggle">
+          <input type="checkbox" id="cmMarketing">
+          <span class="cm-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <button class="cm-save-btn" onclick="cookieSaveSettings()" data-i18n="cookie.save">保存设置</button>
+  </div>
+</div>
+
+<script>
+// Cookie Consent Logic
+(function() {
+  const CONSENT_KEY = 'vp92_cookie_consent';
+  const EXPIRY_DAYS = 365;
+
+  function getConsent() {
+    try {
+      const data = JSON.parse(localStorage.getItem(CONSENT_KEY));
+      if (data && data.expiry > Date.now()) return data;
+    } catch(e) {}
+    return null;
+  }
+
+  function setConsent(prefs) {
+    prefs.expiry = Date.now() + EXPIRY_DAYS * 86400000;
+    localStorage.setItem(CONSENT_KEY, JSON.stringify(prefs));
+  }
+
+  // Check if consent already given
+  const existing = getConsent();
+  if (existing) {
+    // Apply existing preferences (e.g. enable/disable GA)
+    if (existing.analytics && typeof gtag === 'function') {
+      gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+    if (existing.marketing && typeof gtag === 'function') {
+      gtag('consent', 'update', { ad_storage: 'granted' });
+    }
+    // Don't show banner
+  } else {
+    // Show banner after short delay
+    setTimeout(function() {
+      document.getElementById('cookieBanner').style.display = 'block';
+    }, 1500);
+  }
+
+  // Global functions
+  window.cookieAcceptAll = function() {
+    const prefs = { essential: true, analytics: true, marketing: true };
+    setConsent(prefs);
+    hideBanner();
+    if (typeof gtag === 'function') {
+      gtag('consent', 'update', { analytics_storage: 'granted', ad_storage: 'granted' });
+    }
+  };
+
+  window.cookieRejectNonEssential = function() {
+    const prefs = { essential: true, analytics: false, marketing: false };
+    setConsent(prefs);
+    hideBanner();
+    if (typeof gtag === 'function') {
+      gtag('consent', 'update', { analytics_storage: 'denied', ad_storage: 'denied' });
+    }
+  };
+
+  window.openCookieSettings = function() {
+    const modal = document.getElementById('cookieModal');
+    const consent = getConsent();
+    document.getElementById('cmAnalytics').checked = consent ? consent.analytics : false;
+    document.getElementById('cmMarketing').checked = consent ? consent.marketing : false;
+    modal.classList.add('cm-active');
+    // Hide banner if open
+    document.getElementById('cookieBanner').style.display = 'none';
+  };
+
+  window.closeCookieSettings = function() {
+    document.getElementById('cookieModal').classList.remove('cm-active');
+    // Show banner again if no consent yet
+    if (!getConsent()) {
+      document.getElementById('cookieBanner').style.display = 'block';
+    }
+  };
+
+  window.cookieSaveSettings = function() {
+    const prefs = {
+      essential: true,
+      analytics: document.getElementById('cmAnalytics').checked,
+      marketing: document.getElementById('cmMarketing').checked
+    };
+    setConsent(prefs);
+    document.getElementById('cookieModal').classList.remove('cm-active');
+    document.getElementById('cookieBanner').style.display = 'none';
+    if (typeof gtag === 'function') {
+      gtag('consent', 'update', {
+        analytics_storage: prefs.analytics ? 'granted' : 'denied',
+        ad_storage: prefs.marketing ? 'granted' : 'denied'
+      });
+    }
+  };
+
+  function hideBanner() {
+    const banner = document.getElementById('cookieBanner');
+    banner.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+    banner.style.transform = 'translateY(100%)';
+    banner.style.opacity = '0';
+    setTimeout(function() { banner.style.display = 'none'; banner.style.transform = ''; banner.style.opacity = ''; }, 350);
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('cookieModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCookieSettings();
+  });
+
+  // Close modal on ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('cookieModal').classList.contains('cm-active')) {
+      closeCookieSettings();
+    }
+  });
+})();
 </script>
 </body></html>
