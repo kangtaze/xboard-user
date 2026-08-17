@@ -22,7 +22,7 @@
 | 文件 | 尺寸 | 大小 | 说明 |
 |------|------|------|------|
 | `icon-512x512.png` | 512×512 | 87KB | App 图标 |
-| `feature-graphic-1024x500.png` | 1024×500 | 147KB | 主题横幅（含 vp92vip.com + 真实 dashboard 截图） |
+| `feature-graphic-1024x500.png` | 1024×500 | 152KB | 主题横幅（浅色背景 + 流媒体解锁图标 ×7 + Google Play + 真实 dashboard 截图） |
 | `screenshot-1-login.png` | 1080×1920 | 195KB | 一键登录 |
 | `screenshot-2-dashboard.png` | 1080×1920 | 232KB | 实时监控 |
 | `screenshot-3-account.png` | 1080×1920 | 246KB | 流量透明 |
@@ -30,7 +30,7 @@
 
 ### 技术方案
 - **HTML/CSS 模板** → Chrome DevTools 渲染 → `take_screenshot` → Python PIL 中心裁剪
-- Feature graphic: `docs/google-play-feature-graphic.html`（含 vp92vip.com URL + 真实 dashboard 截图）
+- Feature graphic: `docs/google-play-feature-graphic.html`（浅色背景 + 7 个流媒体/Google Play 解锁图标 + vp92vip.com + 真实 dashboard 截图 + 无 VIP 字样）
 - 截图模板: `docs/google-play-screenshot-template.html`（`?i=0/1/2/3` 参数切换）
 - **关键踩坑**: Chrome `file://` 协议无法加载含中文路径的 `<img src>`（如 `通讯软件`）
   - 解决：将 4 张原始截图复制到 `docs/app-screens/` 目录（ASCII 路径）
