@@ -1,7 +1,7 @@
 # VP92极速加速器 — 最新项目进度
 
 > **最后更新**: 2026-08-18
-> **状态**: ✅ 落地页6项改进已完成并部署
+> **状态**: ✅ Google Play Store 素材生成完成
 
 ---
 
@@ -10,6 +10,31 @@
 ```
 读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。里面包含了当前状态、已完成的工作、待处理事项和精确的技术细节。按照文件中的"唤醒提示词"部分开始工作。
 ```
+
+---
+
+## ✅ 已完成：Google Play Store 素材生成（2026-08-18）
+
+### 输出目录
+`C:\Users\Administrator\Desktop\google\`
+
+### 生成文件（全部符合 Google Play 规格）
+| 文件 | 尺寸 | 大小 | 说明 |
+|------|------|------|------|
+| `icon-512x512.png` | 512×512 | 87KB | App 图标 |
+| `feature-graphic-1024x500.png` | 1024×500 | 147KB | 主题横幅（含 vp92vip.com + 真实 dashboard 截图） |
+| `screenshot-1-login.png` | 1080×1920 | 195KB | 一键登录 |
+| `screenshot-2-dashboard.png` | 1080×1920 | 232KB | 实时监控 |
+| `screenshot-3-account.png` | 1080×1920 | 246KB | 流量透明 |
+| `screenshot-4-ai-chat.png` | 1080×1920 | 175KB | AI 智能客服 |
+
+### 技术方案
+- **HTML/CSS 模板** → Chrome DevTools 渲染 → `take_screenshot` → Python PIL 中心裁剪
+- Feature graphic: `docs/google-play-feature-graphic.html`（含 vp92vip.com URL + 真实 dashboard 截图）
+- 截图模板: `docs/google-play-screenshot-template.html`（`?i=0/1/2/3` 参数切换）
+- **关键踩坑**: Chrome `file://` 协议无法加载含中文路径的 `<img src>`（如 `通讯软件`）
+  - 解决：将 4 张原始截图复制到 `docs/app-screens/` 目录（ASCII 路径）
+- 源截图保存在: `docs/app-screens/login.png`, `dashboard.png`, `account.png`, `aichat.png`
 
 ---
 

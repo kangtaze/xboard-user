@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px;
+  height: 1920px;
+  overflow: hidden;
+  font-family: 'Inter', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e8f4fd 40%, #f8fbff 100%);
+  position: relative;
+}
+
+/* Decorative elements */
+.bg-circle {
+  position: absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
+  top: -100px; right: -100px;
+}
+.bg-circle-2 {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  bottom: 100px; left: -80px;
+}
+
+/* Header */
+.header {
+  position: relative;
+  z-index: 1;
+  padding: 40px 60px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-sm {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+  flex-shrink: 0;
+}
+
+.logo-sm svg { width: 32px; height: 32px; }
+
+.brand-name-sm {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1e3a5f;
+}
+
+/* Tagline area */
+.tagline-area {
+  position: relative;
+  z-index: 1;
+  padding: 0 60px 24px;
+  text-align: center;
+}
+
+.main-tagline {
+  font-size: 42px;
+  font-weight: 800;
+  color: #1e3a5f;
+  line-height: 1.2;
+}
+
+.main-tagline .highlight {
+  color: #2563eb;
+}
+
+.sub-tagline {
+  font-size: 24px;
+  color: #64748b;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Phone mockup */
+.phone-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 60px;
+}
+
+.phone-frame {
+  width: 540px;
+  height: 1080px;
+  background: #1a1a2e;
+  border-radius: 48px;
+  padding: 12px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.15),
+    0 4px 16px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: white;
+}
+
+.phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Phone notch */
+.phone-notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #1a1a2e;
+  border-radius: 0 0 16px 16px;
+  z-index: 2;
+}
+
+/* Bottom CTA */
+.bottom-cta {
+  position: relative;
+  z-index: 1;
+  margin-top: 32px;
+  text-align: center;
+  padding: 0 60px;
+}
+
+.cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+  padding: 16px 48px;
+  border-radius: 100px;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(37,99,235,0.3);
+}
+
+.cta-pill svg { width: 28px; height: 28px; }
+
+/* Feature badges at bottom */
+.features-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+  padding: 0 60px;
+}
+
+.feature-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(37,99,235,0.08);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-radius: 100px;
+  padding: 10px 24px;
+  font-size: 18px;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.feature-badge svg { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+  <div class="bg-circle"></div>
+  <div class="bg-circle-2"></div>
+
+  <div class="header">
+    <div class="logo-sm">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <div class="brand-name-sm">VP92极速</div>
+  </div>
+
+  <div class="tagline-area">
+    <div class="main-tagline" id="mainTagline"><!-- Filled by JS --></div>
+    <div class="sub-tagline" id="subTagline"><!-- Filled by JS --></div>
+  </div>
+
+  <div class="phone-container">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <img id="screenshot" src="" alt="App Screenshot">
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-cta">
+    <div class="cta-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      立即下载
+    </div>
+  </div>
+
+  <div class="features-bottom" id="featuresBottom">
+    <!-- Filled by JS -->
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const idx = parseInt(params.get('i') || '0');
+
+    const BASE = 'E:/jiedian/docs/app-screens/';
+    const data = [
+      {
+        tagline: '<span class="highlight">一键登录</span><br>简单快捷，即刻加速',
+        sub: '邮箱注册，30秒上手',
+        img: BASE + 'login.png',
+        features: ['邮箱登录', '记住密码', '开源免费']
+      },
+      {
+        tagline: '<span class="highlight">实时监控</span><br>网络状态一目了然',
+        sub: '上传下载速度，流量使用清晰可见',
+        img: BASE + 'dashboard.png',
+        features: ['速度监控', '流量统计', 'TUN模式']
+      },
+      {
+        tagline: '<span class="highlight">流量透明</span><br>套餐灵活，按需选择',
+        sub: 'VIP1/2/3 多档套餐，到期自动提醒',
+        img: BASE + 'account.png',
+        features: ['流量透明', '灵活续费', '礼品卡兑换']
+      },
+      {
+        tagline: '<span class="highlight">AI 智能客服</span><br>24小时在线解答',
+        sub: '智能助手，快速解决使用问题',
+        img: BASE + 'aichat.png',
+        features: ['AI客服', '工单系统', '即时响应']
+      }
+    ];
+
+    const d = data[idx] || data[0];
+    document.getElementById('mainTagline').innerHTML = d.tagline;
+    document.getElementById('subTagline').textContent = d.sub;
+    document.getElementById('screenshot').src = d.img;
+
+    const featHTML = d.features.map(f =>
+      `<div class="feature-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>${f}</div>`
+    ).join('');
+    document.getElementById('featuresBottom').innerHTML = featHTML;
+  </script>
+</body>
+</html>
