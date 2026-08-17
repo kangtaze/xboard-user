@@ -937,7 +937,18 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex-1 text-left">
 <h2 class="font-headline-lg text-headline-lg mb-stack-md" data-i18n="device.heading">您的所有设备都将受到保护</h2>
 <p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg" data-i18n="device.description">1000+应用支持，一键连接。无论浏览、游戏还是海外访问，VP92 都能为您提供稳定的网络加速体验。支持所有主流操作系统和智能设备。</p>
-<button class="border border-on-surface px-stack-lg py-stack-sm font-label-md text-label-md hover:bg-surface-container-low transition-colors" data-i18n="device.btn_support_list">查看支持列表</button>
+<div class="store-badges">
+<a href="https://play.google.com/store/apps/details?id=com.vp92.app" target="_blank" rel="noopener">
+<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" loading="lazy">
+</a>
+<span class="store-badge-disabled" title="Coming Soon">
+<img alt="Download on the App Store" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" loading="lazy">
+</span>
+</div>
+<a href="#support" class="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mt-2">
+<span data-i18n="device.btn_support_list">查看支持列表</span>
+<span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+</a>
 </div>
 <div class="flex-1 flex flex-col gap-4">
 <!-- Windows 下载卡片 -->
@@ -1062,7 +1073,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 </section>
 <!-- Section: Why Choose VP92 -->
-<section data-section="why" class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #0f172a 50%, #0c1220 100%);">
+<section id="why" data-section="why" class="py-16 md:py-24 px-margin-mobile md:px-20 relative overflow-hidden" style="background: linear-gradient(180deg, #0c1220 0%, #0f172a 50%, #0c1220 100%);">
 <!-- Decorative glow orbs -->
 <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #6d9fff 0%, transparent 70%); filter: blur(80px);"></div>
 <div class="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-8 pointer-events-none" style="background: radial-gradient(circle, #a78bfa 0%, transparent 70%); filter: blur(60px);"></div>
@@ -1448,8 +1459,8 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex flex-col gap-stack-sm">
 <h4 class="font-label-md text-on-surface uppercase tracking-wider" data-i18n="footer.col_product">产品</h4>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="#support" data-i18n="footer.link_download">下载中心</a>
-<a class="font-body-md text-on-surface-variant hover:text-primary" href="#" data-i18n="footer.link_features">功能介绍</a>
-<a class="font-body-md text-on-surface-variant hover:text-primary" href="#" data-i18n="footer.link_pricing">价格方案</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary" href="#why" data-i18n="footer.link_features">功能介绍</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary" href="#plans" data-i18n="footer.link_pricing">价格方案</a>
 </div>
 <div class="flex flex-col gap-stack-sm">
 <h4 class="font-label-md text-on-surface uppercase tracking-wider" data-i18n="footer.col_help">帮助</h4>
@@ -1829,6 +1840,16 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
   .st-plan-recommended .st-plan-img{width:calc(100% + 34px) !important;margin:-17px -17px 8px !important;}
   .st-plan-price-val{font-size:28px !important;}
 }
+/* Store Badges */
+.store-badges{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+.store-badge-disabled{position:relative;cursor:not-allowed;display:inline-block}
+.store-badge-disabled img{filter:grayscale(100%);opacity:.6;transition:all .3s}
+.store-badge-disabled:hover::after{content:'敬请期待';position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:5px 14px;border-radius:6px;font-size:12px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:none;z-index:10}
+.store-badge-disabled:hover::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e293b;z-index:10}
+.store-badge-disabled:hover img{filter:grayscale(60%);opacity:.8}
+.store-badges img{width:135px;height:auto;border-radius:6px;transition:all .3s}
+.store-badges a img{width:160px}
+.store-badges a:hover img{transform:scale(1.03);box-shadow:0 2px 8px rgba(0,0,0,.1)}
 /* Download Cards */
 .dl-card{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:#fff;border:1px solid #E2E8F0;border-radius:16px;transition:all .3s cubic-bezier(.34,1.56,.64,1);cursor:default}
 .dl-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,102,255,.12);border-color:#0066ff}

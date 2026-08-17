@@ -1,15 +1,57 @@
 # VP92极速加速器 — 最新项目进度
 
 > **最后更新**: 2026-08-18
-> **状态**: ✅ Google Play Store 素材生成完成
+> **状态**: ✅ Worker XBOARD_ORIGIN 统一更新 + VIP1 路由修正
+
+## ✅ 已完成：Worker XBOARD_ORIGIN 统一更新 + VIP1 路由修正（2026-08-18）
+
+### 改动内容
+- VIP1/2/3 的 `XBOARD_ORIGIN` 全部统一改为 `https://dns.vp92vip.cc.cd`
+- VIP1 Worker 路由从废弃域名 `ferrari.ccwu.cc` 改为 `vp92.cc.cd`
+- **本地配置已更新**，CF 路由用户已在 Cloudflare 后台手动更新
+
+### 改动文件
+| 文件 | 改动 |
+|------|------|
+| `edgetunnel-extracted/wrangler.jsonc` | 路由→`vp92.cc.cd`，XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
+| `edgetunnel-extracted/wrangler-vip2.jsonc` | XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
+| `edgetunnel-extracted/wrangler-vip3.jsonc` | XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
+
+### VIP1-VIP3 域名配置总览
+
+| | VIP1 | VIP2 | VIP3 |
+|---|---|---|---|
+| **订阅域名** | `vp92.app/s/{token}`（三组共用） | 同左 | 同左 |
+| **子节点域名** | `vp92.cc.cd` | `vp92vip2.cc.cd` | `vp92vip3.cc.cd` |
+| **Worker 路由** | `vp92.cc.cd` | `vp92vip2.cc.cd` | `vp92vip3.cc.cd` |
+| **XBOARD_ORIGIN** | `dns.vp92vip.cc.cd` | `dns.vp92vip.cc.cd` | `dns.vp92vip.cc.cd` |
+| **group_id** | 2 | 3 | 4 |
+| **server id** | 113 | 114 | 115 |
+
+### 废弃域名（已不用）
+~~ferrari.cc.cd~~ ~~ferrari.ccwu.cc~~ ~~jpuuc.cc.cd~~ ~~ferrari1.cc.cd~~
 
 ---
 
-## 唤醒提示词（直接复制粘贴到新窗口）
+## ✅ 已完成：Google Play Store 平板电脑截图生成（2026-08-18 v4）
 
-```
-读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。里面包含了当前状态、已完成的工作、待处理事项和精确的技术细节。按照文件中的"唤醒提示词"部分开始工作。
-```
+**输出目录**: C:\Users\Administrator\Desktop\google\pingban\
+
+| 文件 | 尺寸 | 说明 |
+|------|------|------|
+| tablet-7-1-login.png | 2560×1440 | 7寸 一键登录 |
+| tablet-7-2-dashboard.png | 2560×1440 | 7寸 实时监控 |
+| tablet-7-3-account.png | 2560×1440 | 7寸 流量透明 |
+| tablet-7-4-aichat.png | 2560×1440 | 7寸 AI智能客服 |
+| tablet-10-1-login.png | 3840×2160 | 10寸 一键登录 |
+| tablet-10-2-dashboard.png | 3840×2160 | 10寸 实时监控 |
+| tablet-10-3-account.png | 3840×2160 | 10寸 流量透明 |
+| tablet-10-4-aichat.png | 3840×2160 | 10寸 AI智能客服 |
+
+- 全部 PNG、<8MB、16:9 横向、符合 Google Play 规格
+- 使用真实 VP92 logo + 真实平板 App 截图
+- 技术方案: HTML 模板 → Chrome 渲染 → Node.js sharp 精确裁剪/放大
+- 模板: docs/google-play-tablet-template.html（?i=0/1/2/3）
 
 ---
 
@@ -22,86 +64,46 @@
 | 文件 | 尺寸 | 大小 | 说明 |
 |------|------|------|------|
 | `icon-512x512.png` | 512×512 | 87KB | App 图标 |
-| `feature-graphic-1024x500.png` | 1024×500 | 152KB | 主题横幅（浅色背景 + 流媒体解锁图标 ×7 + Google Play + 真实 dashboard 截图） |
+| `feature-graphic-1024x500.png` | 1024×500 | 186KB | 主题横幅 v6（浅色背景 + stats在左侧不挡手机 + 流媒体图标×7 + 真实dashboard截图） |
 | `screenshot-1-login.png` | 1080×1920 | 195KB | 一键登录 |
 | `screenshot-2-dashboard.png` | 1080×1920 | 232KB | 实时监控 |
 | `screenshot-3-account.png` | 1080×1920 | 246KB | 流量透明 |
 | `screenshot-4-ai-chat.png` | 1080×1920 | 175KB | AI 智能客服 |
 
-### 技术方案
-- **HTML/CSS 模板** → Chrome DevTools 渲染 → `take_screenshot` → Python PIL 中心裁剪
-- Feature graphic: `docs/google-play-feature-graphic.html`（浅色背景 + 7 个流媒体/Google Play 解锁图标 + vp92vip.com + 真实 dashboard 截图 + 无 VIP 字样）
-- 截图模板: `docs/google-play-screenshot-template.html`（`?i=0/1/2/3` 参数切换）
-- **关键踩坑**: Chrome `file://` 协议无法加载含中文路径的 `<img src>`（如 `通讯软件`）
-  - 解决：将 4 张原始截图复制到 `docs/app-screens/` 目录（ASCII 路径）
-- 源截图保存在: `docs/app-screens/login.png`, `dashboard.png`, `account.png`, `aichat.png`
+### Feature Graphic v6 关键设计（6轮迭代最终版）
+- **HTML模板**: `E:\jiedian\docs\google-play-feature-graphic.html`
+- **背景**: 浅色蓝白渐变 `linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 40%, #f2f8ff 100%)`
+- **布局**: 左右两栏 flex，左列=logo+标语+流媒体条+功能chips+stats，右列=手机mockup
+- **Stats "90+节点"/"99.9%在线"**: `.stats-row` 在左列底部，**不再绝对定位**，不会挡手机
+- **流媒体图标**: Netflix/YouTube/Disney+/Twitch/TikTok/Spotify/GooglePlay，毛玻璃条包裹
+- **功能chips**: 安全加密/极速连接/AI客服，蓝色pill
+- **无VIP字样**（用户反馈像诈骗）
+- **Logo来源**: `E:/jiedian/docs/app-screens/logo.png`（真实VP92盾牌+闪电logo）
+- **手机截图**: `E:/jiedian/docs/app-screens/dashboard.png`（真实VP92 App界面）
+- **渲染流程**: Chrome `file://` 打开HTML → `resize_page(1024,500)` → `take_screenshot(filePath)` → 直接1024×500
+- **⚠️ 踩坑**: Chrome `file://` 无法加载含中文路径的 `<img src>`，所有图片必须放在ASCII路径
 
 ---
 
-## ✅ 已完成：落地页6项改进（2026-08-18 v2）
+## ✅ 已完成：落地页改进（2026-08-18）
 
 **文件**：`E:\jiedian\vp92-frontend\theme\landing.blade.php`
 **所有改动已部署到服务器** ✅
 
-### 1. 套餐卡片重排序
-- 从 VIP1→VIP3→VIP2 改为 **VIP1→VIP2→VIP3**（价格升序）
-- VIP3 保持"推荐方案"高亮样式（border-2 + st-plan-recommended + 主色按钮）
-- FAQ Q5 答案同步更新顺序
+### 6项改进（v2）
+1. 套餐卡片重排序 VIP1→VIP2→VIP3
+2. Stats 修正：90+节点 / 7+地区 / 99.9%在线
+3. CRO 试用文案："无需信用卡，无需绑定支付即可免费试用"
+4. iOS 下载引导：推荐 Shadowrocket/SingBox
+5. FAQ 平滑展开/收起动画
+6. FAQ 底部联系客服按钮（Telegram）
 
-### 2. Stats 数据值修正（基于实际订阅数据）
-- CDN 节点：300+ → **90+ 加速节点**（I18N: stats.nodes）
-- 覆盖国家：30+ → **7+ 覆盖地区**（I18N: stats.countries）
-- 在线率：99.9% 保持不变（I18N: stats.uptime）
-- Why Choose 节点卡片标题：30+ → **90+ 全球优质节点**
-- Why Choose 节点卡片描述更新为七大区域准确列表
-- FAQ Q9 答案中 "30+ 节点" → "90+ 节点"
-- 新增 I18N `stats` section
-
-### 3. CRO 试用降低门槛文案
-- 套餐区域标题下方新增绿色 ✓ "无需信用卡，无需绑定支付即可免费试用"
-- 带绿色 verified_user 图标
-- 新增 I18N `plans.no_credit` 三语翻译
-
-### 4. iOS 下载引导改善
-- 当无原生 iOS 应用时，显示"推荐使用 Shadowrocket、SingBox 或 Streisand，登录后复制订阅链接即可一键导入节点"
-- 新增 I18N `device.ios_guide` 三语翻译
-- ⚠️ 服务器当前已配置 $ios_download_url（Shadowrocket App Store 链接），所以实际显示的是下载按钮
-
-### 5. FAQ 平滑展开/收起动画
-- CSS：`.faq-content` 使用 `max-height: 0 → 500px` + `opacity: 0 → 1` 过渡动画
-- JS：`toggleFaq()` 从 `hidden` class 切换改为 `faq-open` class 切换
-- 动画时间：max-height 0.4s cubic-bezier, opacity 0.3s ease, padding 0.3s ease
-- 已验证：展开/收起均有平滑过渡效果
-
-### 6. FAQ 底部联系客服按钮
-- "未找到答案？" + "联系客服" 圆角按钮
-- 链接到 Telegram Bot: https://t.me/vp92vip_bot
-- 半透明蓝色背景 + 边框 + hover 效果
-- 新增 I18N `faq.contact_text` / `faq.contact_btn` 三语翻译
-
----
-
-## ✅ 已完成：落地页视觉优化（2026-08-18 v1）
-
-**文件**：`E:\jiedian\vp92-frontend\theme\landing.blade.php`
-**所有改动已部署到服务器** ✅
-
-### 1. Why Choose 图标优化
-- `cloud_queue`、`public`、`speed`、`card_giftcard` 四个 Material Symbols 图标
-- 从 `FILL 0`（空心轮廓）→ `FILL 1`（实心填充），`wght 400`→`wght 300`，`opsz 24`→`opsz 40`
-- 尺寸从 `text-3xl`（30px）→ `2.25rem`（36px），在 64px 容器中比例更好
-
-### 2. Why Choose 标题修正
-- I18N `why.heading` 三语更新：VP92极速 / VP92極速 / VP92 Turbo
-- 移除标题下方的装饰线
-
-### 3. FAQ 卡片化重设计
-- grid 布局，毛玻璃背景，悬浮效果
-
-### 4. Footer 品牌更新
-- logo.svg + "VP92极速"
-
-### 5. 流媒体图标区域（用户要求保持原样）
+### 5项视觉优化（v1）
+1. Why Choose 图标实心填充
+2. 标题 VP92极速
+3. FAQ 卡片化重设计
+4. Footer 品牌更新
+5. 流媒体图标区域
 
 ---
 
@@ -137,37 +139,27 @@
 
 ---
 
-## ✅ 已完成：FAQ Q9/Q10 JSON-LD 更新（2026-08-17）
-
----
-
-## ✅ 已完成：Why Choose 彩色卡片重设计（2026-08-17）
-
----
-
-## ✅ VIP 状态（全部正常）
-
-| VIP | CF Worker | 域名 | group_id | 状态 |
-|-----|-----------|------|----------|------|
-| VIP1 | Worker01 (id=33) | vp92.cc.cd | 2 | ✅ |
-| VIP2 | Worker02 (id=34) | vp92vip2.cc.cd | 3 | ✅ |
-| VIP3 | Worker03 (id=35) | vp92vip3.cc.cd | 4 | ✅ |
-
----
-
 ## ⏳ 待处理/可考虑
 
 1. **数据库自动备份** — 设计完成但未实施
-2. **VIP2/3 Worker XBOARD_ORIGIN 可选更新** — 低优先级
-3. **GitHub Actions workflow** — private repo，建议禁用
-4. **git commit + push** — 本地文件已修改，需要 commit 推送到 `my master`
+2. **GitHub Actions workflow** — private repo，建议禁用
+3. **git commit + push** — 本地文件已修改，需要 commit 推送到 `my master`
+
+---
+
+## 唤醒提示词（直接复制粘贴到新窗口）
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。里面包含了当前状态、已完成的工作、待处理事项和精确的技术细节。按照文件中的"唤醒提示词"部分开始工作。
+```
 
 ---
 
 ## 🔑 服务器信息
 
 - **HK 服务器**: `root@154.3.38.212` (DMIT), Docker 容器 `xboard`
-- **域名**: vp92vip.com（用户面板/落地页），vp92vip.cc.cd（APK/Edgetunnel 订阅）
+- **域名**: vp92vip.com（用户面板/落地页），vp92.app（订阅入口），vp92vip.cc.cd（APK/Edgetunnel）
+- **订阅链接**: `https://vp92.app/s/{token}`（三组共用）
 - **SSH**: `ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212`
 
 ## 🔑 部署流程速查
@@ -189,5 +181,8 @@ ssh root@154.3.38.212 "docker cp /tmp/TelegramAdminAiPoll_local.php xboard:/www/
 
 ### Edgetunnel Worker 部署
 ```bash
-cd E:\jiedian\edgetunnel-extracted && npx wrangler deploy --config wrangler.jsonc
+cd E:\jiedian\edgetunnel-extracted
+npx wrangler deploy --config wrangler.jsonc        # VIP1
+npx wrangler deploy --config wrangler-vip2.jsonc   # VIP2
+npx wrangler deploy --config wrangler-vip3.jsonc   # VIP3
 ```
