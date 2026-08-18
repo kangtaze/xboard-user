@@ -939,7 +939,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg" data-i18n="device.description">1000+应用支持，一键连接。无论浏览、游戏还是海外访问，VP92 都能为您提供稳定的网络加速体验。支持所有主流操作系统和智能设备。</p>
 <div class="store-badges">
 <a href="https://play.google.com/store/apps/details?id=com.vp92.app" target="_blank" rel="noopener">
-<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" loading="lazy">
+<img alt="Get it on Google Play" src="/img/google-play-badge.png" loading="lazy">
 </a>
 <span class="store-badge-disabled" title="Coming Soon">
 <img alt="Download on the App Store" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" loading="lazy">
