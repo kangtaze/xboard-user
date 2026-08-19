@@ -1,23 +1,98 @@
 # VP92极速加速器 — 最新项目进度
 
-> **最后更新**: 2026-08-18
-> **状态**: ✅ Worker XBOARD_ORIGIN 统一更新 + VIP1 路由修正
+> **最后更新**: 2026-08-19
+> **状态**: 🔍 排查在线用户上报问题（老版本能看到，新版本看不到）
 
-## ✅ 已完成：Worker XBOARD_ORIGIN 统一更新 + VIP1 路由修正（2026-08-18）
+---
 
-### 改动内容
-- VIP1/2/3 的 `XBOARD_ORIGIN` 全部统一改为 `https://dns.vp92vip.cc.cd`
-- VIP1 Worker 路由从废弃域名 `ferrari.ccwu.cc` 改为 `vp92.cc.cd`
-- **本地配置已更新**，CF 路由用户已在 Cloudflare 后台手动更新
+## 🔴 当前排查中：在线用户上报问题
 
-### 改动文件
-| 文件 | 改动 |
+### 现象
+- **老版本** Worker 部署后，后台能看到用户 `netzege@163.com` 在线 ✅
+- **新版 worker-merged.js** 部署后，后台看不到用户在线 ❌
+- 新版本已回滚到老版本，当前线上正常
+
+### 已排除
+- API 调用完全一致：两个版本都调 `/api/v1/server/UniProxy/push`（diff 确认无差异）
+- 两个版本的 `reportXboardTraffic` 函数相同
+- `XBOARD_NODE_ID`、`XBOARD_TOKEN`、`XBOARD_ORIGIN` 配置相同
+
+### 已确认
+- Xboard V1 API `/api/v1/server/UniProxy/alive` 是专用的在线上报接口
+  - 参数：`{ userId: [ip] }` — 直接 POST，不需要 KV，不需要 cron
+  - 对应 `ServerService::processAlive()` → `DeviceStateService->setDevices()`
+- Xboard V1 API `/api/v1/server/UniProxy/push` 上报流量时**也会**设置 `SERVER_{TYPE}_ONLINE_USER` 缓存
+  - 但只设置 push 中的用户数（单次 disconnect 的用户），不是总在线数
+- 老版本 Worker 的 `scheduled` cron handler 是**死代码**（CF 上没有 cron trigger）
+- `xboard-reporter` Worker 在 CF 上**不存在**（API 只查到 vp92-doh、worker01、worker06）
+- `xboard-alive` KV **没有人写入**（KV sync 也不写）
+
+### **待查明**（新窗口第一个任务）
+- 老版本到底怎么实现在线用户显示的？
+  - 可能方向1：检查老 Worker 的 `push` 数据格式是否有不同
+  - 可能方向2：检查 Xboard `processPush` 的完整逻辑，看 push 是否真的设置了在线缓存
+  - 可能方向3：CF Dashboard 查看 worker01 的实时日志（wrangler tail），看老版本是否有其他 API 调用
+  - 可能方向4：对比老版本和新版本的 `getXboardUserId` 调用是否成功（如果 userId 解析失败，push 不会被调用）
+
+### 下一步方案
+- **方案 A**：在 Worker 连接成功后直接调 `/api/v1/server/UniProxy/alive?token=X&node_id=Y` 上报在线
+  - 不需要 KV
+  - 不需要 cron trigger
+  - 断开时发送 `{ userId: [] }` 清除
+- **方案 B**：查明白老版本为什么能工作，再针对性修复
+
+---
+
+## ✅ 已完成：新版 Worker 模板合并（2026-08-19）
+
+### 合并内容（`worker-merged.js` → 服务器 `/www/storage/app/worker-template.js`）
+| 模块 | 说明 |
 |------|------|
-| `edgetunnel-extracted/wrangler.jsonc` | 路由→`vp92.cc.cd`，XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
-| `edgetunnel-extracted/wrangler-vip2.jsonc` | XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
-| `edgetunnel-extracted/wrangler-vip3.jsonc` | XBOARD_ORIGIN→`dns.vp92vip.cc.cd` |
+| **用户 UUID 验证** | KV user-list 缓存(5min TTL) + Xboard API `/api/v2/server/user/check` 实时验证 |
+| **流量上报** | `reportXboardTraffic` V1 API，上传/下载字节跟踪，连接关闭时上报 |
+| **版本接口安全优化** | SHA-256 + timingSafeEqual 替代弱求和校验 |
 
-### VIP1-VIP3 域名配置总览
+### ⚠️ 合并时添加的在线追踪代码（需清理或替换）
+- `recordAlive()` / `removeAlive()` — KV 方案（**不可行，没人写 KV**）
+- `scheduled` cron handler — 读取 KV 上报（**不可行，没 cron trigger**）
+- wrangler.jsonc 添加的 cron trigger 配置（**不需要了如果用方案 A**）
+- **这些改动需要回滚**，改用方案 A
+
+### 关键文件
+| 文件 | 说明 |
+|------|------|
+| `C:\Users\Administrator\Desktop\wok\worker-merged.js` | 合并版（含需清理的 KV 在线追踪代码） |
+| `C:\Users\Administrator\Desktop\wok\server-worker-template.js` | 老版备份（在线追踪正常） |
+| `C:\Users\Administrator\Desktop\wok\worker.js` | 纯新版原文件（327,451 bytes，无 XBOARD） |
+
+---
+
+## ✅ 已完成：XHTTP 协议分析（2026-08-19）
+
+### 结论
+- **Worker 已内置 XHTTP 支持**，改 config `传输协议: "xhttp"` 即可
+- **Xboard 已完全支持** `EdgetunnelServiceProvider::parseUpstreamSubscription()` 自动从上游检测 `type=xhttp`，5 分钟缓存
+- **SingBox 格式不支持 XHTTP**（节点会被静默排除）
+- **不需要改任何代码**，用户自己改 Worker config 即可
+
+---
+
+## ✅ 已完成：Nginx 废弃配置清理（2026-08-19）
+- 删除 `/etc/nginx/conf.d/auth-proxy.conf`（指向废弃域名 `ferrari.ccwu.cc`）
+
+---
+
+## ✅ 已完成：Google Play Badge 自托管（2026-08-19）
+- Badge 放到 `/www/public/img/google-play-badge.png`
+- 落地页改为引用 `/img/google-play-badge.png`
+
+---
+
+## ✅ 已完成：AI客服动态知识库注入（2026-08-18）
+
+---
+
+## 📋 VIP1-VIP3 域名配置总览
 
 | | VIP1 | VIP2 | VIP3 |
 |---|---|---|---|
@@ -28,161 +103,70 @@
 | **group_id** | 2 | 3 | 4 |
 | **server id** | 113 | 114 | 115 |
 
-### 废弃域名（已不用）
-~~ferrari.cc.cd~~ ~~ferrari.ccwu.cc~~ ~~jpuuc.cc.cd~~ ~~ferrari1.cc.cd~~
+---
+
+## 📋 Xboard 在线上报 API 详解
+
+### V1 API（推荐）
+
+**流量上报**: `POST /api/v1/server/UniProxy/push?token=X&node_id=Y`
+- Body: `{ userId: [upload_bytes, download_bytes] }`
+- 副作用：也会设置 `SERVER_{TYPE}_ONLINE_USER_{nodeId}` 缓存（TTL 3600s）
+
+**在线设备上报**: `POST /api/v1/server/UniProxy/alive?token=X&node_id=Y`
+- Body: `{ userId: [ip1, ip2] }`
+- 调用 `ServerService::processAlive()` → `DeviceStateService->setDevices()`
+
+**在线列表**: `GET /api/v1/server/UniProxy/alivelist?token=X&node_id=Y`
+- 返回当前在线设备
+
+**在线连接数**: `POST /api/v1/server/UniProxy/online?token=X&node_id=Y`
+- Body: `{ userId: connectionCount }`
+- 设置 `USER_ONLINE_CONN_{type}_{nodeId}_{userId}` 缓存
+
+### V2 API（老版 cron 用的）
+- `POST /api/v2/server/report` — 接受 `{ token, node_id, traffic, alive, online }`
+- `alive` → 调 `processAlive`，`online` → 调 `processOnline`
+
+### Server Model 在线属性
+- `$server->online` → 读取缓存 `SERVER_{TYPE}_ONLINE_USER_{nodeId}`，默认 0
+- `$server->is_online` → 节点是否在线（1/0）
 
 ---
 
-## ✅ 已完成：Google Play Store 平板电脑截图生成（2026-08-18 v4）
+## 📋 在线追踪相关代码位置
 
-**输出目录**: C:\Users\Administrator\Desktop\google\pingban\
-
-| 文件 | 尺寸 | 说明 |
+| 文件 | 行号 | 说明 |
 |------|------|------|
-| tablet-7-1-login.png | 2560×1440 | 7寸 一键登录 |
-| tablet-7-2-dashboard.png | 2560×1440 | 7寸 实时监控 |
-| tablet-7-3-account.png | 2560×1440 | 7寸 流量透明 |
-| tablet-7-4-aichat.png | 2560×1440 | 7寸 AI智能客服 |
-| tablet-10-1-login.png | 3840×2160 | 10寸 一键登录 |
-| tablet-10-2-dashboard.png | 3840×2160 | 10寸 实时监控 |
-| tablet-10-3-account.png | 3840×2160 | 10寸 流量透明 |
-| tablet-10-4-aichat.png | 3840×2160 | 10寸 AI智能客服 |
-
-- 全部 PNG、<8MB、16:9 横向、符合 Google Play 规格
-- 使用真实 VP92 logo + 真实平板 App 截图
-- 技术方案: HTML 模板 → Chrome 渲染 → Node.js sharp 精确裁剪/放大
-- 模板: docs/google-play-tablet-template.html（?i=0/1/2/3）
-
----
-
-## ✅ 已完成：Google Play Store 素材生成（2026-08-18）
-
-### 输出目录
-`C:\Users\Administrator\Desktop\google\`
-
-### 生成文件（全部符合 Google Play 规格）
-| 文件 | 尺寸 | 大小 | 说明 |
-|------|------|------|------|
-| `icon-512x512.png` | 512×512 | 87KB | App 图标 |
-| `feature-graphic-1024x500.png` | 1024×500 | 186KB | 主题横幅 v6（浅色背景 + stats在左侧不挡手机 + 流媒体图标×7 + 真实dashboard截图） |
-| `screenshot-1-login.png` | 1080×1920 | 195KB | 一键登录 |
-| `screenshot-2-dashboard.png` | 1080×1920 | 232KB | 实时监控 |
-| `screenshot-3-account.png` | 1080×1920 | 246KB | 流量透明 |
-| `screenshot-4-ai-chat.png` | 1080×1920 | 175KB | AI 智能客服 |
-
-### Feature Graphic v6 关键设计（6轮迭代最终版）
-- **HTML模板**: `E:\jiedian\docs\google-play-feature-graphic.html`
-- **背景**: 浅色蓝白渐变 `linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 40%, #f2f8ff 100%)`
-- **布局**: 左右两栏 flex，左列=logo+标语+流媒体条+功能chips+stats，右列=手机mockup
-- **Stats "90+节点"/"99.9%在线"**: `.stats-row` 在左列底部，**不再绝对定位**，不会挡手机
-- **流媒体图标**: Netflix/YouTube/Disney+/Twitch/TikTok/Spotify/GooglePlay，毛玻璃条包裹
-- **功能chips**: 安全加密/极速连接/AI客服，蓝色pill
-- **无VIP字样**（用户反馈像诈骗）
-- **Logo来源**: `E:/jiedian/docs/app-screens/logo.png`（真实VP92盾牌+闪电logo）
-- **手机截图**: `E:/jiedian/docs/app-screens/dashboard.png`（真实VP92 App界面）
-- **渲染流程**: Chrome `file://` 打开HTML → `resize_page(1024,500)` → `take_screenshot(filePath)` → 直接1024×500
-- **⚠️ 踩坑**: Chrome `file://` 无法加载含中文路径的 `<img src>`，所有图片必须放在ASCII路径
-
----
-
-## ✅ 已完成：落地页改进（2026-08-18）
-
-**文件**：`E:\jiedian\vp92-frontend\theme\landing.blade.php`
-**所有改动已部署到服务器** ✅
-
-### 6项改进（v2）
-1. 套餐卡片重排序 VIP1→VIP2→VIP3
-2. Stats 修正：90+节点 / 7+地区 / 99.9%在线
-3. CRO 试用文案："无需信用卡，无需绑定支付即可免费试用"
-4. iOS 下载引导：推荐 Shadowrocket/SingBox
-5. FAQ 平滑展开/收起动画
-6. FAQ 底部联系客服按钮（Telegram）
-
-### 5项视觉优化（v1）
-1. Why Choose 图标实心填充
-2. 标题 VP92极速
-3. FAQ 卡片化重设计
-4. Footer 品牌更新
-5. 流媒体图标区域
-
----
-
-## 📋 当前文件状态
-
-### landing.blade.php 关键行号（供快速定位）
-
-| 区域 | 行号范围 | 说明 |
-|------|----------|------|
-| Material Symbols 基础设置 | 247-249 | `.material-symbols-outlined` FILL 0 |
-| Why 图标覆盖 | 251-254 | `.why-icon-wrap .material-symbols-outlined` FILL 1 |
-| Plans 套餐卡片 | ~787-912 | VIP1→VIP2→VIP3 顺序 |
-| CRO 试用文案 | ~786 | 无需信用卡绿色提示 |
-| Stats 行 | ~1060-1073 | 90+ / 7+ / 99.9% |
-| Why Choose 标题+图标 | ~1053-1120 | 4 张彩色卡片 + Stats |
-| FAQ 容器 + 10 问题 | ~1167-1330 | grid + contact CTA |
-| FAQ 卡片 CSS | ~473-535 | 卡片样式 + 动画 CSS |
-| Footer logo | ~1413-1417 | logo.svg + VP92极速 |
-| toggleFaq JS | ~1490-1522 | faq-open 平滑动画 |
-| Stats animation JS | ~2320-2360 | IntersectionObserver |
-
-### 新增 I18N 键
-
-| 键 | zh-CN | zh-TW | en |
-|----|-------|-------|----|
-| `stats.nodes` | 加速节点 | 加速節點 | Proxy Nodes |
-| `stats.countries` | 覆盖地区 | 覆蓋地區 | Regions |
-| `stats.uptime` | 在线率 | 在線率 | Uptime |
-| `plans.no_credit` | 无需信用卡... | 無需信用卡... | No credit card... |
-| `device.ios_guide` | 推荐使用Shadowrocket... | 推薦使用Shadowrocket... | Use Shadowrocket... |
-| `faq.contact_text` | 未找到答案？ | 未找到答案？ | Can't find...? |
-| `faq.contact_btn` | 联系客服 | 聯繫客服 | Contact Support |
-
----
-
-## ⏳ 待处理/可考虑
-
-1. **数据库自动备份** — 设计完成但未实施
-2. **GitHub Actions workflow** — private repo，建议禁用
-3. **git commit + push** — 本地文件已修改，需要 commit 推送到 `my master`
+| `worker-merged.js` | 3-15 | `getXboardUserId()` — 通过 UUID 查 Xboard userId |
+| `worker-merged.js` | 17-30 | `reportXboardTraffic()` — 流量上报 V1 push |
+| `worker-merged.js` | 32-52 | `recordAlive()` / `removeAlive()` — ⚠️ KV 方案（需替换） |
+| `worker-merged.js` | ~1282 | gRPC 路径 tracker 创建 + recordAlive 调用 |
+| `worker-merged.js` | ~1794 | WS 路径 tracker 创建 + recordAlive 调用 |
+| `worker-merged.js` | ~1903 | WS close handler + removeAlive 调用 |
+| `worker-merged.js` | ~623 | scheduled cron handler（需替换为方案 A） |
+| `ServerService_final_decoded.php` | 235-241 | `processAlive()` — 处理 alive 上报 |
+| `ServerService_final_decoded.php` | 246-260 | `processOnline()` — 处理 online 上报 |
+| `ServerService_final_decoded.php` | 226-227 | `processPush()` — 流量上报也设置 ONLINE_USER 缓存 |
+| `UniProxyController.php` | 83-91 | `alive()` endpoint — 接收 alive 数据 |
+| `UniProxyController.php` | 72-81 | `alivelist()` endpoint — 返回在线列表 |
+| `EdgetunnelServiceProvider.php` | 163-188 | `detectSubscriptionConfigs()` — 上游订阅协议检测 |
 
 ---
 
 ## 唤醒提示词（直接复制粘贴到新窗口）
 
 ```
-读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。里面包含了当前状态、已完成的工作、待处理事项和精确的技术细节。按照文件中的"唤醒提示词"部分开始工作。
+读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。里面包含了当前状态、已完成的工作、待处理事项和精确的技术细节。按照文件中的“当前状态摘要”部分开始工作。
 ```
 
 ---
+## 当前状态摘要（新窗口快速上下文，读完进度文件后看这个）
 
-## 🔑 服务器信息
+**紧急任务**: 排查在线用户上报问题。老版本 Worker 能在 Xboard 后台显示用户在线，新版不行。两个版本的 push API 调用完全一致（diff 确认）。待查明老版本到底怎么实现的。
 
-- **HK 服务器**: `root@154.3.38.212` (DMIT), Docker 容器 `xboard`
-- **域名**: vp92vip.com（用户面板/落地页），vp92.app（订阅入口），vp92vip.cc.cd（APK/Edgetunnel）
-- **订阅链接**: `https://vp92.app/s/{token}`（三组共用）
-- **SSH**: `ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212`
+**已排除**: API 调用一致、KV/cron 不是原因（老版也没有）、xboard-reporter 不存在。
 
-## 🔑 部署流程速查
+**待查方向**: 老版 push 数据格式是否有差异？getXboardUserId 是否在新版中失败？直接用方案 A（连接时调 V1 alive API）绕过问题。
 
-### 落地页部署
-```bash
-scp -i C:/Users/Administrator/.ssh/id_ed25519 E:\jiedian\vp92-frontend\theme\landing.blade.php root@154.3.38.212:/tmp/landing.blade.php
-ssh root@154.3.38.212 "docker cp /tmp/landing.blade.php xboard:/www/theme/VP92/landing.blade.php && cp /www/theme/VP92/landing.blade.php /www/public/theme/VP92/landing.blade.php 2>/dev/null; docker exec xboard sh -c 'php artisan view:clear && php artisan cache:clear && php artisan octane:reload'"
-```
-
-### Admin AI Bot 部署
-```bash
-scp -i C:/Users/Administrator/.ssh/id_ed25519 E:/jiedian/xboard-repo/app/Console/Commands/TelegramAdminAiPoll.php root@154.3.38.212:/tmp/TelegramAdminAiPoll_local.php
-ssh root@154.3.38.212 "docker cp /tmp/TelegramAdminAiPoll_local.php xboard:/www/app/Console/Commands/TelegramAdminAiPoll.php && docker exec xboard sh -c 'kill \$(pgrep -f telegram:admin-ai-poll) 2>/dev/null; sleep 1; cd /www && nohup php artisan telegram:admin-ai-poll > /tmp/admin-ai-poll.log 2>&1 &'"
-```
-
-> ⚠️ Bot 不走 Octane，是独立 artisan 长驻进程，必须 kill+重启
-> ⚠️ 不要用 Python 字符串替换修改压缩文件，直接 scp 本地文件
-
-### Edgetunnel Worker 部署
-```bash
-cd E:\jiedian\edgetunnel-extracted
-npx wrangler deploy --config wrangler.jsonc        # VIP1
-npx wrangler deploy --config wrangler-vip2.jsonc   # VIP2
-npx wrangler deploy --config wrangler-vip3.jsonc   # VIP3
-```
+**注意**: worker-merged.js 里我加了 KV 方案的在线追踪代码（recordAlive/removeAlive/scheduled handler），这些需要**回滚并替换为方案 A**（直接调 V1 alive API，不需要 KV 和 cron）。
