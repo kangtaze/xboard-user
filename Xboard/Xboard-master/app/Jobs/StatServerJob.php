@@ -92,33 +92,27 @@ class StatServerJob implements ShouldQueue
 
     protected function processServerStatForSqlite(int $u, int $d, int $recordAt): void
     {
-        DB::transaction(function () use ($u, $d, $recordAt) {
-            $existingRecord = StatServer::where([
-                'record_at' => $recordAt,
-                'server_id' => $this->server['id'],
-                'server_type' => $this->protocol,
-                'record_type' => $this->recordType,
-            ])->first();
+        $table = (new StatServer())->getTable();
+        $now = time();
 
-            if ($existingRecord) {
-                $existingRecord->update([
-                    'u' => $existingRecord->u + $u,
-                    'd' => $existingRecord->d + $d,
-                    'updated_at' => time(),
-                ]);
-            } else {
-                StatServer::create([
-                    'record_at' => $recordAt,
-                    'server_id' => $this->server['id'],
-                    'server_type' => $this->protocol,
-                    'record_type' => $this->recordType,
-                    'u' => $u,
-                    'd' => $d,
-                    'created_at' => time(),
-                    'updated_at' => time(),
-                ]);
-            }
-        }, 3);
+        $sql = "INSERT INTO {$table} (record_at, server_id, server_type, record_type, u, d, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (server_id, server_type, record_at)
+                DO UPDATE SET
+                    u = {$table}.u + EXCLUDED.u,
+                    d = {$table}.d + EXCLUDED.d,
+                    updated_at = EXCLUDED.updated_at";
+
+        DB::statement($sql, [
+            $recordAt,
+            $this->server['id'],
+            $this->protocol,
+            $this->recordType,
+            $u,
+            $d,
+            $now,
+            $now,
+        ]);
     }
 
     protected function processServerStatForOtherDatabases(int $u, int $d, int $recordAt): void
