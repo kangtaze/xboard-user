@@ -50,7 +50,10 @@ class EdgetunnelController
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:512',
             'group_ids' => 'required|array',
-            'group_ids.*' => 'nullable|integer|string|in:all',
+            // 注意: nullable|integer|string|in:all 在某些 Laravel 版本下是 AND 关系
+            // 导致 [5] (integer) 或 ['all'] (字符串) 都失败 422。
+            // 直接用 nullable 即可，具体取值在 service 层处理。
+            'group_ids.*' => 'nullable',
             'dns_cf_worker_id' => 'nullable|integer',
             'direct_ip_mode' => 'nullable|boolean',
         ]);
