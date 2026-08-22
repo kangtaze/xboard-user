@@ -52,6 +52,7 @@ class EdgetunnelController
             'group_ids' => 'required|array',
             'group_ids.*' => 'nullable|integer|string|in:all',
             'dns_cf_worker_id' => 'nullable|integer',
+            'direct_ip_mode' => 'nullable|boolean',
         ]);
 
         $updateData = [
@@ -61,6 +62,8 @@ class EdgetunnelController
             'enabled' => $request->input('enabled', true),
             'show' => $request->input('show', true),
             'sort' => $request->input('sort', 0),
+            // 直接读取 boolean，缺省 false（保持向 VIP1-3 兼容）
+            'direct_ip_mode' => (bool) $request->input('direct_ip_mode', false),
         ];
 
         // 只在前端明确传递时才更新 dns_cf_worker_id，避免编辑时被清空
