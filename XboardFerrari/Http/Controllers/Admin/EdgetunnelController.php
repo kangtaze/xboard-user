@@ -4,6 +4,7 @@ namespace XboardFerrari\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use XboardFerrari\Services\EdgetunnelService;
 use XboardFerrari\Models\EdgetunnelSubscription;
 use XboardFerrari\Models\EdgetunnelNode;
@@ -401,7 +402,7 @@ class EdgetunnelController
             $previewNodes[] = [
                 'name' => $node->name,
                 'original_host' => $node->host . ':' . $node->port,
-                'injected_host' => $edgetunnelHost . ':443',
+                'injected_host' => $edgetunnelHost . ':' . (!empty($sub->direct_ip_mode) ? (int) $node->port : 443),
                 'sni' => $workerDomain,
                 'path' => $node->path ?: '/',
                 'type' => $node->type,

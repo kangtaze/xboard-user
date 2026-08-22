@@ -35,14 +35,10 @@ class EdgetunnelServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // 加载自定义管理 API 路由
-
         if (config('database.default') === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = ON;');
         }
 
-        // Octane 环境下在 WorkerStarting 事件注册 Hook（因为 HookManager::reset() 在每个 Worker 启动时调用）
-        // 同时直接在 boot() 注册，确保覆盖所有场景
         $this->registerHooks();
 
         if (!$this->app->runningInConsole() && $this->app->bound('octane')) {
@@ -54,9 +50,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
 
     /**
      * 注册订阅输出 Hook
-     *
-     * Hook 优先级 10，在 Xboard 核心 Hook 之后运行。
-     * 回调接收 ($servers, $user, $request)，返回追加 Edgetunnel 节点后的 $servers 数组。
      */
     private function registerHooks(): void
     {
@@ -68,40 +61,42 @@ class EdgetunnelServiceProvider extends ServiceProvider
                 return $servers;
             }
 
-            // 预加载每个订阅对应的 Worker 域名
             $workerDomains = $this->resolveWorkerDomains($nodes);
 
-            // 共享服务（用于域名分配和 IP 回退映射）
+            // === NEW: 预加载 subscription 对象（含 direct_ip_mode 等字段）===
+            $subsById = \XboardFerrari\Models\EdgetunnelSubscription::whereIn('id',
+                $nodes->pluck('subscription_id')->unique()->values()
+            )->get()->keyBy('id');
+
             $regionHelper = app(RegionHelper::class);
             $dnsService = app(CloudflareDnsService::class);
 
-            // 从上游订阅自动检测传输协议和面板 UUID（带 5 分钟缓存）
             $subscriptionConfigs = $this->detectSubscriptionConfigs($nodes);
 
             foreach ($nodes as $node) {
-                // 获取该订阅对应的 Worker 域名作为 SNI/host
+                // === NEW: 获取当前节点对应的 subscription ===
+                $sub = $subsById[$node->subscription_id] ?? null;
+
                 $baseDomain = $workerDomains[$node->subscription_id] ?? 'vp92.cc.cd';
 
-                // 获取该订阅的传输协议类型和面板 UUID
                 $config = $subscriptionConfigs[$node->subscription_id] ?? [
                     'network' => 'ws',
                     'mode' => null,
                     'panel_uuid' => $user->uuid,
                 ];
                 $network = $config['network'];
-
-                // XHTTP 使用面板 UUID（Worker XHTTP 不走 KV 用户验证）
-                // WS 使用用户 UUID（Worker WS 走 KV 验证）
                 $uuid = $user->uuid;
 
                 // 根据传输协议选择连接方式
                 if ($network === 'xhttp') {
-                    // XHTTP: 使用节点原始 IP + 端口 + path=/（匹配上游订阅格式）
                     $server = $node->host;
                     $port = (int) $node->port;
                     $path = '/';
                 } else {
-                    // WS: 使用子域名路由 + 443 端口 + 区域路径
+                    // WS: 使用子域名路由 + Worker 端口 + 区域路径
+                    // === CHANGED: direct_ip_mode=1 时用节点解析端口，否则保持 443 ===
+                    $port = (!empty($sub->direct_ip_mode)) ? (int) $node->port : 443;
+
                     $server = $this->assignDomainFromNodeName(
                         $node->name,
                         $node->host,
@@ -109,17 +104,14 @@ class EdgetunnelServiceProvider extends ServiceProvider
                         $regionHelper,
                         $dnsService,
                     );
-                    $port = 443;
                     $path = $this->buildRegionPath($node->path, $node->name, $regionHelper);
                 }
 
-                // 根据传输协议构建 network_settings
                 $networkSettings = $this->buildNetworkSettings($network, $path, $baseDomain, $config['mode']);
 
-                // 追加 Edgetunnel 节点到订阅输出
                 $servers[] = [
                     'id' => $node->id,
-                    'name' => $node->name,
+                    'name' => $this->addFlagToNodeName($node->name, $regionHelper),
                     'type' => $node->type,
                     'host' => $server,
                     'port' => $port,
@@ -153,13 +145,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         }, 10);
     }
 
-    /**
-     * 从上游订阅自动检测每个订阅的传输协议和面板 UUID
-     *
-     * 缓存 5 分钟，避免每次订阅请求都 fetch 上游。
-     *
-     * @return array<int, array{network: string, mode: string|null, panel_uuid: string}>  subscription_id => config
-     */
     private function detectSubscriptionConfigs($nodes): array
     {
         $configs = [];
@@ -187,11 +172,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         return $configs;
     }
 
-    /**
-     * Fetch 上游订阅 URL，解析第一个节点的传输协议和 UUID
-     *
-     * @return array{network: string, mode: string|null, panel_uuid: string}
-     */
     private function parseUpstreamSubscription(string $url): array
     {
         try {
@@ -211,7 +191,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
                 return ['network' => 'ws', 'mode' => null, 'panel_uuid' => ''];
             }
 
-            // 提取 UUID: vless://UUID@host:port?...
             $firstLine = $lines[0];
             $panelUuid = '';
             if (preg_match('#vless://([^@]+)@#', $firstLine, $m)) {
@@ -240,9 +219,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * 根据传输协议类型构建 network_settings
-     */
     private function buildNetworkSettings(string $network, string $path, string $baseDomain, ?string $mode): array
     {
         if ($network === 'xhttp') {
@@ -253,7 +229,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
             ];
         }
 
-        // 默认: ws
         return [
             'path' => $path,
             'headers' => [
@@ -262,9 +237,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         ];
     }
 
-    /**
-     * 从节点名解析地区代码和编号，分配域名
-     */
     private function assignDomainFromNodeName(
         string $name,
         string $ip,
@@ -282,9 +254,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         return $ipToDomain[$ip] ?? $ip;
     }
 
-    /**
-     * 在 WebSocket path 中编码区域前缀
-     */
     private function buildRegionPath(?string $originalPath, string $nodeName, RegionHelper $regionHelper): string
     {
         $path = $originalPath ?: '/';
@@ -296,11 +265,6 @@ class EdgetunnelServiceProvider extends ServiceProvider
         return $path;
     }
 
-    /**
-     * 解析每个订阅对应的 CF Worker 域名
-     *
-     * @return array<int, string>  subscription_id => domain
-     */
     private function resolveWorkerDomains($nodes): array
     {
         $subscriptionIds = $nodes->pluck('subscription_id')->unique()->values();
@@ -325,5 +289,30 @@ class EdgetunnelServiceProvider extends ServiceProvider
         }
 
         return $domains;
+    }
+
+    private function countryCodeToFlag(string $code): string
+    {
+        $code = strtoupper($code);
+        if (strlen($code) !== 2 || !ctype_alpha($code)) {
+            return '';
+        }
+        return mb_chr(0x1F1E6 + ord($code[0]) - 65) . mb_chr(0x1F1E6 + ord($code[1]) - 65);
+    }
+
+    private function addFlagToNodeName(string $name, RegionHelper $regionHelper): string
+    {
+        $name = preg_replace('/^\[.\]/u', '', $name);
+        $name = trim($name);
+        $name = preg_replace('/^[\x{1F1E6}-\x{1F1FF}]{2}\s*/u', '', $name);
+
+        $parsed = $regionHelper->extractRegionAndNumber($name);
+        if ($parsed) {
+            $flag = $this->countryCodeToFlag($parsed['region']);
+            if ($flag) {
+                return $flag . ' ' . $name;
+            }
+        }
+        return $name;
     }
 }
