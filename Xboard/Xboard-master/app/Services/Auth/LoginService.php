@@ -67,6 +67,14 @@ class LoginService
             return [false, [400, __('Your account has been suspended')]];
         }
 
+        // 检查设备数量限制（device_limit > 0 时生效）
+        if ($user->device_limit > 0) {
+            $activeTokens = $user->tokens()->count();
+            if ($activeTokens >= $user->device_limit) {
+                return [false, [403, __('The number of devices has reached the upper limit ({count}). Please remove other devices in Account > Active Sessions and try again.', ['count' => $user->device_limit])]];
+            }
+        }
+
         // 更新最后登录时间
         $user->last_login_at = time();
         $user->save();
