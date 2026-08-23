@@ -5,6 +5,7 @@ use App\Http\Controllers\V1\User\CommController;
 use App\Http\Controllers\V1\User\CouponController;
 use App\Http\Controllers\V1\User\GiftCardController;
 use App\Http\Controllers\V1\User\InviteController;
+use App\Http\Controllers\V1\User\AiController;
 use App\Http\Controllers\V1\User\KnowledgeController;
 use App\Http\Controllers\V1\User\NoticeController;
 use App\Http\Controllers\V1\User\OrderController;
@@ -74,6 +75,8 @@ class UserRoute
             // Comm
             $router->get('/comm/config', [CommController::class, 'config']);
             $router->Post('/comm/getStripePublicKey', [CommController::class, 'getStripePublicKey']);
+            // AI 客服（登录用户，带个人上下文）
+            $router->post('/ai/chat', [AiController::class, 'chat']);
             // Knowledge
             $router->get('/knowledge/fetch', [KnowledgeController::class, 'fetch']);
             $router->get('/knowledge/getCategory', [KnowledgeController::class, 'getCategory']);
