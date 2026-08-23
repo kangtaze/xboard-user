@@ -29,6 +29,11 @@ class AiChatService
     private const FALLBACK_ANDROID_VERSION = '1.0.9';
     private const FALLBACK_ANDROID_URL = 'https://vp92vip.cc.cd/apk/vp92-1.0.9.apk';
 
+    // 版本动态数据源（R2 上的版本检查文件，与客户端自动更新共用同一份）
+    private const VERSION_JSON_ANDROID = 'https://vp92vip.cc.cd/version.json';
+    private const VERSION_JSON_WINDOWS = 'https://vp92vip.cc.cd/version-windows.json';
+    private const VERSION_INFO_CACHE_TTL = 1800; // 30 分钟缓存，发版后最迟半小时自动生效
+
     // System Prompt - 产品知识库 + 安全约束（占位符在 buildMessages() 中动态替换）
     private const SYSTEM_PROMPT = <<<PROMPT
 你是 %APP_NAME% 的智能客服助手。你的职责是帮助用户解决产品使用问题。
@@ -46,6 +51,18 @@ class AiChatService
 当用户询问如何下载、在哪里下载、下载链接时，请提供以下信息（链接用 markdown 格式方便点击）：
 
 %DOWNLOAD_LINKS%
+
+【最新版本动态】
+当用户询问"新版本"、"更新了什么"、"有什么新功能"、"要不要更新"时，基于以下真实发布信息回答（这是唯一事实来源，不要编造版本号和功能；如果此处没有内容，就回答不确定并建议联系人工客服确认）：
+
+%VERSION_INFO%
+
+转述风格要求（必须遵守）：
+- 把发布说明翻译成普通用户的大白话，不要逐条复述，挑重点讲，最多 3~4 条，一条一句话
+- 禁止出现技术术语（如"本地化""适配""兼容""异常处理""机制""场景""优化了XX功能"等），用户看不懂；要说结果和感受（更清晰、更稳定、更快、更省心）
+- 每条都讲"对用户的实际好处"，而不是"我们做了什么工作"
+- 语气自信克制，体现产品高级感，不要汇报工作的口吻
+- 结尾轻引导一句：用着顺手可以继续使用，想体验新版可到官网下载，有问题随时找我
 
 【使用教程】
 当用户询问如何使用、怎么连接、怎么配置时，请提供教程链接（用 markdown 格式方便点击）：
@@ -281,7 +298,10 @@ PROMPT;
         $prompt = str_replace('%DOWNLOAD_LINKS%', $downloadLinks, $prompt);
         $prompt = str_replace('%DOWNLOAD_REPLY_EXAMPLE%', $downloadExample, $prompt);
 
-        // ---- 5. 追加用户上下文（保留用户信息注入功能） ----
+        // ---- 5. 注入最新版本动态（R2 version.json，30 分钟缓存，失败则整段跳过） ----
+        $prompt = str_replace('%VERSION_INFO%', $this->getVersionInfo(), $prompt);
+
+        // ---- 6. 追加用户上下文（保留用户信息注入功能） ----
         if ($userContext) {
             $prompt .= "\n\n---\n【当前咨询客户信息】\n{$userContext}\n---\n"
                 . "请根据以上客户信息提供个性化回复。如果客户询问与自己账号相关的问题"
@@ -305,6 +325,72 @@ PROMPT;
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
         return $messages;
+    }
+
+    /**
+     * 获取最新版本动态（供 system prompt 注入）
+     *
+     * 数据源为 R2 上的 version.json / version-windows.json（与客户端自动更新共用同一份），
+     * 30 分钟缓存 —— 客户端发版上传后，AI 客服最迟半小时内自动同步，无需手动维护。
+     * 任一数据源拉取失败或格式异常时跳过该平台，全部失败返回空串（prompt 中该段留空，
+     * 风格规则会引导 AI 回答"不确定"而不是编造）。
+     */
+    private function getVersionInfo(): string
+    {
+        $sections = [];
+
+        $android = $this->fetchVersionChangelog(self::VERSION_JSON_ANDROID);
+        if ($android !== null) {
+            $changelog = trim($android['changelog'] ?? '');
+            if ($changelog !== '') {
+                // 发布说明原文注入，由 prompt 中的风格规则引导 AI 转述成用户语言
+                $sections[] = "Android 最新版本：V{$android['version']}（官方发布说明原文，仅供你理解参考，回答时要按上面的风格要求转述）：\n{$changelog}";
+            }
+        }
+
+        $windows = $this->fetchVersionChangelog(self::VERSION_JSON_WINDOWS);
+        if ($windows !== null) {
+            $changelog = trim($windows['changelog'] ?? '');
+            if ($changelog !== '') {
+                $sections[] = "Windows 最新版本：V{$windows['version']}（官方发布说明原文，仅供你理解参考，回答时要按上面的风格要求转述）：\n{$changelog}";
+            }
+        }
+
+        return implode("\n\n", $sections);
+    }
+
+    /**
+     * 拉取单个版本 JSON 并提取版本号 + changelog
+     *
+     * @return array{version: string, changelog: string}|null 失败或格式异常返回 null
+     */
+    private function fetchVersionChangelog(string $url): ?array
+    {
+        try {
+            $json = Cache::remember(
+                'ai_chat_version_info_' . md5($url),
+                self::VERSION_INFO_CACHE_TTL,
+                function () use ($url) {
+                    $response = \Http::timeout(5)->get($url);
+                    if (!$response->successful()) {
+                        return null;
+                    }
+                    $data = $response->json();
+                    if (!is_array($data) || empty($data['version'])) {
+                        return null;
+                    }
+                    return [
+                        'version' => (string) $data['version'],
+                        'changelog' => (string) ($data['changelog'] ?? ''),
+                    ];
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning('AiChatService fetch version info failed', ['url' => $url, 'error' => $e->getMessage()]);
+            return null;
+        }
+
+        return is_array($json) ? $json : null;
     }
 
     /**
