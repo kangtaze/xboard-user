@@ -55,7 +55,11 @@ class AuthService
     public function getSessions(): array
     {
         return $this->user->tokens()
-            ->orderByDesc('last_used_at')
+            // Sort by created_at DESC so the freshest login is at the top.
+            // (Tokens start with last_used_at = null, so a last_used_at DESC
+            // sort would push new tokens to the bottom where the user can't
+            // see them — confusing for the device-info feature.)
+            ->orderByDesc('created_at')
             ->get()
             ->map(fn ($t) => [
                 'id' => (int) $t->id,
