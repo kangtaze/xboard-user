@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User as UserModel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\HttpClientException;
@@ -179,7 +180,7 @@ PROMPT;
         }
 
         // 构建 API 请求
-        $messages = $this->buildMessages($message, $history, $userContext);
+        $messages = $this->buildMessages($userId, $message, $history, $userContext);
 
         try {
             $response = \Http::withHeaders([
@@ -242,7 +243,7 @@ PROMPT;
     /**
      * 构建消息列表（解析动态产品信息 + 追加用户上下文）
      */
-    private function buildMessages(string $userMessage, array $history, ?string $userContext = null): array
+    private function buildMessages(int $userId, string $userMessage, array $history, ?string $userContext = null): array
     {
         $prompt = self::SYSTEM_PROMPT;
 
@@ -301,14 +302,22 @@ PROMPT;
         // ---- 5. 注入最新版本动态（R2 version.json，30 分钟缓存，失败则整段跳过） ----
         $prompt = str_replace('%VERSION_INFO%', $this->getVersionInfo(), $prompt);
 
-        // ---- 6. 追加用户上下文（保留用户信息注入功能） ----
+        // ---- 6. 用户上下文：调用方未提供时自动按 userId 构建（让 AI"认识"登录客户） ----
+        if (!$userContext && $userId > 0) {
+            $userContext = $this->buildUserContext((int) $userId);
+        }
+
+        // ---- 7. 追加用户上下文（保留用户信息注入功能） ----
         if ($userContext) {
             $prompt .= "\n\n---\n【当前咨询客户信息】\n{$userContext}\n---\n"
                 . "请根据以上客户信息提供个性化回复。如果客户询问与自己账号相关的问题"
-                . "（如套餐、到期、流量），请直接引用上述信息回答，不要让客户提供。";
+                . "（如套餐、到期、流量），请直接引用上述信息回答，不要让客户提供，也不要反问客户。"
+                . "\n打招呼/问候规则：如果客户只是打招呼（你好/在吗/hello），像老朋友一样热情迎接，"
+                . "自然带上称呼和关怀（如提到套餐正常使用中、流量还充足），一句话即可，"
+                . "然后主动问今天有什么可以帮忙的。禁止报菜名式罗列客户信息，禁止说\"根据系统显示\"这类话。";
         }
 
-        // ---- 6. 组装消息数组 ----
+        // ---- 8. 组装消息数组 ----
         $messages = [
             ['role' => 'system', 'content' => $prompt]
         ];
@@ -325,6 +334,63 @@ PROMPT;
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
         return $messages;
+    }
+
+    /**
+     * 构建登录用户的个人上下文（供 system prompt 注入，让 AI"认识"客户）
+     *
+     * 与 TelegramAiPoll::buildUserContext() 同口径：邮箱/套餐/到期/流量/状态。
+     * 任何字段缺失时跳过该行，用户不存在或查询异常返回 null（AI 按无上下文正常回答）。
+     */
+    private function buildUserContext(int $userId): ?string
+    {
+        try {
+            $user = UserModel::find($userId);
+            if (!$user) {
+                return null;
+            }
+
+            $lines = [];
+
+            if ($user->email) {
+                $lines[] = "邮箱: {$user->email}";
+            }
+
+            $planName = '无套餐';
+            if ($user->plan_id) {
+                $plan = \App\Models\Plan::find($user->plan_id);
+                if ($plan) {
+                    $planName = $plan->name;
+                }
+            }
+            $lines[] = "套餐: {$planName}";
+
+            if ($user->expired_at) {
+                $expiredStr = date('Y-m-d H:i:s', $user->expired_at);
+                $isExpired = $user->expired_at <= time();
+                $lines[] = "到期时间: {$expiredStr}" . ($isExpired ? '（已过期）' : '');
+            } else {
+                $lines[] = "到期时间: 永不过期";
+            }
+
+            $totalGB = round(($user->transfer_enable ?? 0) / 1024 / 1024 / 1024, 2);
+            $usedGB = round($user->getTotalUsedTraffic() / 1024 / 1024 / 1024, 2);
+            $remainGB = round($user->getRemainingTraffic() / 1024 / 1024 / 1024, 2);
+            $lines[] = "流量: 已用 {$usedGB} GB / 总共 {$totalGB} GB（剩余 {$remainGB} GB）";
+
+            if ($user->banned) {
+                $lines[] = "状态: 已封禁";
+            } elseif (!$user->isActive()) {
+                $lines[] = "状态: 已过期/未订阅";
+            } else {
+                $lines[] = "状态: 正常";
+            }
+
+            return implode("\n", $lines);
+        } catch (\Throwable $e) {
+            Log::warning('AiChatService buildUserContext failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            return null;
+        }
     }
 
     /**
