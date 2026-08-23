@@ -659,6 +659,42 @@ PROMPT;
                     ],
                 ],
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'preview_renewal_bulk',
+                    'description' => '预览续费邮件群发：统计当前已到期且可发送的用户数量、样本邮箱和预计耗时。管理员要求"给所有到期用户发邮件"时，必须先调用本工具并把统计结果展示给管理员，获得明确确认后才能调用 send_renewal_bulk。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'send_renewal_bulk',
+                    'description' => '启动续费邮件群发后台任务（仅发给已到期用户，限速批次发送）。前提：必须已调用 preview_renewal_bulk 且管理员明确回复确认（如"确认发送"）。未经管理员确认禁止调用本工具。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'confirm' => ['type' => 'boolean', 'description' => '仅在管理员明确确认后传 true'],
+                        ],
+                        'required' => ['confirm'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'check_renewal_bulk_status',
+                    'description' => '查看续费邮件群发任务的运行状态和日志尾部。管理员问"群发进度/发完了吗/发了多少"时调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -755,6 +791,9 @@ PROMPT;
                 'today_new_users' => $this->toolTodayNewUsers(),
                 'send_announcement' => $this->toolSendAnnouncement($args),
                 'send_renewal_email' => $this->toolSendRenewalEmail($args['email'] ?? ''),
+                'preview_renewal_bulk' => $this->toolPreviewRenewalBulk(),
+                'send_renewal_bulk' => $this->toolSendRenewalBulk((bool) ($args['confirm'] ?? false)),
+                'check_renewal_bulk_status' => $this->toolCheckRenewalBulkStatus(),
                 default => "未知工具函数: {$name}",
             };
         } catch (\Throwable $e) {
@@ -1214,6 +1253,90 @@ PROMPT;
 
         Log::info('Bot 发送续费邮件成功', ['email' => $email, 'admin_bot' => true]);
         return "✅ 续费邮件已发送至 {$email}";
+    }
+
+    /**
+     * 到期用户查询（群发预览/执行共用的筛选条件）
+     */
+    private function renewalBulkQuery()
+    {
+        return User::whereNotNull('email')
+            ->where('email', '!=', '')
+            ->where('is_admin', false)
+            ->where('banned', false)
+            ->whereNotNull('expired_at')
+            ->where('expired_at', '<', time());
+    }
+
+    /**
+     * 预览群发：统计到期用户数量和样本（仅管理员）
+     */
+    private function toolPreviewRenewalBulk(): string
+    {
+        $total = (clone $this->renewalBulkQuery())->count();
+        if ($total === 0) {
+            return json_encode(['total' => 0, 'message' => '当前没有符合条件的到期用户'], JSON_UNESCAPED_UNICODE);
+        }
+
+        $samples = $this->renewalBulkQuery()->orderBy('expired_at')->limit(10)->pluck('email')->toArray();
+        $batches = (int) ceil($total / 50);
+        $estMinutes = round(($batches - 1) * 6 / 60, 1);
+
+        return json_encode([
+            'total' => $total,
+            'sample_emails' => $samples,
+            'chunk_size' => 50,
+            'delay_seconds' => 6,
+            'estimated_minutes' => $estMinutes,
+            'note' => '请把统计结果展示给管理员并等待明确确认，确认后才能调用 send_renewal_bulk(confirm=true)',
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * 启动群发后台任务（仅管理员，需二次确认）
+     */
+    private function toolSendRenewalBulk(bool $confirm): string
+    {
+        if (!$confirm) {
+            $count = (clone $this->renewalBulkQuery())->count();
+            return "未获确认，不执行。当前到期用户 {$count} 人，请先向管理员展示数量并获得明确确认后再调用（confirm=true）。";
+        }
+
+        // 防重复：已有任务在跑就拒绝
+        $running = trim((string) shell_exec('pgrep -f send:renewal-campaign'));
+        if ($running !== '') {
+            return '⚠️ 已有一个群发任务在运行中，请先用 check_renewal_bulk_status 查看进度';
+        }
+
+        shell_exec('cd /www && nohup php artisan send:renewal-campaign --expired-only --force > /tmp/renewal-bulk.log 2>&1 &');
+        Log::info('Bot 启动续费邮件群发', ['admin_bot' => true]);
+        return '✅ 群发任务已在后台启动（仅到期用户，每批 50 封、间隔 6 秒）。可用 check_renewal_bulk_status 查询进度。';
+    }
+
+    /**
+     * 查看群发进度（仅管理员）
+     */
+    private function toolCheckRenewalBulkStatus(): string
+    {
+        $logFile = '/tmp/renewal-bulk.log';
+        if (!file_exists($logFile)) {
+            return '还没有群发任务日志（从未启动过）';
+        }
+
+        $running = trim((string) shell_exec('pgrep -f send:renewal-campaign')) !== '';
+
+        $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        $clean = [];
+        foreach ($lines as $line) {
+            foreach (explode("\r", $line) as $seg) {
+                if (trim($seg) !== '') {
+                    $clean[] = trim($seg);
+                }
+            }
+        }
+        $tail = implode("\n", array_slice($clean, -12));
+
+        return ($running ? '🟢 任务运行中' : '🏁 任务已结束') . "\n--- 日志尾部 ---\n{$tail}";
     }
 
     // ========================================================
