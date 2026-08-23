@@ -34,7 +34,11 @@ class UserController extends Controller
     {
         $user = $request->user();
         $authService = new AuthService($user);
-        return $this->success($authService->getSessions());
+        // currentAccessToken() returns the Sanctum token that authenticated
+        // this request; pass its id so getSessions() can flag it is_current.
+        $currentToken = $user->currentAccessToken();
+        $currentTokenId = $currentToken ? (int) $currentToken->id : null;
+        return $this->success($authService->getSessions($currentTokenId));
     }
 
     public function removeActiveSession(Request $request)

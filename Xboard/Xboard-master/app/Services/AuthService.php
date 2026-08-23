@@ -52,7 +52,7 @@ class AuthService
         ];
     }
 
-    public function getSessions(): array
+    public function getSessions(?int $currentTokenId = null): array
     {
         return $this->user->tokens()
             // Sort by created_at DESC so the freshest login is at the top.
@@ -61,16 +61,23 @@ class AuthService
             // see them — confusing for the device-info feature.)
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn ($t) => [
-                'id' => (int) $t->id,
-                'ip' => $t->ip ?? '',
-                'os' => $t->os ?? '',
-                'device' => $t->device ?? '',
-                'browser' => $t->browser ?? '',
-                'country' => $t->country ?? '',
-                'last_active_at' => $t->last_used_at ? $t->last_used_at->timestamp : 0,
-                'created_at' => $t->created_at->timestamp,
-            ])
+            ->map(function ($t) use ($currentTokenId) {
+                return [
+                    'id' => (int) $t->id,
+                    'ip' => $t->ip ?? '',
+                    'os' => $t->os ?? '',
+                    'device' => $t->device ?? '',
+                    'browser' => $t->browser ?? '',
+                    'country' => $t->country ?? '',
+                    'last_active_at' => $t->last_used_at ? $t->last_used_at->timestamp : 0,
+                    'created_at' => $t->created_at->timestamp,
+                    // is_current lets the Flutter app highlight the row the user
+                    // is logged in from (matches the access token that issued
+                    // the current /user/getActiveSession request). Strict int
+                    // compare — Sanctum token ids are unsigned bigint.
+                    'is_current' => $currentTokenId !== null && (int) $t->id === $currentTokenId,
+                ];
+            })
             ->values()
             ->toArray();
     }
