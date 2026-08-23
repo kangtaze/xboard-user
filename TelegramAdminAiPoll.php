@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Plan;
 use App\Models\Server;
 use App\Models\User;
+use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -644,6 +645,20 @@ PROMPT;
                     ],
                 ],
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'send_renewal_email',
+                    'description' => '给单个用户发送续费促销邮件（VIP限时特惠，官方商业模板）。管理员说"给xxx发续费邮件/发优惠邮件"时调用。每次只发一封。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'email' => ['type' => 'string', 'description' => '用户邮箱'],
+                        ],
+                        'required' => ['email'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -739,6 +754,7 @@ PROMPT;
                 'today_orders' => $this->toolTodayOrders(),
                 'today_new_users' => $this->toolTodayNewUsers(),
                 'send_announcement' => $this->toolSendAnnouncement($args),
+                'send_renewal_email' => $this->toolSendRenewalEmail($args['email'] ?? ''),
                 default => "未知工具函数: {$name}",
             };
         } catch (\Throwable $e) {
@@ -1159,6 +1175,45 @@ PROMPT;
         }
 
         return '公告已发送到频道' . ($pin ? '并已置顶' : '') . ($imageUrl ? '（含图片）' : '');
+    }
+
+    /**
+     * 给单个用户发送续费促销邮件（仅管理员）
+     */
+    private function toolSendRenewalEmail(string $email): string
+    {
+        $email = strtolower(trim($email));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return "邮箱格式无效: {$email}";
+        }
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return "未找到用户: {$email}";
+        }
+
+        $appName = admin_setting('app_name', 'VP92');
+        $appUrl = rtrim(admin_setting('app_url', 'https://vp92vip.com'), '/');
+
+        $log = MailService::sendEmail([
+            'email' => $email,
+            'subject' => $appName . ' - VIP限时特惠，续费专享优惠',
+            'template_name' => 'renewalCampaign',
+            'template_value' => [
+                'name' => $appName,
+                'url' => $appUrl,
+                'purchase_url' => $appUrl . '/#/plan',
+                'price' => '19.99',
+            ],
+        ]);
+
+        if (!empty($log['error'])) {
+            Log::error('Bot 发送续费邮件失败', ['email' => $email, 'error' => $log['error']]);
+            return "❌ 发送失败: {$log['error']}";
+        }
+
+        Log::info('Bot 发送续费邮件成功', ['email' => $email, 'admin_bot' => true]);
+        return "✅ 续费邮件已发送至 {$email}";
     }
 
     // ========================================================
