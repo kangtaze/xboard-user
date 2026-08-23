@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -1256,16 +1257,27 @@ PROMPT;
     }
 
     /**
-     * 到期用户查询（群发预览/执行共用的筛选条件）
+     * 到期用户查询（群发预览/执行共用的筛选条件，含7天冷却去重）
      */
     private function renewalBulkQuery()
     {
+        $cooldown = time() - (7 * 86400);
         return User::whereNotNull('email')
             ->where('email', '!=', '')
             ->where('is_admin', false)
             ->where('banned', false)
             ->whereNotNull('expired_at')
-            ->where('expired_at', '<', time());
+            ->where('expired_at', '<', time())
+            ->whereNotExists(function ($q) use ($cooldown) {
+                $q->select(DB::raw(1))
+                    ->from('v2_mail_log')
+                    ->whereColumn('v2_mail_log.email', 'v2_user.email')
+                    ->where(function ($q2) {
+                        $q2->where('template_name', 'like', '%renewalCampaign')
+                            ->orWhere('template_name', 'like', '%renewalMarketing');
+                    })
+                    ->where('created_at', '>', $cooldown);
+            });
     }
 
     /**
@@ -1275,8 +1287,17 @@ PROMPT;
     {
         $total = (clone $this->renewalBulkQuery())->count();
         if ($total === 0) {
-            return json_encode(['total' => 0, 'message' => '当前没有符合条件的到期用户'], JSON_UNESCAPED_UNICODE);
+            return json_encode(['total' => 0, 'message' => '当前没有符合条件的到期用户（可能都已被每日任务或7天冷却覆盖）'], JSON_UNESCAPED_UNICODE);
         }
+
+        $expiredTotal = User::whereNotNull('email')
+            ->where('email', '!=', '')
+            ->where('is_admin', false)
+            ->where('banned', false)
+            ->whereNotNull('expired_at')
+            ->where('expired_at', '<', time())
+            ->count();
+        $skipped = max(0, $expiredTotal - $total);
 
         $samples = $this->renewalBulkQuery()->orderBy('expired_at')->limit(10)->pluck('email')->toArray();
         $batches = (int) ceil($total / 50);
@@ -1284,11 +1305,12 @@ PROMPT;
 
         return json_encode([
             'total' => $total,
+            'skipped_by_cooldown' => $skipped,
             'sample_emails' => $samples,
             'chunk_size' => 50,
             'delay_seconds' => 6,
             'estimated_minutes' => $estMinutes,
-            'note' => '请把统计结果展示给管理员并等待明确确认，确认后才能调用 send_renewal_bulk(confirm=true)',
+            'note' => "共 {$expiredTotal} 人到期，其中 {$skipped} 人因7天内已收到过续费邮件被跳过，实际将发送 {$total} 封。请展示给管理员并等待明确确认，确认后才能调用 send_renewal_bulk(confirm=true)",
         ], JSON_UNESCAPED_UNICODE);
     }
 

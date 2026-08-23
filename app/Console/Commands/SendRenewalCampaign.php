@@ -5,10 +5,13 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Services\MailService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SendRenewalCampaign extends Command
 {
+    private const COOLDOWN_DAYS = 7; // 同一用户7天内收到过续费类邮件则跳过（含每日自动任务发的）
+
     protected $signature = 'send:renewal-campaign
                             {--dry : 预览模式，不发送邮件}
                             {--chunk-size=50 : 每批处理数量}
@@ -30,8 +33,19 @@ class SendRenewalCampaign extends Command
             ->where('banned', false);
 
         if ($this->option('expired-only')) {
+            $cooldown = time() - (self::COOLDOWN_DAYS * 86400);
             $baseQuery->whereNotNull('expired_at')
-                ->where('expired_at', '<', time());
+                ->where('expired_at', '<', time())
+                ->whereNotExists(function ($q) use ($cooldown) {
+                    $q->select(DB::raw(1))
+                        ->from('v2_mail_log')
+                        ->whereColumn('v2_mail_log.email', 'v2_user.email')
+                        ->where(function ($q2) {
+                            $q2->where('template_name', 'like', '%renewalCampaign')
+                                ->orWhere('template_name', 'like', '%renewalMarketing');
+                        })
+                        ->where('created_at', '>', $cooldown);
+                });
         }
 
         $totalUsers = $baseQuery->count();
