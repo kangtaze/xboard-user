@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Utils\UserAgentParser;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -15,7 +17,7 @@ class AuthService
         $this->user = $user;
     }
 
-    public function generateAuthData(): array
+    public function generateAuthData(?Request $request = null): array
     {
         // Create a new Sanctum token with device info
         $token = $this->user->createToken(
@@ -23,6 +25,21 @@ class AuthService
             ['*'], // abilities
             now()->addYear() // expiration
         );
+
+        // Store device info when a request is available (i.e. login flow).
+        if ($request) {
+            $accessToken = $token->accessToken;
+            $ua = $request->userAgent() ?? '';
+            $parsed = UserAgentParser::parse($ua);
+
+            $accessToken->ip = $request->ip();
+            $accessToken->os = $parsed['os'];
+            $accessToken->device = $parsed['device'];
+            $accessToken->browser = $parsed['browser'];
+            // country is reserved for a future GeoIP lookup.
+            $accessToken->country = '';
+            $accessToken->save();
+        }
 
         // Format token: remove ID prefix and add Bearer
         $tokenParts = explode('|', $token->plainTextToken);
@@ -37,13 +54,27 @@ class AuthService
 
     public function getSessions(): array
     {
-        return $this->user->tokens()->get()->toArray();
+        return $this->user->tokens()
+            ->orderByDesc('last_used_at')
+            ->get()
+            ->map(fn ($t) => [
+                'id' => (int) $t->id,
+                'ip' => $t->ip ?? '',
+                'os' => $t->os ?? '',
+                'device' => $t->device ?? '',
+                'browser' => $t->browser ?? '',
+                'country' => $t->country ?? '',
+                'last_active_at' => $t->last_used_at ? $t->last_used_at->timestamp : 0,
+                'created_at' => $t->created_at->timestamp,
+            ])
+            ->values()
+            ->toArray();
     }
 
     public function removeSession(string $sessionId): bool
     {
-        $this->user->tokens()->where('id', $sessionId)->delete();
-        return true;
+        $deleted = $this->user->tokens()->where('id', $sessionId)->delete();
+        return $deleted > 0;
     }
 
     public function removeAllSessions(): bool
@@ -55,11 +86,11 @@ class AuthService
     public static function findUserByBearerToken(string $bearerToken): ?User
     {
         $token = str_replace('Bearer ', '', $bearerToken);
-        
+
         $accessToken = PersonalAccessToken::findToken($token);
-        
+
         $tokenable = $accessToken?->tokenable;
-        
+
         return $tokenable instanceof User ? $tokenable : null;
     }
 
@@ -72,11 +103,11 @@ class AuthService
     public static function decryptAuthData(string $authorization): ?array
     {
         $user = self::findUserByBearerToken($authorization);
-        
+
         if (!$user) {
             return null;
         }
-        
+
         return [
             'id' => $user->id,
             'email' => $user->email,
