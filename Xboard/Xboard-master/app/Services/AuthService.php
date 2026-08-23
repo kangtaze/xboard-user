@@ -19,9 +19,14 @@ class AuthService
 
     public function generateAuthData(?Request $request = null): array
     {
+        // Prefer a stable client-generated device id (X-Device-Id header) as the
+        // token name — LoginService dedups same-device sessions by matching it.
+        // Fall back to a random name for old clients that don't send it.
+        $deviceId = mb_substr(trim((string) $request?->header('X-Device-Id', '')), 0, 64);
+
         // Create a new Sanctum token with device info
         $token = $this->user->createToken(
-            Str::random(20), // token name (device identifier)
+            $deviceId !== '' ? $deviceId : Str::random(20), // token name (device identifier)
             ['*'], // abilities
             now()->addYear() // expiration
         );
@@ -32,9 +37,14 @@ class AuthService
             $ua = $request->userAgent() ?? '';
             $parsed = UserAgentParser::parse($ua);
 
+            // #53: prefer the real device model reported by the client
+            // (X-Device-Model header, e.g. "Xiaomi 23127PN0CC") over the
+            // coarse UA-derived type ("Mobile"/"Desktop").
+            $reportedModel = mb_substr(trim((string) $request->header('X-Device-Model', '')), 0, 64);
+
             $accessToken->ip = $request->ip();
             $accessToken->os = $parsed['os'];
-            $accessToken->device = $parsed['device'];
+            $accessToken->device = $reportedModel !== '' ? $reportedModel : $parsed['device'];
             $accessToken->browser = $parsed['browser'];
             // country is reserved for a future GeoIP lookup.
             $accessToken->country = '';

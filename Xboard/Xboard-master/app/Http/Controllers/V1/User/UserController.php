@@ -48,6 +48,20 @@ class UserController extends Controller
         return $this->success($authService->removeSession($request->input('session_id')));
     }
 
+    /**
+     * 退出登录 —— 撤销当前请求使用的 token（B3）。
+     * APP 端退出账号时先调这个接口再清本地存储，避免 token 在服务端残留。
+     */
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        $token = $user->currentAccessToken();
+        if ($token) {
+            $user->tokens()->where('id', $token->id)->delete();
+        }
+        return $this->success(true);
+    }
+
     public function checkLogin(Request $request)
     {
         $data = [

@@ -3,9 +3,11 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Utils\UserAgentParser;
 use App\Services\Plugin\HookManager;
 use App\Utils\CacheKey;
 use App\Utils\Helper;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class LoginService
@@ -15,9 +17,10 @@ class LoginService
      *
      * @param string $email 用户邮箱
      * @param string $password 用户密码
+     * @param Request|null $request 用于同设备识别（X-Device-Id 头 / IP+UA 指纹）
      * @return array [成功状态, 用户对象或错误信息]
      */
-    public function login(string $email, string $password): array
+    public function login(string $email, string $password, ?Request $request = null): array
     {
         // 检查密码错误限制
         if ((int) admin_setting('password_limit_enable', true)) {
@@ -67,11 +70,38 @@ class LoginService
             return [false, [400, __('Your account has been suspended')]];
         }
 
-        // 检查设备数量限制（device_limit > 0 时生效）
+        // B1: 同设备去重 —— 同一台设备的旧会话先撤销，避免反复登录产生多条会话占满名额。
+        // 新版客户端带 X-Device-Id 头（持久随机 ID，存在 token name 列），识别最可靠；
+        // 旧版客户端没有该头，退化为 IP + UA 指纹匹配（同 IP 且同系统/客户端才视为同一设备）。
+        if ($request) {
+            $deviceId = trim((string) $request->header('X-Device-Id', ''));
+            if ($deviceId !== '') {
+                $user->tokens()->where('name', $deviceId)->delete();
+            } else {
+                $ua = $request->userAgent() ?? '';
+                if ($ua !== '') {
+                    $parsed = UserAgentParser::parse($ua);
+                    $user->tokens()
+                        ->where('ip', (string) $request->ip())
+                        ->where('os', $parsed['os'])
+                        ->where('browser', $parsed['browser'])
+                        ->delete();
+                }
+            }
+        }
+
+        // B2: 设备数量达到上限时直接拒绝登录，让用户自己管理会话
+        // （不再自动踢最旧设备 —— 被踢设备的 token 全部失效，体验差且容易被误认为盗号）
         if ($user->device_limit > 0) {
-            $activeTokens = $user->tokens()->count();
-            if ($activeTokens >= $user->device_limit) {
-                return [false, [403, __('The number of devices has reached the upper limit ({count}). Please remove other devices in Account > Active Sessions and try again.', ['count' => $user->device_limit])]];
+            $activeCount = $user->tokens()->count();
+            if ($activeCount >= $user->device_limit) {
+                return [
+                    false,
+                    [
+                        403,
+                        '登录设备数已达上限，请在已登录设备的「账号 - 活跃会话」中移除不需要的设备后重试'
+                    ]
+                ];
             }
         }
 
