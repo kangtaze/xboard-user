@@ -21,16 +21,17 @@ class AuthService
     {
         // Prefer a stable client-generated device id (X-Device-Id header) as the
         // token name — LoginService dedups same-device sessions by matching it.
-        // Requests WITHOUT the header are web-dashboard logins: mark their token
-        // name with a "web:" prefix so the device-limit count in LoginService can
-        // skip them — users must always be able to open the web panel to copy
-        // subscription links in whatever format their client needs.
+        // Requests without the header are web-dashboard logins ONLY when the UA
+        // looks like a browser (Mozilla*). Legacy APP versions also omit the
+        // header — they must keep counting toward the device limit, so they fall
+        // through to a random unprefixed name.
         $deviceId = mb_substr(trim((string) $request?->header('X-Device-Id', '')), 0, 64);
-        $isWebSession = $deviceId === '';
+        $ua = (string) $request?->userAgent();
+        $isWebSession = $deviceId === '' && str_contains($ua, 'Mozilla');
 
         // Create a new Sanctum token with device info
         $token = $this->user->createToken(
-            $isWebSession ? 'web:' . Str::random(20) : $deviceId, // token name (device identifier)
+            $isWebSession ? 'web:' . Str::random(20) : ($deviceId !== '' ? $deviceId : Str::random(20)), // token name (device identifier)
             ['*'], // abilities
             now()->addYear() // expiration
         );
@@ -48,7 +49,7 @@ class AuthService
 
             $accessToken->ip = $request->ip();
             $accessToken->os = $parsed['os'];
-            $accessToken->device = $reportedModel !== '' ? $reportedModel : ($isWebSession ? '网页登录' : $parsed['device']);
+            $accessToken->device = $reportedModel !== '' ? $reportedModel : ($isWebSession ? '网页登录' : ($deviceId !== '' ? $parsed['device'] : ('旧版客户端 ' . $parsed['device'])));
             $accessToken->browser = $parsed['browser'];
             // country is reserved for a future GeoIP lookup.
             $accessToken->country = '';
