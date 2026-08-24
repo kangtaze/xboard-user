@@ -942,7 +942,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <img alt="Get it on Google Play" src="/img/google-play-badge.png" loading="lazy">
 </a>
 <span class="store-badge-disabled" title="Coming Soon">
-<img alt="Download on the App Store" src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" loading="lazy">
+<img alt="Download on the App Store" src="/img/app-store-badge.png" loading="lazy">
 </span>
 </div>
 <a href="#support" class="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mt-2">
