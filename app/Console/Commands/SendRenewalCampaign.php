@@ -17,6 +17,7 @@ class SendRenewalCampaign extends Command
                             {--chunk-size=50 : 每批处理数量}
                             {--delay=6 : 批次间延迟秒数}
                             {--expired-only : 仅发送给已到期用户}
+                            {--no-cooldown : 忽略7天冷却限制，所有符合条件用户均发送}
                             {--force : 跳过确认}';
 
     protected $description = '群发续费促销邮件给所有用户';
@@ -33,10 +34,11 @@ class SendRenewalCampaign extends Command
             ->where('banned', false);
 
         if ($this->option('expired-only')) {
-            $cooldown = time() - (self::COOLDOWN_DAYS * 86400);
             $baseQuery->whereNotNull('expired_at')
-                ->where('expired_at', '<', time())
-                ->whereNotExists(function ($q) use ($cooldown) {
+                ->where('expired_at', '<', time());
+            if (!$this->option('no-cooldown')) {
+                $cooldown = time() - (self::COOLDOWN_DAYS * 86400);
+                $baseQuery->whereNotExists(function ($q) use ($cooldown) {
                     $q->select(DB::raw(1))
                         ->from('v2_mail_log')
                         ->whereColumn('v2_mail_log.email', 'v2_user.email')
@@ -46,6 +48,7 @@ class SendRenewalCampaign extends Command
                         })
                         ->where('created_at', '>', $cooldown);
                 });
+            }
         }
 
         $totalUsers = $baseQuery->count();
@@ -60,7 +63,7 @@ class SendRenewalCampaign extends Command
         $estimatedMinutes = $delay > 0 ? round(($batches - 1) * $delay / 60, 1) : 0;
 
         $this->table(['项目', '值'], [
-            ['筛选模式', $this->option('expired-only') ? '24-27日到用户' : '所有用户'],
+            ['筛选模式', $this->option('expired-only') ? ($this->option('no-cooldown') ? '已到期用户（忽略冷却）' : '已到期用户（7天冷却）') : '所有用户'],
             ['符合条件的用户', number_format($totalUsers)],
             ['每批数量', $chunkSize],
             ['批次间延迟', $delay > 0 ? "{$delay} 秒" : '无'],
@@ -152,7 +155,7 @@ class SendRenewalCampaign extends Command
 
     private function buildSubject(): string
     {
-        return  'VP92极速加速器 - 您的订阅已到期，专属回归优惠等您';
+        return  '【VP92】您的订阅已到期 — 全新 V1.2.5 版本已发布，续费即享全新体验';
     }
 
     private function getPurchaseUrl(): string
