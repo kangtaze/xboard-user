@@ -173,11 +173,14 @@ function startPolling() {
     countdownText.value = min > 0 ? `${min}分${sec.toString().padStart(2, '0')}秒` : `${sec}秒`
     try {
       const tradeNo = pendingTradeNo.value || props.tradeNo
-      // 后端 ApiResponse::success 返回 {status, message, data}，data 是订单 status 数字
-      // response interceptor 已解一层，所以 res.data.data = 0/1/2/3/4
+      // 后端 ApiResponse::success 返回 {status, message, data}
+      // axios 拦截器 (client.ts) 已解一层 response.data，所以 res.data 就是订单 status 数字
+      // 之前写的 res?.data?.data 多解一层，导致永远是 undefined
       const res = await checkOrder(tradeNo) as any
-      const status = res?.data?.data
-      if (status === 3 || status === 4) {
+      const status = res?.data
+      // 支付成功后 OrderService::paid() 立刻把 status 设为 1 (处理中)
+      // 然后 OrderHandleJob 异步推到 3 (已完成)。前端 3 秒轮询大概率落在 1，所以 >= 1 都视为成功
+      if (typeof status === 'number' && status >= 1) {
         stopPolling()
         step.value = 'success'
         setTimeout(() => {
