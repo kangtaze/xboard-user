@@ -247,11 +247,12 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 @endverbatim
 <script type="application/ld+json" data-i18n-schema="org">{!! $orgSchema !!}</script>
 <script type="application/ld+json" data-i18n-schema="web">{!! $webSchema !!}</script>
-<link rel="stylesheet" href="/css/landing.min.css"/>
+<!-- XboardFerrari v10: ?v=2 加 query string 绕过 CF 缓存拿新 CSS（含 .gn-stats-overlay 完整规则） -->
+<link rel="stylesheet" href="/css/landing.min.css?v=2"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Geist:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/css/global-network.css"/>
+<link rel="stylesheet" href="/css/global-network.css?v=3"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -1443,7 +1444,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     50% { box-shadow: 0 0 24px rgba(38,165,228,0.6), 0 0 48px rgba(38,165,228,0.2); }
 }
 </style>
-<script src="/js/vp92-chat-widget.js"></script>
+<script src="/js/vp92-chat-widget.js?v=2"></script>
 <!-- Footer Shell -->
 <footer class="bg-surface border-t border-outline-variant">
 <div class="max-w-[1600px] mx-auto px-margin-mobile md:px-20 py-stack-xl">
@@ -1717,7 +1718,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
             observer.observe(section);
         });
     </script>
-    <script src="/js/global-network.js"></script>
+    <script src="/js/global-network.js?v=3"></script>
 
 <!-- Subscribe Modal -->
 <div id="subscribeModal" class="sub-modal" style="display:none;">
@@ -2015,10 +2016,12 @@ let CYCLE_SAVE = {
 };
 
 function openSubscribeModal(plan) {
-  // 已登录用户直接跳转到购买页
+  // 已登录用户直接跳转到套餐购买页（自动选中本套餐 + 触发 checkout）
   var _t = localStorage.getItem('fe_auth_token') || localStorage.getItem('auth_token');
   if (_t) {
-    window.location.href = '/dashboard';
+    var planInfo = PLAN_DATA[plan] || {};
+    var url = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=monthly';
+    window.location.href = url;
     return;
   }
   selectedPlan = plan;
@@ -2104,11 +2107,14 @@ function handleSubscribe() {
           const auth = loginData.data.auth_data;
           localStorage.setItem('fe_auth_token', auth.token);
         }
-        // Redirect to checkout with plan and cycle
+        // Redirect to plans page with auto-checkout params (Dashboard SPA reads them)
         const planInfo = PLAN_DATA[selectedPlan] || {};
-        window.location.href = '/dashboard?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        window.location.href = checkoutUrl;
       }).catch(() => {
-        window.location.href = '/dashboard?checkout_plan=' + (PLAN_DATA[selectedPlan]?.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const planInfo = PLAN_DATA[selectedPlan] || {};
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        window.location.href = checkoutUrl;
       });
     } else {
       showSubError(data.message || jt('err_register_failed'));
