@@ -761,7 +761,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <p class="font-body-lg text-body-lg mb-stack-lg" style="color:#9398b0;" data-i18n="hero.subtitle">
                     全球加速节点一键连接，高速稳定，畅享全球网络
                 </p>
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
+<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
                     免费注册
                 </button>
                 <p class="font-body-sm mb-stack-xl" style="color:#666;" data-i18n="hero.trial_note">新注册用户免费体验 24 小时</p>
@@ -1475,7 +1475,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex flex-col md:flex-row items-center justify-between border-t border-outline-variant pt-stack-md gap-stack-md">
 <p class="font-label-md text-on-surface-variant">© 2026 VP92 PRECISION ENGINEERING</p>
 <div class="flex gap-stack-lg">
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
+<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
 <button class="text-on-surface-variant font-label-md hover:text-primary transition-colors" data-i18n="footer.btn_learn_more">了解更多</button>
 </div>
 </div>
