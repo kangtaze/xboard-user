@@ -61,7 +61,17 @@ Route::get('/', function (Request $request) {
             'version' => app(UpdateService::class)->getCurrentVersion(),
             'description' => admin_setting('app_description', 'Xboard is best'),
             'logo' => admin_setting('logo'),
-            'theme_config' => $themeService->getConfig($theme)
+            'theme_config' => $themeService->getConfig($theme),
+            // XboardFerrari v10: landing.blade.php 通过 @isset($windows_download_url) 等读取，
+            // 必须从 admin_setting 注入，否则下载卡片永远显示"敬请期待"。
+            'windows_download_url' => admin_setting('windows_download_url'),
+            'windows_version' => admin_setting('windows_version'),
+            'android_download_url' => admin_setting('android_download_url'),
+            'android_version' => admin_setting('android_version'),
+            'ios_download_url' => admin_setting('ios_download_url'),
+            'ios_version' => admin_setting('ios_version'),
+            // 8/10 落地的 SEO 背景图
+            'background_url' => admin_setting('frontend_background_url'),
         ];
         // XboardFerrari: 根路径渲染落地页 landing.blade.php（恢复 v10 用户报告：vp92vip.com 应为营销落地页）
         // 命名空间 theme::VP92 → /www/theme/VP92/landing.blade.php
@@ -73,6 +83,23 @@ Route::get('/', function (Request $request) {
         ]);
         abort(500, '主题加载失败');
     }
+});
+
+// XboardFerrari v10: 恢复 2026-08-10 加的 SEO 法律页/教程路由（commit 3c6cd38 后 submodule 迁移丢失）
+// landing.blade.php 引用 /vp92-tutorial.html /vp92-terms.html /vp92-privacy.html，
+// sitemap.xml 也列出这三页；缺一 → GSC 报语法错误 + 用户看到 404。
+// 渲染源在 /www/theme/VP92/（nginx 静态副本在 /www/public/）
+Route::get('/vp92-tutorial.html', function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    return view('theme::' . $theme . '.vp92-tutorial');
+});
+Route::get('/vp92-terms.html', function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    return view('theme::' . $theme . '.vp92-terms');
+});
+Route::get('/vp92-privacy.html', function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    return view('theme::' . $theme . '.vp92-privacy');
 });
 
 //TODO:: 兼容

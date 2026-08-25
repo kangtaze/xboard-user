@@ -247,11 +247,12 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 @endverbatim
 <script type="application/ld+json" data-i18n-schema="org">{!! $orgSchema !!}</script>
 <script type="application/ld+json" data-i18n-schema="web">{!! $webSchema !!}</script>
-<link rel="stylesheet" href="/css/landing.min.css"/>
+<!-- XboardFerrari v10: ?v=2 加 query string 绕过 CF 缓存拿新 CSS（含 .gn-stats-overlay 完整规则） -->
+<link rel="stylesheet" href="/css/landing.min.css?v=2"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Geist:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/css/global-network.css"/>
+<link rel="stylesheet" href="/css/global-network.css?v=2"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
