@@ -176,6 +176,9 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\SettingServiceProvider::class,
         App\Providers\OctaneServiceProvider::class,
+        // XboardFerrari: Edgetunnel 节点注入订阅必须在 Octane 之后注册
+        // 命名空间是 XboardFerrari\Providers（不带 App\），依赖 composer.json 的 XboardFerrari PSR-4 映射
+        XboardFerrari\Providers\EdgetunnelServiceProvider::class,
         App\Providers\PluginServiceProvider::class,
         App\Providers\ProtocolServiceProvider::class,
 

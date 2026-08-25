@@ -328,6 +328,24 @@
                     </template>
                 </div>
             </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1.5">订阅端口格式</label>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="form.direct_ip_mode = false"
+                        type="button"
+                        class="px-3 py-1.5 text-xs rounded-lg border transition"
+                        :class="!form.direct_ip_mode ? 'bg-brand-500/20 border-brand-500 text-brand-400' : 'bg-slate-900 border-slate-600 text-slate-400 hover:border-slate-500'"
+                        x-text="'域名 + 443 端口'"></button>
+                    <button @click="form.direct_ip_mode = true"
+                        type="button"
+                        class="px-3 py-1.5 text-xs rounded-lg border transition"
+                        :class="form.direct_ip_mode ? 'bg-brand-500/20 border-brand-500 text-brand-400' : 'bg-slate-900 border-slate-600 text-slate-400 hover:border-slate-500'"
+                        x-text="'域名 + 上游订阅端口'"></button>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">
+                    默认使用域名 + 443；若上游订阅的端口非标准（如 8443/2053），可改为沿用上游端口直连
+                </p>
+            </div>
             <div class="flex items-center gap-6">
                 <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
                     <input type="checkbox" x-model="form.enabled" class="rounded border-slate-600 text-brand-500 focus:ring-brand-500">
@@ -463,7 +481,7 @@ function edgetunnelApp() {
         planGroups: [],
         cfWorkers: [],
         servers: [],
-        form: { name: '', url: '', group_ids: [], dns_cf_worker_id: null, enabled: true, show: true },
+        form: { name: '', url: '', group_ids: [], dns_cf_worker_id: null, enabled: true, show: true, direct_ip_mode: false },
         serverForm: { name: '', host: '', port: 443, group_ids: [] },
         toast: { show: false, message: '', type: 'success' },
         userList: [],
@@ -633,6 +651,7 @@ function edgetunnelApp() {
                 dns_cf_worker_id: sub.dns_cf_worker_id || null,
                 enabled: sub.enabled !== false,
                 show: sub.show !== false,
+                direct_ip_mode: !!sub.direct_ip_mode,
             };
             this.showAddModal = true;
         },
@@ -653,7 +672,7 @@ function edgetunnelApp() {
                     this.showToast(this.editingId ? '更新成功' : '添加成功');
                     this.showAddModal = false;
                     this.editingId = null;
-                    this.form = { name: '', url: '', group_ids: [], dns_cf_worker_id: null, enabled: true, show: true };
+                    this.form = { name: '', url: '', group_ids: [], dns_cf_worker_id: null, enabled: true, show: true, direct_ip_mode: false };
                     await this.fetchSubscriptions();
                 } else {
                     this.showToast('保存失败 (' + res.status + ')', 'error');

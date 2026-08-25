@@ -36,6 +36,7 @@ class EdgetunnelController
                 'last_sync_at' => $sub->last_sync_at,
                 'node_count' => $sub->nodes_count,
                 'dns_cf_worker_id' => $sub->dns_cf_worker_id,
+                'direct_ip_mode' => (bool) ($sub->direct_ip_mode ?? false),
                 'dns_zone_name' => $sub->dnsWorker ? $sub->dnsWorker->domain : null,
             ];
         });
