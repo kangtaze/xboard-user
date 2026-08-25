@@ -272,7 +272,7 @@ onMounted(async () => {
   <div class="plan-purchase-page">
     <!-- Loading -->
     <div v-if="loading" class="loading-state">
-      <span class="material-symbols-outlined animate-spin">progress_activity</span>
+      <span class="vp-spinner vp-spinner-md"></span>
       <span>加载套餐...</span>
     </div>
 
