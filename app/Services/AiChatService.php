@@ -36,7 +36,9 @@ class AiChatService
     private const VERSION_INFO_CACHE_TTL = 1800; // 30 分钟缓存，发版后最迟半小时自动生效
 
     // System Prompt - 产品知识库 + 安全约束（占位符在 buildMessages() 中动态替换）
-    private const SYSTEM_PROMPT = <<<PROMPT
+    // 注意: 必须用 nowdoc (<<<'PROMPT'),不能用 heredoc (<<<PROMPT)
+    // 因为 heredoc 会插值 $userContext 等变量,在 class const 中报 "Constant expression contains invalid operations" 致命错误(2026-08-26 v15.4 部署后 Chrome 测试暴露)
+    private const SYSTEM_PROMPT = <<<'PROMPT'
 你是 %APP_NAME% 的智能客服助手。你的职责是帮助用户解决产品使用问题。
 
 【产品知识】
