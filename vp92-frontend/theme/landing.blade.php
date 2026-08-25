@@ -2016,10 +2016,12 @@ let CYCLE_SAVE = {
 };
 
 function openSubscribeModal(plan) {
-  // 已登录用户直接跳转到购买页
+  // 已登录用户直接跳转到套餐购买页（自动选中本套餐 + 触发 checkout）
   var _t = localStorage.getItem('fe_auth_token') || localStorage.getItem('auth_token');
   if (_t) {
-    window.location.href = '/dashboard';
+    var planInfo = PLAN_DATA[plan] || {};
+    var url = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=monthly';
+    window.location.href = url;
     return;
   }
   selectedPlan = plan;
@@ -2105,11 +2107,14 @@ function handleSubscribe() {
           const auth = loginData.data.auth_data;
           localStorage.setItem('fe_auth_token', auth.token);
         }
-        // Redirect to checkout with plan and cycle
+        // Redirect to plans page with auto-checkout params (Dashboard SPA reads them)
         const planInfo = PLAN_DATA[selectedPlan] || {};
-        window.location.href = '/dashboard?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        window.location.href = checkoutUrl;
       }).catch(() => {
-        window.location.href = '/dashboard?checkout_plan=' + (PLAN_DATA[selectedPlan]?.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const planInfo = PLAN_DATA[selectedPlan] || {};
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        window.location.href = checkoutUrl;
       });
     } else {
       showSubError(data.message || jt('err_register_failed'));
