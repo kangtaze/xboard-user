@@ -1,251 +1,171 @@
-# VP92 项目进度 — 2026-08-25 v9 ✅ **完成+入库** + v10 后台用户信息缺失排查中
+# 🚨 v15.3 紧急唤醒快照 (2026-08-26 凌晨)
 
-## 🚨 唤醒提示词（直接复制粘贴到新窗口）
+> 用户紧急指令："上下文满了，新窗口要能马上接手项目进度，不能有脱节"
+> **新窗口第一件事：复制粘贴底部"唤醒提示词"**
+
+## 🎯 本次会话最大成果
+
+**完整修复"扫码支付完成后前端不弹'支付成功'提示" bug**——横跨 Web/PC/APK 三个端，代码已 commit + push 三个仓库，但**只 Web 已部署上线，APP 端代码修了未构建发布**。
+
+| 端 | Bug | 状态 |
+|----|-----|------|
+| **Web Dashboard** | ✅ status 字段读取路径错（多解一层）+ status 范围漏 1 | ✅ 已修复 + 部署 + push |
+| **PC 客户端 (Windows)** | ❌ status 范围漏 1 | ✅ 代码已 commit+push，但**未构建 v1.2.6** |
+| **APK (Android)** | ❌ status 范围漏 1 | ✅ 代码已 commit+push，但**未构建 v1.2.6** |
+
+## 当前状态 (2026-08-26 凌晨 v15.3)
+
+### ✅ 本次会话已完成 + 部署 + 入库
+| Task | 仓库 | Commit | 部署状态 |
+|------|------|--------|----------|
+| Web CheckoutDialog status 字段读取路径修复 | vp92-frontend | `a006be3` | ✅ 已部署（index-DlVtTxFQ.js 上线）+ push my |
+| Web status 范围修复 `status >= 1` | vp92-frontend | `a006be3` | ✅ 同上（一个 commit 一起修） |
+| PC-vp92 status 范围修复 | PC-vp92 | `4857d81` | ✅ commit+push，**未构建** |
+| vp92-flclash status 范围修复 | vp92-flclash | `c2c3dce` | ✅ commit+push，**未构建** |
+| 用户撤销支付宝私钥（公网泄露过） | 用户操作 | - | ✅ 用户已自己后台填好 |
+
+### 🟡 进行中
+- **P0-A v1.2.6 构建部署**：代码全 commit+push，只差 build + R2 上传 + version.json bump
+  - PC-vp92 → Windows EXE build → R2 (`vp92-releases/windows/`) → version-windows.json bump
+  - vp92-flclash → Android APK (split-per-abi) → R2 (`vp92-releases/apk/`) → version.json bump (+2000) → Play Store AAB versionCode +1
+  - 工具：`E:\jiedian\vp92-flclash\release_android.py 1.2.6 "..."` 一键脚本
+  - 预计耗时：45-60 分钟（编译占大头）
+
+### ⏸️ 待办
+- **P0-B 教程图恢复**：`/img/tutorial/` 17 张图全丢，已找到原图在 `C:\Users\Administrator\Desktop\shuoming\images\` + `Desktop\tupian\`（两套镜像副本）
+  - PC 9 张 + Mobile 8 张 = 17 张
+  - 路径: `shuoming\images\` + `shuoming\images\手机端\`
+  - 需重命名+压缩+上传到 `/www/public/theme/VP92/img/tutorial/`
+
+- **P0-C 支付方式图标（支付宝官方 SVG）**：
+  - `E:\jiedian\vp92-frontend\src\components\common\CheckoutDialog.vue` line 26-34 `brandConfig` 所有 logo 都是文字
+  - 用户反馈"付款时支付宝的专用图标呢？" — 没有官方图标
+  - 需做 SVG：支付宝（蓝渐变+支字）/ 微信支付（绿+气泡）/ Stripe / PayPal / USDT
+
+- **记忆库合并**：旧的 v15-2-emergency-wakeup.md / v15-2-snapshot-2026-08-26.md 是冗余快照，新窗口直接读 latest.md 即可（保留索引但精简）
+
+## 🐛 本次修复的 Bug 详情（**下次别再踩同一个坑！**）
+
+### Bug 链路（4 层错位）
+
+| 层 | 数据 |
+|----|------|
+| 后端 OrderController::check() | `return $this->success($order->status)` → 返回 `{status:'success', message, data: 1或3, error}` |
+| axios 拦截器 (client.ts:60) | `return response.data` ← **解一层** → `res = {status, message, data, error}` |
+| 前端 CheckoutDialog.vue:179（web） | `const status = res?.data?.data` ← ❌ **多解一层** → undefined |
+| 前端 PC/APK api_service.dart | `final status = res['data']` ← ✅ **正确**（dio 无 axios 拦截器）|
+
+**症状**：用户扫码支付 → 后端 status 设 1 (处理中) → OrderHandleJob 异步推 3 (已完成) → 前端 3 秒轮询读 status → 永远读 undefined 或 3 之前的 1 → 永远不切 success 步骤
+
+### 修复要点（两边都要修）
+
+1. **Web**: `res?.data?.data` → `res?.data` + `status >= 1`
+2. **PC/APK**: `res['data']` (路径对) + `status >= 1 && status < 5`
+
+### Order 状态定义（`app/Models/Order.php:56-60`）
 
 ```
-读取 E:\jiedian\docs\session-progress-latest.md，这是 VP92 Xboard 项目最新进度。
-这是 2026-08-25 v9 快照（v9 完成：EdgetunnelServiceProvider 注册修复 + composer PSR-4 + direct_ip_mode UI + commit fb13f0a）。
-从 "## 当前状态" 开始，按 "## 待办清单" 顺序接手。
+STATUS_PENDING     = 0  // 待支付
+STATUS_PROCESSING  = 1  // 开通中 ← 这里立刻就触发
+STATUS_CANCELLED   = 2  // 已取消
+STATUS_COMPLETED   = 3  // 已完成 ← OrderHandleJob 异步推到这里
+STATUS_DISCOUNTED  = 4  // 已折抵
+```
+
+`OrderService::paid()` 在 `app/Services/OrderService.php:286-303` 立刻把 status 设 1，然后 `dispatchSync(OrderHandleJob::handle() → case STATUS_PROCESSING → orderService->open())` 推到 3。
+
+**所以"成功"判断应该用 `status >= 1 && status < 5`**：覆盖 1/3/4 排除 0/2。
+
+## 🚨 服务器规则（v15.2 修订，**这次会话没违反！**）
+
+> **本地才是真权威！** 服务器可能被回滚，本地副本可能落后于线上
+> 改任何后端 PHP 前**必须**：
+> 1. `git log` 看最新本地 commit
+> 2. `ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 "docker exec xboard cat /www/app/xxx.php" > /tmp/server_latest.php`
+> 3. `md5sum` 对比，本地 != 服务器时**以服务器为基准合并修改**
+
+## 关键文件路径速查
+
+| 文件 | 路径 |
+|------|------|
+| 后端 PHP 源码 | `E:\jiedian\xboard-repo\` |
+| 前端 VP92 主题 | `E:\jiedian\vp92-frontend\` (CheckoutDialog.vue 在 `src/components/common/`) |
+| PC 客户端 | `E:\jiedian\PC-vp92\` (api_service.dart 在 `lib/xboard/`) |
+| APK/移动客户端 | `E:\jiedian\vp92-flclash\` (api_service.dart 在 `lib/xboard/`, 一键发布 `release_android.py`) |
+| Edgetunnel Worker 代码 | `E:\jiedian\edgetunnel-extracted\` ❌ **不要读取** |
+| 部署脚本 | `E:\jiedian\xboard-deploy\` |
+| 设计文档 | `E:\jiedian\docs\` |
+| **教程图原图** | `C:\Users\Administrator\Desktop\shuoming\images\` + `Desktop\tupian\` |
+
+## 服务器速查
+- SSH: `ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212`
+- 容器: `xboard` (Laravel + Octane + Caddy)
+- 路径: `/www/app/`, `/www/theme/VP92/`, `/www/public/theme/VP92/`, `/www/plugins-core/`
+- Caddyfile: `/etc/caddy/Caddyfile` (不是 `/www/.docker/caddy/`)
+- SQLite: `/www/.docker/.data/database.sqlite` (表前缀 `v2_`)
+
+## 当前线上版本
+- Web Dashboard: **v15.3**（commit `a006be3` deployed，hash `index-DlVtTxFQ.js`）
+- PC/APK: **v1.2.5**（代码已修，未构建 v1.2.6）
+
+## 关键 commit hash
+- v15.3 web 修复: `a006be3` (vp92-frontend / xboard-ze)
+- v1.2.6 code: `4857d81` (PC-vp92), `c2c3dce` (vp92-flclash)
+- v15.2 此前: `b449ec7` (sitemap), `33a92fe` (CORS/字体), `8231ef4` (wakeup doc)
+
+## 🚨 网络注意（这次会话遇到了！）
+- `git push` 不稳定，可能 Failed to connect github.com 443 / schannel 错误
+- **解决**: 等 20-30 秒重试（CLAUDE.md 禁止 sleep 25 链式，要用 Monitor until-loop 或者直接重试）
+- SSH 也有同样问题: `Connection closed by 154.3.38.212 port 22`
+- `git config --global --unset http.proxy` 必须做（router 透明代理）
+
+## 🟢 三大 Bot 进程（持续运行）
+```
+telegram-ai  PID 21162  ✅
+telegram-adm PID 21166  ✅
+kawu-ai      PID 21170  ✅
+```
+supervisord 主进程没 socket，supervisorctl 用不了，bot 必须 `setsid` 启动（之前 wakeup v15.2 已记录）
+
+## 待办优先级（接手立即做，按用户决定）
+
+1. **P0-A v1.2.6 构建部署**（用户场景决定是否必要）：如果用户用 APP 付钱就做，45-60 分钟
+2. **P0-B 教程图 17 张**：用户点头就开始重命名+压缩+上传，30-45 分钟
+3. **P0-C 支付方式 SVG 图标**：替换 brandConfig 文字 logo，20-30 分钟
+4. 记忆库合并：清理旧 v15-2 快照，5 分钟
+
+## ⚠️ 给新窗口的安全警告
+- **任何 RSA 私钥不要贴到对话**！用后台管理界面或 scp 传文件
+- 用户上次贴了两段支付宝私钥到公网 → 已撤销重置
+
+---
+
+## 📢 唤醒提示词（**新窗口直接复制粘贴**）
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md，
+这是 VP92 Xboard 项目最新进度（v15.3 凌晨紧急快照）。
+
+核心进展：支付通知 bug 已修，Web 已上线（a006be3 deployed），
+PC/APK 代码修了未构建（4857d81/c2c3dce）。
+
+完成的事：
+- C/D/E 已 commit 33a92fe + b449ec7 入库+部署+push（v15.2 前）
+- v15.3 Web CheckoutDialog status 字段路径+范围已修 + 部署（a006be3）
+- PC-vp92 + vp92-flclash 同 bug 修复代码已 commit + push（4857d81/c2c3dce）
+- 用户撤销了支付宝密钥（公网泄露过，自己后台填好）
+- 教程图原图已定位（Desktop/shuoming/ Desktop/tupian/）
+
+未完成：
+- A 待用户决定是否构建 v1.2.6（45-60分钟，让 APP 享受修复）
+- B 教程图 17 张恢复（PC 9 + Mobile 8）
+- C 支付方式图标（支付宝 SVG 等）
+
 所有 ssh 命令加 -i C:/Users/Administrator/.ssh/id_ed25519。
-CF Worker 代码(E:\jiedian\edgetunnel-extracted)绝对不要读取。
-完整流程链路: 用户 → Xboard(/s/{token}) → Hook(client.subscribe.servers) → EdgetunnelServiceProvider → DB 缓存 → 注入订阅。
-改任何后端 PHP 前先拉服务器最新版本对比 md5，避免覆盖。
-git push my 前需要临时设 git proxy http://127.0.0.1:10808（路由透明代理对github.com无效）。
-**新上下文无记忆**: 关键架构 + 根因 + 记忆文件已存入 memory/Xboard架构.md / missing-edgetunnel-provider.md 等。
-核心已解问题: VIP1 订阅不可用 = EdgetunnelServiceProvider 未注册 → 已修。
-进行中: 后台用户列表缺注册IP/登录IP/设备显示（cedar2025 SPA 显示问题）→ 见 v9 待办。
+CF Worker 代码（E:\jiedian\edgetunnel-extracted）绝对不要读取。
+完整流程链路: 用户 → Xboard(/s/{token}) → Hook→ EdgetunnelServiceProvider → DB 缓存 →注入订阅。
+改任何后端 PHP 前先 git log + md5 对比本地（本地是真权威，服务器可能被回滚）。
+git push my 前 unset proxy（github.com 直连 OK），失败等 20-30 秒重试。
+
+第一步：问用户"是否启动 v1.2.6 构建？用户常用 APP 付钱吗？"
 ```
-
----
-
-## 🎯 当前状态：v9 全部完成+入库 ✅ | v10 后台用户信息缺失 🔍
-
-### ✅ v9 已完成（commit fb13f0a push kangtaze/xboard-ze，4 files +27/-3）
-- **EdgetunnelServiceProvider 注册修复**：config/app.php 加 `XboardFerrari\Providers\EdgetunnelServiceProvider::class`（在 OctaneServiceProvider 之后）
-- **composer.json PSR-4 补**：本地加 `"XboardFerrari\\": "app/XboardFerrari/"`（服务器原本就有，本地漏同步）
-- **VIP1 订阅恢复**：122 节点重新注入用户订阅 ✅ 用户确认可用
-- **direct_ip_mode UI 部署**：edgetunnel.blade.php 4 处 + EdgetunnelController.php 3 处
-
-### ⚠️ v10 进行中（用户反馈）
-- **后台看不到用户设备、注册 IP、登录 IP**（以前有这些功能）
-- 已确认：UserController.fetch() 返回 `v2_user.*`（含 register_ip, last_login_ip, last_login_user_agent）✅
-- 已确认：cedar2025 SPA 显示用户信息页 → umi.js 中无 IP/device 字段引用
-- **猜测根因**：SPA 显示字段丢失，需要在 Xboard 端添加 Hook 注入 device 解析
-
----
-
-## 📋 待办清单（按优先级）
-
-### 🔥 P0 v10：后台用户信息缺失修复
-1. **查 cedar2025 SPA 用户列表页**：SPA 调 `/api/v2/{secure_path}/user/fetch`（AdminRoute line 133）→ V2\Admin\UserController::fetch → 返 `v2_user.*`
-2. **注册 `admin.user.transform` Hook**：在 `XboardFerrari\Providers\UserInfoProvider` 中加 Hook 解析 `last_login_user_agent` → `device` 字段（iPhone/Android/Windows/Mac/Linux）
-3. **若 SPA 真不显示 IP**：在 transform 中显式注入 `register_ip`, `last_login_ip`, `last_login_user_agent` 字段（实际已有，但确认别名映射）
-
-### 💡 P1 v10 独立
-4. **修复 vp92vip.cc.cd R2 bucket** — 登 CF 控制台重传 APK（v8 老问题）
-5. **重写 renewalMarketing / maintenanceVip4 邮件模板**（官方风格）
-6. **把 3 个 Bot 加进 supervisord conf** — telegram-ai / admin-ai / kawu-ai
-
-### ⚠️ P2 优化
-7. **SPA 忽略 ?redirect= query param** — 跳默认 dashboard
-
----
-
-## 🧠 v9 根因发现（必读，避免重复踩坑）
-
-### EdgetunnelServiceProvider 注册缺失 BUG
-- **症状**：所有用户订阅拿不到 Edgetunnel 节点；VIP1 因无 fallback v2_server 完全空
-- **根因**：Provider 文件存在 `/www/app/XboardFerrari/Providers/EdgetunnelServiceProvider.php`，但**未在 `config/app.php` providers 数组中注册**
-- **后果**：`boot()` 永不行 → `HookManager::registerFilter('client.subscribe.servers', ...)` 永不调用 → 订阅跳过 EdgetunnelServiceProvider hook
-- **修复**：commit fb13f0a + octane:reload 后无 "Class not found" 错误
-
-### composer.json XboardFerrari PSR-4 缺失
-- 服务器 composer.json 有 `"XboardFerrari\\": "app/XboardFerrari/"` 
-- **本地仓库曾缺这一行**（历史漏同步）
-- 修复：commit fb13f0a 同步本地
-
-### Edgetunnel 数据流（用户关键提示）
-> "肯定是缓存在 Xboard 上啊，Xboard给用户订阅子节点啊，不可能给上游地址的啊"
-
-```
-1. 用户订阅 → Xboard ClientController@subscribe(/s/{token})
-2. HookManager::filter('client.subscribe.servers', $servers, $user, $request)
-3. → EdgetunnelServiceProvider 回调（priority=10）
-4. → EdgetunnelService::getAvailableNodes($user) → DB 查询
-5. → 注入子域名（sg01.vp92.cc.cd）→ 不是上游 IP
-```
-
-### 关键发现
-- **CF Worker KV 只存 users，不存 nodes**（sync:all-workers-kv 推 user-list + user-map）
-- **Worker 通过 Xboard API 实时拉 nodes**（但具体机制待验证）
-- **v2_edgetunnel_node** 是缓存节点（name, host, port, uuid, path, sni 等）
-
----
-
-## 📊 提交记录
-
-| Commit | 说明 |
-|--------|------|
-| **fb13f0a** | ✅ fix: 注册 EdgetunnelServiceProvider + 直连端口选择 UI + composer PSR-4 补 |
-| a626b93 | feat: SPA token bridge 替代 login.blade.php + 修 Bearer 前缀 BUG |
-| 6b883ab | feat: 备份 Bot 命令文件 |
-| 1bb5fc7 | fix: Caddyfile 加 @admin rewrite 恢复 /2d532679/edgetunnel 和 /cf-worker |
-| f8e6c81 | feat: send:update-notice |
-
-最近 push: kangtaze/xboard-ze.git master (2026-08-25 18:50+)
-
----
-
-## 🌐 域名速查
-| 域名 | 用途 | 状态 |
-|------|------|------|
-| vp92vip.com | 用户面板/落地页 + Xboard API | ✅ |
-| vp92vip.com/2d532679 | cedar2025 admin SPA | ✅ |
-| vp92vip.com/2d532679/edgetunnel | Edgetunnel Blade | ✅ |
-| vp92vip.com/2d532679/cf-worker | CF Worker Blade | ✅ |
-| vp92.app | 订阅入口 | ✅ |
-| vp92vip.cc.cd | APK + R2 (404 待修) | ❌ |
-| vp92.cc.cd | CF Worker01 (VIP1) | ✅ 已部署 id=46 |
-
----
-
-## 📂 项目目录结构（每个文件的作用）
-
-### E:\jiedian\ 根目录
-```
-├── CLAUDE.md                    # 项目说明（新会话必读）
-├── docs/                        # 设计文档和进度
-│   └── session-progress-latest.md  # 当前进度（**必读**）
-├── xboard-repo/                 # ★ 主工作仓库
-│   ├── app/                     #  自定义代码（XboardFerrari 命名空间）
-│   ├── XboardFerrari/           #  镜像副本（早期版本同步用）
-│   ├── resources/views/admin/   #  自定义后台 Blade
-│   └── Xboard/Xboard-master/    #  上游 Xboard 参考
-├── edgetunnel-extracted/        # CF Worker 代码 + 部署脚本（**禁止读取**）
-├── xboard-theme-lighttrack/     # 旧前端主题
-├── xboard-deploy/               # 部署调试副本
-└── docs/                        # 设计文档
-```
-
-### E:\jiedian\xboard-repo\ 自定义文件清单（详见 docs/文件结构说明.md）
-
-#### `app/XboardFerrari/`
-- **Models/EdgetunnelSubscription.php** — Edgetunnel 订阅 Eloquent 模型（含 dnsWorker 关系、group_ids cast 为 array）
-- **Providers/EdgetunnelServiceProvider.php** — 注册 client.subscribe.servers Hook 注入节点（**必须在 config/app.php 注册**！）
-
-#### `app/XboardFerrari/`（app/ 同级，镜像副本）
-- **Http/Controllers/Admin/EdgetunnelController.php** — Edgetunnel 后台管理 API（订阅/节点/用户/服务器 CRUD）
-- **Models/EdgetunnelNode.php** — 节点 Eloquent 模型
-- **Models/EdgetunnelSubscription.php** — 订阅模型副本
-- **Providers/EdgetunnelServiceProvider.php** — Provider 副本
-- **Services/EdgetunnelService.php** — 核心服务（syncSubscription 拉上游、getAvailableNodes 按组筛、testLatency 延迟）
-- **routes/admin.php** — 自定义后台路由（edgetunnel/* + cf-worker/*）
-
-#### `app/Http/Routes/`
-- **V1/UserRoute.php** — 用户 API 路由（user/order/gift-card/ai/knowledge 等）
-- **V2/AdminRoute.php** — 后台 API 路由（含 cf-worker + edgetunnel 路由 + bridge 页面）
-
-#### `app/Http/Controllers/V1/`
-- **User/AiController.php** — 登录用户 AI 客服（带个人上下文）
-- **Guest/GuestAiController.php** — 访客 AI 客服（无个人上下文）
-
-#### `app/Services/`
-- **AiChatService.php** — AI 客服核心（DeepSeek API）
-- **AuthService.php** — Sanctum auth + token 管理
-- **Auth/LoginService.php** — 登录业务逻辑
-
-#### `app/Console/Commands/`
-- **TelegramAiPoll.php** — 客服 Bot（用户侧）
-- **TelegramAdminAiPoll.php** — 管理 Bot（管理员侧）
-- **TelegramKawuPoll.php** — 卡务 Bot（礼品卡）
-- **SendPromotionMail.php** — 营销邮件群发
-- **SendRemindMail.php** — 续费提醒邮件
-- **SendRenewalCampaign.php** — 续费活动邮件
-- **SendUpdateNotice.php** — 版本更新邮件
-
-#### `resources/views/admin/`
-- **bridge.blade.php** — SPA token 桥接页（无 Sanctum 时跳转登录）
-- **cf-worker.blade.php** — CF Worker 管理 Blade
-- **edgetunnel.blade.php** — Edgetunnel 订阅管理 Blade（直接渲染版 admin page）
-
-#### `Xboard/Xboard-master/app/Http/Controllers/V2/Admin/`
-- **UserController.php** — 后台用户管理（fetch/update/dumpCSV/sendMail/ban/destroy 等）
-- **CfWorkerController.php** — CF Worker 后台 API（list/save/deploy/delete/redeploy）
-- 其余 ConfigController / CouponController / GiftCardController / KnowledgeController / MailTemplateController / NoticeController / OrderController / PaymentController / PlanController / PluginController / StatController / SystemController / ThemeController / TicketController / TrafficResetController / Server/* — 上游 Xboard 控制器
-
-#### `Xboard/Xboard-master/app/Http/Controllers/V1/Client/`
-- **ClientController.php** — 用户订阅端点（/s/{token} → 调 Hook → 输出订阅）
-- **AppController.php** — Dashboard 应用版本/下载信息
-
-### E:\jiedian\edgetunnel-extracted\（禁止读取）
-- **patched-worker.js** — 主部署 Worker（修改版）
-- **wrangler.jsonc** — Wrangler 配置
-- **kv-sync-v4.sh** — KV 同步脚本
-- **dns-sync.py** — DNS 同步
-- *.py — 各种诊断 + 部署脚本（不要碰）
-
----
-
-## 🔧 SSH 操作技巧
-
-### 容器内执行（关键！）
-```bash
-# 1. 文件先 scp 到服务器 /tmp/
-scp -i C:/Users/Administrator/.ssh/id_ed25519 local.txt root@154.3.38.212:/tmp/local.txt
-
-# 2. docker cp 进容器（容器内 /tmp 看不到宿主的）
-ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
-  "docker cp /tmp/local.txt xboard:/tmp/local.txt"
-
-# 3. 在容器内执行
-ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
-  "docker exec xboard sqlite3 /www/.docker/.data/database.sqlite < /tmp/local.txt"
-```
-
-### PowerShell 转义陷阱
-- 单引号 + 双引号 + $(date) → PowerShell 会尝试解释
-- 解决：写 `.sh` 文件 → scp 到 /tmp/ → `bash /tmp/file.sh`
-- 或用全路径 Python：`/c/Users/Administrator/AppData/Local/Programs/Python/Python313/python.exe -c "..."`
-
-### 部署后必做
-```bash
-ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
-  "docker exec xboard php artisan octane:reload"
-```
-
----
-
-## 🔗 相关 memory 文件（v9 新增）
-
-- [[xboard-architecture-overview]] — **Xboard 完整架构**（theme/Hook/Provider/Controllers/数据流）
-- [[edgetunnel-architecture]] — **Edgetunnel 完整数据流 + 缓存位置 + 配置**
-- [[missing-edgetunnel-provider]] — **EdgetunnelServiceProvider 注册缺失 BUG**（v9 修复）
-- [[composer-xboardferrari-psr4-missing]] — composer PSR-4 缺失 BUG（v9 修复）
-- [[session-2026-08-25-v8-vip1-debug]] — v8 快照（旧）
-- [[session-2026-08-25-v6-admin-login-blade]] — v7 完成
-- [[container-recreate-incident-2026-08-25]] — 容器重建事故
-- [[xboard-caddyfile-config-location]] — Caddyfile 双份位置
-- [[cf-worker-500-missing-blade]] — cf-worker 500 根因
-- [[login-blade-auth-data-bug]] — data.data.token vs auth_data
-- [[admin-spa-login-vs-login-blade]] — 用户方向争议
-- [[admin-login-redirect-loop]] — _t query 方案
-
----
-
-## ⚠️ v9 → v10 关键交接
-
-**v10 接手第一件事**：
-1. 读 `docs/session-progress-latest.md` ← 这个文件
-2. 读 `docs/文件结构说明.md` ← 新建的文件清单
-3. 读 memory/xboard-architecture-overview.md + missing-edgetunnel-provider.md + edgetunnel-architecture.md
-4. 从 P0 v10 "后台用户信息缺失修复" 开始
-
-**v10 不要做的事**：
-- ❌ 不要重做 v9 已修的 VIP1 订阅（已 commit fb13f0a）
-- ❌ 不要读 E:\jiedian\edgetunnel-extracted 下的 .js/.py 文件
-- ❌ 不要修改上游 Xboard/Xboard-master/ 核心 Controller
-
-**v10 已知风险**：
-- 容器重建事故恢复后状态可能漂移 → 改任何 PHP 前先 `md5sum` 对比
-- 直连透明代理 github.com 不可达 → push 前设 `git config --global http.proxy http://127.0.0.1:10808`，push 后 unset
-- Octane 重启只用 `reload` 不要 `start`（会断连）
