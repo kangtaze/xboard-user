@@ -59,6 +59,21 @@ theme::  →  /www/storage/theme/      (用户主题，优先级更高)
 
 ## 部署工作流
 
+### ⚠️ 修改后端代码前必做：先拉服务器最新版（防旧代码覆盖！）
+本地副本可能落后于线上（历史上发生过：AiController 孤儿文件、ServerService 多版本混乱）。**改任何后端 PHP 文件之前，必须先确认本地版本 = 服务器版本**：
+
+```bash
+# 1. 取服务器当前版本到本地临时文件
+ssh root@154.3.38.212 "docker exec xboard cat /www/app/xxx.php" > /tmp/server_latest.php
+
+# 2. md5 对比本地文件，判断是否一致
+md5sum 本地文件.php /tmp/server_latest.php
+```
+
+- **一致** → 直接在本地改，然后走正常部署流程
+- **不一致** → 以服务器版为基准合并修改，再上传覆盖；绝不拿本地旧版直接覆盖
+- 改完部署成功后**立即 git commit 入库**（未入库的文件对下个会话来说等于不存在）
+
 ### 后端 PHP 代码部署
 ```bash
 # 方法 1: Python 编辑 + scp pipe (推荐)
@@ -87,7 +102,7 @@ ssh root@154.3.38.212 \
    cd /www && nohup php artisan telegram:admin-ai-poll > /tmp/admin-ai-poll.log 2>&1 &'"
 ```
 **不要用 Python 字符串替换修改压缩文件！直接 scp 本地文件。**
-**Bot 不走 Octane，是独立 artisan 长驻进程，必须 kill+重启。**
+**Bot 由 supervisord 管理（telegram-ai / admin-ai / kawu-ai），优先用 `docker exec xboard supervisorctl restart telegram-ai` 重启。**
 
 ### Edgetunnel Worker 部署
 ```bash
