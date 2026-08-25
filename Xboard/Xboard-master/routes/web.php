@@ -63,7 +63,9 @@ Route::get('/', function (Request $request) {
             'logo' => admin_setting('logo'),
             'theme_config' => $themeService->getConfig($theme)
         ];
-        return view('theme::' . $theme . '.dashboard', $renderParams);
+        // XboardFerrari: 根路径渲染落地页 landing.blade.php（恢复 v10 用户报告：vp92vip.com 应为营销落地页）
+        // 命名空间 theme::VP92 → /www/theme/VP92/landing.blade.php
+        return view('theme::' . $theme . '.landing', $renderParams);
     } catch (Exception $e) {
         Log::error('Theme rendering failed', [
             'theme' => $theme,
@@ -90,3 +92,24 @@ Route::get('/' . admin_setting('secure_path', admin_setting('frontend_admin_path
 Route::get('/' . (admin_setting('subscribe_path', 's')) . '/{token}', [\App\Http\Controllers\V1\Client\ClientController::class, 'subscribe'])
     ->middleware('client')
     ->name('client.subscribe');
+
+// XboardFerrari: SPA shell 路由 — 登录/注册/忘记密码/用户面板走 dashboard.blade.php（Vue SPA 接管）
+// 不影响 /（landing）/s/{token}（订阅）/{secure_path}（后台）
+$dashboardShell = function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    $renderParams = [
+        'title' => admin_setting('app_name', 'VP92极速加速器'),
+        'theme' => $theme,
+        'version' => app(UpdateService::class)->getCurrentVersion(),
+        'description' => admin_setting('app_description', 'VP92极速加速器'),
+        'logo' => admin_setting('logo'),
+        'theme_config' => (new ThemeService())->getConfig($theme),
+    ];
+    return view('theme::' . $theme . '.dashboard', $renderParams);
+};
+Route::get('/login', $dashboardShell);
+Route::get('/register', $dashboardShell);
+Route::get('/forgot', $dashboardShell);
+// SPA 路径：dashboard, auth 全部命中（Vue router 内部处理）
+Route::get('/dashboard/{path?}', $dashboardShell)->where('path', '.*');
+Route::get('/auth/{path?}', $dashboardShell)->where('path', '.*');
