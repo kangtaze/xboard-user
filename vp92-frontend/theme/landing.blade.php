@@ -252,7 +252,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Geist:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/css/global-network.css?v=2"/>
+<link rel="stylesheet" href="/css/global-network.css?v=3"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -1718,7 +1718,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
             observer.observe(section);
         });
     </script>
-    <script src="/js/global-network.js"></script>
+    <script src="/js/global-network.js?v=3"></script>
 
 <!-- Subscribe Modal -->
 <div id="subscribeModal" class="sub-modal" style="display:none;">

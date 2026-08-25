@@ -64,12 +64,14 @@ Route::get('/', function (Request $request) {
             'theme_config' => $themeService->getConfig($theme),
             // XboardFerrari v10: landing.blade.php 通过 @isset($windows_download_url) 等读取，
             // 必须从 admin_setting 注入，否则下载卡片永远显示"敬请期待"。
+            // 注意：DB 实际只存了 windows_*/macos_*/android_*（无 ios_*），macos 给 iOS 兜底
             'windows_download_url' => admin_setting('windows_download_url'),
             'windows_version' => admin_setting('windows_version'),
             'android_download_url' => admin_setting('android_download_url'),
             'android_version' => admin_setting('android_version'),
-            'ios_download_url' => admin_setting('ios_download_url'),
-            'ios_version' => admin_setting('ios_version'),
+            // iOS: 优先 ios_*，缺则回落到 macos_*（DB 实际命名）
+            'ios_download_url' => admin_setting('ios_download_url') ?: admin_setting('macos_download_url'),
+            'ios_version' => admin_setting('ios_version') ?: admin_setting('macos_version', '苹果端自备-小火箭-Shadowrocket'),
             // 8/10 落地的 SEO 背景图
             'background_url' => admin_setting('frontend_background_url'),
         ];
