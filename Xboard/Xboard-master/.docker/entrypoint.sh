@@ -147,6 +147,23 @@ echo "[entrypoint] Starting services (caddy=${ENABLE_CADDY} web=${ENABLE_WEB} ho
 # Drop stale Octane/WorkerMan state files so the new master does not signal
 # PIDs left over from a previous container run (causes Swoole kill EPERM).
 rm -f /www/storage/logs/octane-server-state.json /www/storage/logs/xboard-ws-server.pid 2>/dev/null || true
+
+# Ensure plugin library/ subdirs autoload (safety net for composer.json PSR-4).
+# As of v15, AlipayF2F is the only Plugin\\ class with a library/ subdirectory,
+# and its files live in plugins-core/ rather than plugins/. composer.json has
+# been updated to map both paths, but a symlink guarantees any plugin using
+# require_once on its own library files still works after container rebuild.
+if [ -d /www/plugins-core ] && [ -d /www/plugins ]; then
+    for plugin_dir in /www/plugins-core/*; do
+        [ -d "$plugin_dir" ] || continue
+        name=$(basename "$plugin_dir")
+        if [ ! -e "/www/plugins/$name" ]; then
+            ln -sf "$plugin_dir" "/www/plugins/$name"
+            echo "[entrypoint] Symlinked /www/plugins/$name -> plugins-core/$name"
+        fi
+    done
+fi
+
 chown -R www:www /www 2>/dev/null || true
 chown redis:redis /data 2>/dev/null || true
 exec "$@"
