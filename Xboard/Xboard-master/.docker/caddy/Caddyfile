@@ -22,7 +22,7 @@
 	@ws path /ws
 	reverse_proxy @ws 127.0.0.1:{$WS_PORT:8076}
 
-	@admin path /2d532679/edgetunnel /2d532679/cf-worker
+	@admin path /{$SECURE_PATH}/edgetunnel /{$SECURE_PATH}/cf-worker
 	rewrite @admin /api/v2{path}
 
 	reverse_proxy 127.0.0.1:{$OCTANE_INTERNAL_PORT:7002} {
