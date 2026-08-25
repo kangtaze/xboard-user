@@ -103,7 +103,10 @@
         .vp92-chat-input input {
             flex: 1; border: 1px solid #e0e3e5; border-radius: 20px; padding: 8px 14px;
             font-size: 14px; outline: none; transition: border-color 0.2s;
+            color: #1a1a2e;  /* 修复:输入框字体清晰深色,避免 mobile 浏览器偏淡看不清 */
+            background: #ffffff;  /* 显式白底,避免暗色主题继承 */
         }
+        .vp92-chat-input input::placeholder { color: #9aa0a6; }  /* placeholder 单独控制 */
         .vp92-chat-input input:focus { border-color: #0066ff; }
         .vp92-chat-input button {
             width: 36px; height: 36px; border-radius: 50%; border: none;
@@ -115,7 +118,10 @@
         .vp92-chat-input button:disabled { background: #ccc; cursor: not-allowed; }
         .vp92-chat-input button svg { width: 18px; height: 18px; }
         @media (max-width: 480px) {
-            #vp92-chat-box { width: calc(100vw - 16px); height: calc(100vh - 100px); bottom: 64px; right: 8px; }
+            #vp92-chat-widget { bottom: 14px; right: 12px; }  /* 修复:手机端靠右下,但避开底部 CTA 按钮 */
+            #vp92-chat-btn { width: 48px; height: 48px; box-shadow: 0 3px 10px rgba(0,102,255,0.35); }  /* 修复:缩小按钮减少遮挡面积 */
+            #vp92-chat-btn svg { width: 24px; height: 24px; }
+            #vp92-chat-box { width: calc(100vw - 16px); height: calc(100vh - 100px); bottom: 72px; right: 0px; }
         }
     `;
     document.head.appendChild(style);
@@ -181,10 +187,12 @@
         if (e.key === 'Enter' && !sendBtn.disabled) send();
     });
 
-    sendBtn.addEventListener('click', send);
+    sendBtn.addEventListener('click', () => send());
 
     // 发送消息
     async function send(text) {
+        // 兼容：DOM 事件处理器调用 send() 时会传入 Event 对象，需要忽略
+        if (text && typeof text !== 'string') text = '';
         const message = text || inputEl.value.trim();
         if (!message || isTyping) return;
 
@@ -233,13 +241,25 @@
         sendBtn.disabled = !inputEl.value.trim();
     }
 
+    // 修复:用 scrollIntoView + rAF 替代直接 scrollTop,解决浏览器 layout 未完成时 scrollHeight 还是旧值导致不滚
+    function scrollMessagesToBottom(smooth) {
+        requestAnimationFrame(() => {
+            const last = messagesEl.lastElementChild;
+            if (last && typeof last.scrollIntoView === 'function') {
+                last.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+            } else {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+        });
+    }
+
     // DOM 辅助
     function addBotMessage(text, suggestions) {
         const div = document.createElement('div');
         div.className = 'vp92-msg vp92-msg-bot';
         div.textContent = text;
         messagesEl.appendChild(div);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        scrollMessagesToBottom(true);  /* 修复:用 scrollIntoView 滚到底 */
 
         if (suggestions && suggestions.length > 0) {
             suggestionsEl.innerHTML = '';
@@ -264,7 +284,7 @@
         div.className = 'vp92-msg vp92-msg-user';
         div.textContent = text;
         messagesEl.appendChild(div);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        scrollMessagesToBottom(true);  /* 修复:同上 */
     }
 
     function addTypingIndicator() {
@@ -273,7 +293,7 @@
         div.id = 'vp92-typing';
         div.textContent = '正在思考...';
         messagesEl.appendChild(div);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        scrollMessagesToBottom(false);  /* 打字中即时滚(无 smooth 动画) */
     }
 
     function removeTypingIndicator() {
