@@ -22,6 +22,9 @@
 	@ws path /ws
 	reverse_proxy @ws 127.0.0.1:{$WS_PORT:8076}
 
+	@admin path /2d532679/edgetunnel /2d532679/cf-worker
+	rewrite @admin /api/v2{path}
+
 	reverse_proxy 127.0.0.1:{$OCTANE_INTERNAL_PORT:7002} {
 		header_up Host {host}
 		# X-Forwarded-For is auto-appended with our remote_addr by Caddy
