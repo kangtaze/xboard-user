@@ -56,9 +56,11 @@ class GeoIpService
 
         return Cache::remember($cacheKey, 86400, function () use ($ip, $empty) {
             try {
-                $region = \zoujingli\Ip2Region::instance()->memorySearch($ip);
-                // 返回格式: "国家|省|市|ISP" 或 "0|0|0|0" (查不到)
-                $parts = explode('|', $region);
+                // Ip2Region 是全局类 (无 namespace, 在 /www/vendor/zoujingli/ip2region/Ip2Region.php)
+                // 必须用 `\Ip2Region` 前导反斜杠强制全局命名空间 (本类在 App\Services 命名空间下)
+                $region = (new \Ip2Region())->memorySearch($ip);
+                // memorySearch 返回 array: ['city_id' => 0, 'region' => '国家|省|市|ISP' 或 '0|0|0|0']
+                $parts = explode('|', $region['region'] ?? '');
 
                 // ip2region 用 "0" 表示无数据, 标准化为空
                 $clean = static function ($v): string {
