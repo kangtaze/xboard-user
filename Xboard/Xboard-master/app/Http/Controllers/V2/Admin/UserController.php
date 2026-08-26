@@ -297,6 +297,45 @@ class UserController extends Controller
         if (!empty($data['register_ip'])) {
             $data['register_ip_str'] = long2ip($data['register_ip']);
         }
+        // === v15.12 修复: getUserInfoById 也需要 5 字段（与 transformUserData 一致） ===
+        $geoIp = app(\App\Services\GeoIpService::class);
+        $data['register_geo'] = !empty($data['register_ip'])
+            ? $geoIp->lookup(long2ip((int) $data['register_ip']))
+            : ['country' => '', 'province' => '', 'city' => '', 'isp' => ''];
+        $data['last_login_geo'] = !empty($data['last_login_ip'])
+            ? $geoIp->lookup(long2ip((int) $data['last_login_ip']))
+            : ['country' => '', 'province' => '', 'city' => '', 'isp' => ''];
+        $data['last_login_client'] = \App\Utils\ClientFingerprint::parse((string) ($data['last_login_user_agent'] ?? ''));
+        $data['devices'] = \DB::table('personal_access_tokens')
+            ->where('tokenable_id', $user->id)
+            ->where('tokenable_type', 'App\\Models\\User')
+            ->orderByDesc('last_used_at')
+            ->limit(10)
+            ->get(['id', 'name', 'ip', 'os', 'device', 'browser', 'country', 'last_used_at', 'created_at'])
+            ->map(function ($t) {
+                return [
+                    'id' => (int) $t->id, 'name' => $t->name, 'ip' => $t->ip,
+                    'os' => $t->os, 'device' => $t->device, 'browser' => $t->browser,
+                    'country' => $t->country,
+                    'last_used_at' => $t->last_used_at ? strtotime($t->last_used_at) : 0,
+                    'created_at' => $t->created_at ? strtotime($t->created_at) : 0,
+                ];
+            })->toArray();
+        $data['subscription_logs'] = \DB::table('v2_subscription_log')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get(['id', 'ip', 'user_agent', 'client_type', 'client_version', 'os', 'country', 'province', 'city', 'isp', 'node_count', 'subscription_token', 'created_at'])
+            ->map(function ($r) {
+                return [
+                    'id' => (int) $r->id, 'ip' => $r->ip, 'user_agent' => $r->user_agent,
+                    'client_type' => $r->client_type, 'client_version' => $r->client_version,
+                    'os' => $r->os, 'country' => $r->country, 'province' => $r->province,
+                    'city' => $r->city, 'isp' => $r->isp, 'node_count' => (int) $r->node_count,
+                    'subscription_token' => $r->subscription_token,
+                    'created_at' => (int) $r->created_at,
+                ];
+            })->toArray();
         return $this->success($data);
     }
 
