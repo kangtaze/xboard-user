@@ -21,12 +21,17 @@ class AuthService
     {
         // Prefer a stable client-generated device id (X-Device-Id header) as the
         // token name — LoginService dedups same-device sessions by matching it.
-        // Fall back to a random name for old clients that don't send it.
+        // Requests without the header are web-dashboard logins ONLY when the UA
+        // looks like a browser (Mozilla*). Legacy APP versions also omit the
+        // header — they must keep counting toward the device limit, so they fall
+        // through to a random unprefixed name.
         $deviceId = mb_substr(trim((string) $request?->header('X-Device-Id', '')), 0, 64);
+        $ua = (string) $request?->userAgent();
+        $isWebSession = $deviceId === '' && str_contains($ua, 'Mozilla');
 
         // Create a new Sanctum token with device info
         $token = $this->user->createToken(
-            $deviceId !== '' ? $deviceId : Str::random(20), // token name (device identifier)
+            $isWebSession ? 'web:' . Str::random(20) : ($deviceId !== '' ? $deviceId : Str::random(20)), // token name (device identifier)
             ['*'], // abilities
             now()->addYear() // expiration
         );
@@ -44,10 +49,10 @@ class AuthService
 
             $accessToken->ip = $request->ip();
             $accessToken->os = $parsed['os'];
-            $accessToken->device = $reportedModel !== '' ? $reportedModel : $parsed['device'];
+            $accessToken->device = $reportedModel !== '' ? $reportedModel : ($isWebSession ? '网页登录' : ($deviceId !== '' ? $parsed['device'] : ('旧版客户端 ' . $parsed['device'])));
             $accessToken->browser = $parsed['browser'];
-            // country is reserved for a future GeoIP lookup.
-            $accessToken->country = '';
+            // GeoIP 反查国家 (方案 B1, v15.11) — ip2region 全内存查询 ~10µs, Laravel Cache 24h 复用
+            $accessToken->country = app(\App\Services\GeoIpService::class)->lookup($request->ip())['country'] ?? '';
             $accessToken->save();
         }
 
