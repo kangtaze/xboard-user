@@ -88,9 +88,14 @@ Route::get('/', function (Request $request) {
 });
 
 // XboardFerrari v10: 恢复 2026-08-10 加的 SEO 法律页/教程路由（commit 3c6cd38 后 submodule 迁移丢失）
-// landing.blade.php 引用 /vp92-tutorial.html /vp92-terms.html /vp92-privacy.html，
+// landing.blade.php 引用 /vp92-tutorial.html /vp92-terms.html /privacy-policy.html，
 // sitemap.xml 也列出这三页；缺一 → GSC 报语法错误 + 用户看到 404。
 // 渲染源在 /www/theme/VP92/（nginx 静态副本在 /www/public/）
+Route::get('/about', function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    return view('theme::' . $theme . '.about');
+});
+
 Route::get('/vp92-tutorial.html', function () {
     $theme = admin_setting('frontend_theme', 'VP92');
     return view('theme::' . $theme . '.vp92-tutorial');
@@ -99,9 +104,13 @@ Route::get('/vp92-terms.html', function () {
     $theme = admin_setting('frontend_theme', 'VP92');
     return view('theme::' . $theme . '.vp92-terms');
 });
-Route::get('/vp92-privacy.html', function () {
+Route::get('/privacy-policy.html', function () {
     $theme = admin_setting('frontend_theme', 'VP92');
-    return view('theme::' . $theme . '.vp92-privacy');
+    return view('theme::' . $theme . '.privacy-policy');
+});
+Route::get('/privacy-privacy.html', function () {
+    $theme = admin_setting('frontend_theme', 'VP92');
+    return view('theme::' . $theme . '.privacy-privacy');
 });
 
 //TODO:: 兼容
