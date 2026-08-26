@@ -59,7 +59,9 @@ class GeoIpService
                 // Ip2Region 是全局类 (无 namespace, 在 /www/vendor/zoujingli/ip2region/Ip2Region.php)
                 // 必须用 `\Ip2Region` 前导反斜杠强制全局命名空间 (本类在 App\Services 命名空间下)
                 $region = (new \Ip2Region())->memorySearch($ip);
-                // memorySearch 返回 array: ['city_id' => 0, 'region' => '国家|省|市|ISP' 或 '0|0|0|0']
+                // memorySearch 返回 array: ['city_id' => 0, 'region' => '国家|0|省|市|ISP' 或 '0|0|0|0|0']
+                // v15.18: 修正 off-by-one — 实际 5 段, parts[1] 是区域标记位(总为0), 应读 parts[2/3/4]
+                // 实测: 114.114.114.114 → "中国|0|江苏省|南京市|0", 8.8.8.8 → "美国|0|0|0|Level3"
                 $parts = explode('|', $region['region'] ?? '');
 
                 // ip2region 用 "0" 表示无数据, 标准化为空
@@ -69,10 +71,10 @@ class GeoIpService
                 };
 
                 return [
-                    'country' => $clean($parts[0] ?? ''),
-                    'province' => $clean($parts[1] ?? ''),
-                    'city' => $clean($parts[2] ?? ''),
-                    'isp' => $clean($parts[3] ?? ''),
+                    'country' => $clean($parts[0] ?? ''),     // 国家
+                    'province' => $clean($parts[2] ?? ''),    // 省 (跳过 parts[1] = 0)
+                    'city' => $clean($parts[3] ?? ''),        // 市
+                    'isp' => $clean($parts[4] ?? ''),         // ISP (电信/移动/联通/Level3)
                 ];
             } catch (\Throwable $e) {
                 Log::warning('GeoIpService lookup failed', [

@@ -99,18 +99,16 @@
       }
       return res;
     };
-    // 2. DOM 观察: cedar SPA 不会自动调 getUserInfoById, 必须在 Radix UI 用户详情 modal 打开时主动拉
+    // 2. DOM 观察: cedar SPA 不会自动调 getUserInfoById, 必须在 Radix UI 用户详情 sheet 打开时主动拉
     const observer = new MutationObserver(() => {
       if (document.getElementById('vp92-geo-panel')) return;
-      // Radix UI modal selector (max-w-xl + fixed + top-[50%])
-      const modal = document.querySelector('div.fixed.left-\\[50\\%\\].top-\\[50\\%\\].max-w-xl') ||
-                    Array.from(document.querySelectorAll('div')).find(d => {
-                      const t = d.textContent || '';
-                      return t.includes('基本信息') && t.includes('订阅信息') && t.includes('Token') && t.length < 12000;
-                    });
-      if (!modal) return;
-      const txt = modal.textContent || '';
-      // 匹配 "用户ID: 328" 或 "用户ID：328" (Chinese full-width colon)
+      // v15.15: cedar 用户详情是 Radix Sheet (右侧滑出面板), 不是 centered modal
+      // 类: fixed ... inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-md
+      // 用 role="dialog" + data-state="open" 通用选择器
+      const sheet = document.querySelector('div[role="dialog"][data-state="open"]');
+      if (!sheet) return;
+      const txt = sheet.textContent || '';
+      // 匹配 "用户ID: 328" 或 "用户ID：328" 或 "用户ID: #328"
       const idMatch = txt.match(/用户?ID[：::\s#]*(\d{2,})/) || txt.match(/user[_\s-]*id[：::\s#]*(\d{2,})/i);
       if (!idMatch) return;
       const id = idMatch[1];
@@ -133,19 +131,50 @@
     observer.observe(document.body, { childList: true, subtree: true });
 
     function renderPanel(user) {
-      // 用户要求：面板直接嵌入到用户详情 modal 内（不漂浮在角落）
-      // Radix UI 不会清掉 portal 外手动 append 的节点
+      // v15.16: 用 class 选择器 div.rounded-lg.border.p-4 + MutationObserver 等卡片渲染
       const old = document.getElementById('vp92-geo-panel');
       if (old) old.remove();
-      // 找当前用户详情 modal (Radix fixed top-[50%])
-      const modal = document.querySelector('div.fixed.left-\\[50\\%\\].top-\\[50\\%\\].max-w-xl');
-      const target = modal || document.body;
+      const sheet = document.querySelector('div[role="dialog"][data-state="open"]');
+      if (!sheet) { document.body.appendChild(makePanel(user)); return; }
+      // Card 容器: div.rounded-lg.border.p-4 (cedar 用户详情卡片通用类)
+      // 用 startsWith 防止匹配到嵌套子元素或大容器
+      const findSubInfoCard = () => Array.from(sheet.querySelectorAll('div.rounded-lg.border.p-4')).find(d => {
+        const t = (d.textContent || '').trim();
+        return t.startsWith('订阅信息');
+      });
+      const insertPanel = () => {
+        const card = findSubInfoCard();
+        const panel = makePanel(user);
+        if (card && card.parentElement) {
+          card.parentElement.insertBefore(panel, card.nextSibling);
+        } else {
+          sheet.appendChild(panel);
+        }
+      };
+      insertPanel();
+      // 如果 panel 落到 sheet 末尾 (cards 还没渲染完), MutationObserver 等候再移
+      const cardObserver = new MutationObserver(() => {
+        const existing = document.getElementById('vp92-geo-panel');
+        if (!existing || existing.parentElement === sheet.querySelector('div.rounded-lg.border.p-4:last-of-type')) return;
+        // 检查 panel 是否在最后一个 card 后面 (即 fallback 位置)
+        const lastCard = sheet.querySelector('div.rounded-lg.border.p-4:last-of-type');
+        if (lastCard && existing.previousElementSibling === lastCard) {
+          const card = findSubInfoCard();
+          if (card && card.parentElement) {
+            card.parentElement.insertBefore(existing, card.nextSibling);
+            cardObserver.disconnect();
+          }
+        }
+      });
+      cardObserver.observe(sheet, { childList: true, subtree: true });
+      setTimeout(() => cardObserver.disconnect(), 3000);
+    }
+    function makePanel(user) {
       const panel = document.createElement('div');
       panel.id = 'vp92-geo-panel';
-      // 内嵌样式: 占据 modal 内整宽，无 fixed/z-index（modal 自带定位）
       panel.style.cssText = 'margin-top:16px;padding:14px 16px;background:#f8fafc;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;font-family:system-ui;font-size:13px;line-height:1.7';
       panel.innerHTML = `
-        <h4 style="margin:0 0 10px;font-size:14px;color:#0f3460;border-bottom:1px solid #e2e8f0;padding-bottom:6px">📍 VP92 增强信息 (v15.12) #${esc(user.id)}</h4>
+        <h4 style="margin:0 0 10px;font-size:14px;color:#0f3460;border-bottom:1px solid #e2e8f0;padding-bottom:6px">📍 VP92 增强信息 (v15.16) #${esc(user.id)}</h4>
         <div><b>最后登录IP:</b> ${esc(user.last_login_ip_str || long2ip(user.last_login_ip))}</div>
         <div><b>注册IP:</b> ${esc(user.register_ip_str || long2ip(user.register_ip))}</div>
         <div><b>客户端:</b> ${esc(user.last_login_client && user.last_login_client.type)} ${esc(user.last_login_client && user.last_login_client.version)} / ${esc(user.last_login_client && user.last_login_client.os)}</div>
@@ -154,10 +183,10 @@
         <details style="margin-top:8px"><summary style="cursor:pointer;color:#0f3460">📱 设备 (${user.devices ? user.devices.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.devices || []).map(d => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(d.browser) + ' / ' + esc(d.os) + ' / ' + esc(d.country) + ' / ' + fmt(d.last_used_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
         <details><summary style="cursor:pointer;color:#0f3460">📡 订阅记录 (${user.subscription_logs ? user.subscription_logs.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.subscription_logs || []).map(s => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(s.client_type) + ' ' + esc(s.client_version) + ' / ' + esc(s.country) + ' / ' + fmt(s.created_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
       `;
-      target.appendChild(panel);
+      return panel;
     }
     function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-    function geo(g) { if (!g) return '-'; var parts = []; if (g.country) parts.push(g.country); if (g.province) parts.push(g.province); if (g.city) parts.push(g.city); return parts.length ? parts.join(' / ') : 'IPv6 暂不支持'; }
+    function geo(g) { if (!g) return '-'; var parts = []; if (g.country) parts.push(g.country); if (g.province) parts.push(g.province); if (g.city) parts.push(g.city); if (g.isp) parts.push(g.isp); return parts.length ? parts.join(' / ') : 'IPv6 暂不支持'; }
     function fmt(ts) { return ts ? new Date(ts * 1000).toLocaleString() : '-'; }
     function long2ip(n) { if (!n || isNaN(n)) return '-'; n = parseInt(n); if (n < 0 || n > 0xFFFFFFFF) return '-'; return ((n >>> 24) & 0xFF) + '.' + ((n >>> 16) & 0xFF) + '.' + ((n >>> 8) & 0xFF) + '.' + (n & 0xFF); }
   })();
