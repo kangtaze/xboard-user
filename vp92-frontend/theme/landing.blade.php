@@ -54,7 +54,7 @@ login:{'zh-CN':'登录','zh-TW':'登入','en':'Login'}
 hero:{
 title:{'zh-CN':'VP92极速加速器','zh-TW':'VP92極速加速器','en':'VP92 Turbo Accelerator'},
 subtitle:{'zh-CN':'全球加速节点一键连接，高速稳定，畅享全球网络','zh-TW':'全球加速節點一鍵連線，高速穩定，暢享全球網路','en':'One-click connection to global nodes. Fast, stable, and enjoy the global internet.'},
-cta_button:{'zh-CN':'免费注册','zh-TW':'免費註冊','en':'Register Free'},
+cta_button:{'zh-CN':'立即订阅','zh-TW':'立即訂閱','en':'Subscribe Now'},
 trial_note:{'zh-CN':'新注册用户免费体验 24 小时','zh-TW':'新註冊用戶免費體驗 24 小時','en':'New users get 24 hours free trial'},
 stat_nodes:{'zh-CN':'全球节点','zh-TW':'全球節點','en':'Global Nodes'},
 stat_servers:{'zh-CN':'服务器','zh-TW':'伺服器','en':'Servers'},
@@ -182,7 +182,7 @@ link_pricing:{'zh-CN':'价格方案','zh-TW':'價格方案','en':'Pricing'},
 link_tutorial:{'zh-CN':'使用教程','zh-TW':'使用教學','en':'Tutorial'},
 link_terms:{'zh-CN':'服务条款','zh-TW':'服務條款','en':'Terms of Service'},
 link_privacy:{'zh-CN':'隐私政策','zh-TW':'隱私政策','en':'Privacy Policy'},
-btn_register:{'zh-CN':'免费注册','zh-TW':'免費註冊','en':'Register Free'},
+btn_register:{'zh-CN':'立即订阅','zh-TW':'立即訂閱','en':'Subscribe Now'},
 btn_learn_more:{'zh-CN':'了解更多','zh-TW':'瞭解更多','en':'Learn More'}
 },
 cookie:{
@@ -762,7 +762,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
                     全球加速节点一键连接，高速稳定，畅享全球网络
                 </p>
 <button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
-                    免费注册
+                    立即订阅
                 </button>
                 <p class="font-body-sm mb-stack-xl" style="color:#666;" data-i18n="hero.trial_note">新注册用户免费体验 24 小时</p>
 </div>
@@ -1475,7 +1475,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex flex-col md:flex-row items-center justify-between border-t border-outline-variant pt-stack-md gap-stack-md">
 <p class="font-label-md text-on-surface-variant">© 2026 VP92 PRECISION ENGINEERING</p>
 <div class="flex gap-stack-lg">
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
+<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">立即订阅</button>
 <button class="text-on-surface-variant font-label-md hover:text-primary transition-colors" data-i18n="footer.btn_learn_more">了解更多</button>
 </div>
 </div>

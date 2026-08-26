@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { fetchPlans, createOrder, getPaymentMethods, cancelOrder, fetchOrders, getOrderDetail } from '@/api/user'
+import { getToken } from '@/api/client'
 import CheckoutDialog from '@/components/common/CheckoutDialog.vue'
 import Toast from '@/components/common/Toast.vue'
 import type { Plan } from '@/api/types'
 
 const route = useRoute()
+const router = useRouter()
 const toastRef = ref<InstanceType<typeof import('@/components/common/Toast.vue').default> | null>(null)
 
 const plans = ref<Plan[]>([])
@@ -159,8 +161,19 @@ const displayPlans = computed(() => {
   return sorted
 })
 
+// --- Redirect to login with current URL preserved ---
+function redirectToLogin() {
+  const currentPath = window.location.pathname + window.location.search
+  router.push({ name: 'login', query: { redirect: currentPath } })
+}
+
 // --- Create order and open checkout ---
 async function handleSelectPlan(plan: Plan) {
+  // 防御: 没有 token 直接跳登录,避免 createOrder 401 默默失败
+  if (!getToken()) {
+    redirectToLogin()
+    return
+  }
   selectedPlan.value = plan
   const price = getSelectedPrice(plan)
   selectedPeriod.value = price.period
@@ -189,6 +202,12 @@ async function handleSelectPlan(plan: Plan) {
     }
   } catch (e: any) {
     const errMsg = e?.message || e?.toString?.() || ''
+    const status = (e as any)?.code
+    // 401: token 失效,跳登录(redirect 参数保留当前完整 URL,含 checkout_plan=X)
+    if (status === 401 || status === 403) {
+      redirectToLogin()
+      return
+    }
     const isPendingBlock = /unpaid|pending|未付款|未支付|待支付|开通中|已有.*订单/i.test(errMsg)
     if (isPendingBlock) {
       // Open checkout with pending conflict flag — CheckoutDialog handles it
@@ -220,26 +239,41 @@ function handleCheckoutCancelOld() {
   }
 }
 
-// --- Load plans ---
-async function loadPlans() {
+// --- Load plans (with retry) ---
+async function loadPlans(attempt: number = 1): Promise<void> {
+  const MAX_ATTEMPTS = 3
   try {
     const res = await fetchPlans() as any
     const data = res?.data
     if (Array.isArray(data)) {
       plans.value = data.filter((p: Plan) => p.show !== false && p.show !== 0)
-      // Default select first period for each plan
-      for (const plan of plans.value) {
-        const periods = getPlanPeriods(plan)
-        if (periods.length > 0 && !selectedPeriodFor.value[plan.id]) {
-          selectedPeriodFor.value[plan.id] = periods[0].period
-        }
-      }
     } else if (Array.isArray(data?.data)) {
       plans.value = data.data.filter((p: Plan) => p.show !== false && p.show !== 0)
     }
+    // Default select first period for each plan
+    for (const plan of plans.value) {
+      const periods = getPlanPeriods(plan)
+      if (periods.length > 0 && !selectedPeriodFor.value[plan.id]) {
+        selectedPeriodFor.value[plan.id] = periods[0].period
+      }
+    }
   } catch (e) {
-    console.error('Failed to fetch plans:', e)
+    console.error(`[loadPlans] attempt ${attempt} failed:`, e)
+    if (attempt < MAX_ATTEMPTS) {
+      // 指数退避: 500ms, 1000ms, 2000ms
+      await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)))
+      return loadPlans(attempt + 1)
+    }
+    // 重试耗尽,toast 提示用户手动重试
+    toastRef.value?.show('套餐加载失败,请点击重试')
   }
+}
+
+// --- Manual retry from empty state button ---
+async function retryLoadPlans() {
+  loading.value = true
+  await loadPlans()
+  loading.value = false
 }
 
 onMounted(async () => {
@@ -315,15 +349,16 @@ onMounted(async () => {
           :class="{ outline: !isRecommended(plan, plans) }"
           @click="handleSelectPlan(plan)"
         >
-          {{ isRecommended(plan, plans) ? '立即订阅' : '选择此方案' }}
+          立即订阅
         </button>
       </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Empty State (含重试按钮,防止 loadPlans 全部失败后用户卡住) -->
     <div v-else class="empty-state">
       <span class="material-symbols-outlined" style="font-size: 48px; color: #c2c6d8;">shopping_cart</span>
       <p>暂无可用套餐</p>
+      <button class="retry-btn" @click="retryLoadPlans">重新加载</button>
     </div>
 
     <!-- Checkout Dialog -->
@@ -368,6 +403,26 @@ onMounted(async () => {
   padding: 80px 0;
   color: #999;
   font-size: 14px;
+}
+
+/* === Retry Button (empty state) === */
+.retry-btn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: #0066ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.retry-btn:hover {
+  background: #0050cb;
+}
+.retry-btn:active {
+  transform: scale(0.98);
 }
 
 /* === Plans Grid === */
