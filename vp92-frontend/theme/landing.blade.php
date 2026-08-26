@@ -1582,8 +1582,13 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
         }
 
         function jt(key) {
-            const lang = window.I18N.js[I18N_CURRENT_LANG] || window.I18N.js[I18N_DEFAULT_LANG];
-            return lang[key] || window.I18N.js[I18N_DEFAULT_LANG][key] || '';
+            // I18N.js 结构是 {key: {lang: value}}（按 key 分组），不是 {lang: {key: value}}（按 lang 分组）
+            // v15.6 修复：原 lookup 假设错了，所有 jt() 调用都会抛 TypeError
+            const group = window.I18N.js;
+            if (!group) return '';
+            const entry = group[key];
+            if (!entry) return '';
+            return entry[I18N_CURRENT_LANG] || entry[I18N_DEFAULT_LANG] || '';
         }
 
         function applyI18N(lang) {
@@ -2083,6 +2088,7 @@ function handleSendCode() {
   });
 }
 function handleSubscribe() {
+  try {
   const email = document.getElementById('subEmail').value.trim();
   const password = document.getElementById('subPassword').value;
   const emailCode = document.getElementById('subCode').value.trim();
@@ -2124,6 +2130,13 @@ function handleSubscribe() {
     showSubError(jt('err_network'));
     btn.disabled = false; btn.textContent = jt('btn_submit');
   });
+  } catch (e) {
+    // v15.6 修复：同步代码抛错时显示错误并重置按钮状态
+    console.error('handleSubscribe sync error:', e);
+    showSubError(jt('err_network'));
+    const btn = document.getElementById('subSubmitBtn');
+    if (btn) { btn.disabled = false; btn.textContent = jt('btn_submit'); }
+  }
 }
 function showSubError(msg) {
   const el = document.getElementById('subError');
