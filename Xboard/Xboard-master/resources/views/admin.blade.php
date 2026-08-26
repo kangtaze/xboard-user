@@ -133,26 +133,33 @@
     observer.observe(document.body, { childList: true, subtree: true });
 
     function renderPanel(user) {
+      // 用户要求：面板直接嵌入到用户详情 modal 内（不漂浮在角落）
+      // Radix UI 不会清掉 portal 外手动 append 的节点
       const old = document.getElementById('vp92-geo-panel');
       if (old) old.remove();
+      // 找当前用户详情 modal (Radix fixed top-[50%])
+      const modal = document.querySelector('div.fixed.left-\\[50\\%\\].top-\\[50\\%\\].max-w-xl');
+      const target = modal || document.body;
       const panel = document.createElement('div');
       panel.id = 'vp92-geo-panel';
-      panel.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;width:420px;max-height:80vh;overflow:auto;background:#1e293b;color:#e2e8f0;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.4);padding:20px;font-family:system-ui;font-size:13px';
+      // 内嵌样式: 占据 modal 内整宽，无 fixed/z-index（modal 自带定位）
+      panel.style.cssText = 'margin-top:16px;padding:14px 16px;background:#f8fafc;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;font-family:system-ui;font-size:13px;line-height:1.7';
       panel.innerHTML = `
-        <button onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px">×</button>
-        <h3 style="margin:0 0 12px;font-size:15px">📍 5字段详情 (v15.12) #${esc(user.id)}</h3>
-        <div style="margin-bottom:6px"><b>邮箱:</b> ${esc(user.email)}</div>
-        <div style="margin-bottom:6px"><b>客户端:</b> ${esc(user.last_login_client && user.last_login_client.type)} ${esc(user.last_login_client && user.last_login_client.version)} / ${esc(user.last_login_client && user.last_login_client.os)}</div>
-        <div style="margin-bottom:6px"><b>注册地:</b> ${geo(user.register_geo)}</div>
-        <div style="margin-bottom:6px"><b>最后登录:</b> ${geo(user.last_login_geo)}</div>
-        <details style="margin-top:8px"><summary style="cursor:pointer">📱 设备 (${user.devices ? user.devices.length : 0})</summary><div style="margin-top:6px">${(user.devices || []).map(d => '<div style="padding:4px;border-bottom:1px solid #334155">' + esc(d.browser) + ' / ' + esc(d.os) + ' / ' + esc(d.country) + ' / ' + fmt(d.last_used_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
-        <details><summary style="cursor:pointer">📡 订阅记录 (${user.subscription_logs ? user.subscription_logs.length : 0})</summary><div style="margin-top:6px">${(user.subscription_logs || []).map(s => '<div style="padding:4px;border-bottom:1px solid #334155">' + esc(s.client_type) + ' ' + esc(s.client_version) + ' / ' + esc(s.country) + ' / ' + fmt(s.created_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
+        <h4 style="margin:0 0 10px;font-size:14px;color:#0f3460;border-bottom:1px solid #e2e8f0;padding-bottom:6px">📍 VP92 增强信息 (v15.12) #${esc(user.id)}</h4>
+        <div><b>最后登录IP:</b> ${esc(user.last_login_ip_str || long2ip(user.last_login_ip))}</div>
+        <div><b>注册IP:</b> ${esc(user.register_ip_str || long2ip(user.register_ip))}</div>
+        <div><b>客户端:</b> ${esc(user.last_login_client && user.last_login_client.type)} ${esc(user.last_login_client && user.last_login_client.version)} / ${esc(user.last_login_client && user.last_login_client.os)}</div>
+        <div><b>注册地:</b> ${geo(user.register_geo)}</div>
+        <div><b>最后登录:</b> ${geo(user.last_login_geo)}</div>
+        <details style="margin-top:8px"><summary style="cursor:pointer;color:#0f3460">📱 设备 (${user.devices ? user.devices.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.devices || []).map(d => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(d.browser) + ' / ' + esc(d.os) + ' / ' + esc(d.country) + ' / ' + fmt(d.last_used_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
+        <details><summary style="cursor:pointer;color:#0f3460">📡 订阅记录 (${user.subscription_logs ? user.subscription_logs.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.subscription_logs || []).map(s => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(s.client_type) + ' ' + esc(s.client_version) + ' / ' + esc(s.country) + ' / ' + fmt(s.created_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
       `;
-      document.body.appendChild(panel);
+      target.appendChild(panel);
     }
     function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function geo(g) { if (!g) return '-'; var parts = []; if (g.country) parts.push(g.country); if (g.province) parts.push(g.province); if (g.city) parts.push(g.city); return parts.length ? parts.join(' / ') : 'IPv6 暂不支持'; }
     function fmt(ts) { return ts ? new Date(ts * 1000).toLocaleString() : '-'; }
+    function long2ip(n) { if (!n || isNaN(n)) return '-'; n = parseInt(n); if (n < 0 || n > 0xFFFFFFFF) return '-'; return ((n >>> 24) & 0xFF) + '.' + ((n >>> 16) & 0xFF) + '.' + ((n >>> 8) & 0xFF) + '.' + (n & 0xFF); }
   })();
   </script>
 </body>
