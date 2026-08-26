@@ -1467,7 +1467,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <h4 class="font-label-md text-on-surface uppercase tracking-wider" data-i18n="footer.col_help">帮助</h4>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-tutorial.html" data-i18n="footer.link_tutorial">使用教程</a>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-terms.html" data-i18n="footer.link_terms">服务条款</a>
-<a class="font-body-md text-on-surface-variant hover:text-primary" href="/vp92-privacy.html" data-i18n="footer.link_privacy">隐私政策</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary" href="/privacy-privacy.html" data-i18n="footer.link_privacy">隐私政策</a>
 <a class="font-body-md text-on-surface-variant hover:text-primary" href="javascript:void(0)" onclick="openCookieSettings()" data-i18n="cookie.settings">Cookie 设置</a>
 </div>
 </div>
