@@ -181,6 +181,10 @@ return [
         XboardFerrari\Providers\EdgetunnelServiceProvider::class,
         App\Providers\PluginServiceProvider::class,
         App\Providers\ProtocolServiceProvider::class,
+        // XboardFerrari v15.7: 修复 /privacy-policy.html 500
+        // 原因：ThemeService::__construct() 调用 registerThemeViewPaths()，
+        // 但只有 XboardUpdate/ConfigController 实例化它，web 请求时 namespace 未注册 → "No hint path defined for [theme]"
+        App\Providers\ThemeServiceProvider::class,
 
     ],
 
