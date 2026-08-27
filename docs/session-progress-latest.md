@@ -1,8 +1,9 @@
 # 📌 v19 + v20 Wakeup Snapshot — 2026-08-28 VP92 营销自动化（最终完成态）
 
-> **当前最新进度**（v20.5 — supersedes v20.6）
+> **当前最新进度**（v20.5 + v20.2 — 全部完成 🎉）
 > **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报 + UX
-> **状态**：✅ v19 + v20.1 + v20.3 + v20.4 + v20.5 + v20.6 全部完成入库；v20.2 pending
+> **状态**：✅ v19 + v20 全部 6 个 sub-version 完成入库（v20.1 / v20.2 / v20.3 / v20.4 / v20.5 / v20.6）
+> **完整 v20.2 细节**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
 > **完整 v20.5 细节**: [`docs/wakups/v20-5-bot-typing-indicator.md`](wakups/v20-5-bot-typing-indicator.md)
 > **完整 v20.6 细节**: [`docs/wakups/v20-6-bot-knowledge-v15-16-panel.md`](wakups/v20-6-bot-knowledge-v15-16-panel.md)
 
@@ -76,10 +77,42 @@ v19 状态（2026-08-28）：
 
 ## ⚠️ 已知遗留（不阻塞）
 
-- 无邮件 open/click 追踪（v2 阶段）
-- 无 funnel 报表（v2 阶段）
-- **v20.2 intent_outdated 第 5 tag pending**（v2_subscription_log 数据积累后）
+- 无邮件 open/click 追踪（v2 阶段 — v20.1 已埋点基础设施，但本期未启用 UI）
+- 无 funnel 报表（v2 阶段 — v20.1 服务 + v20.3 Bot tool 已 ready，可查 funnel/open_rate/intent_stats）
 - admin SPA UI 开关未做（如需做，按 v15.12 模式 JS 注入，30 分钟）
+- 🟡 IntentRefreshTest 未写（UNIQUE 冲突 fix 是手测验证，建议 v21 加）
+
+---
+
+---
+
+## ✅ v20.2 — intent_outdated 第 5 tag（2026-08-28 完成）
+
+**目标**：补 v19 4 tag 漏掉的"曾订阅但过期 7-30 天"中段漏斗用户群（73 个真实用户）
+
+**5 文件改动**（md5 一致 + 6/6 验证）：
+- `app/Models/UserIntent.php` — 加 `TAG_INTENT_OUTDATED` 常量 + ALL_TAGS 包含 5 tag
+- `app/Services/IntentClassifier.php` — `classify()` 加第 5 分支；`usersByTag()` 加 case
+- `app/Console/Commands/SendIntentCampaign.php` — TEMPLATE_MAP / SUBJECT_MAP / CONTENT_MAP 加 outdated
+- `app/Console/Kernel.php` — 加 `send:intent-campaign --tag=intent_outdated --force` 周二 10:00 cron
+- `tests/Feature/IntentClassifierTest.php` — 加 4 测试（10/10 通过，13 assertions）
+- `app/Console/Commands/IntentRefresh.php` — **顺带修复** pre-existing UNIQUE 冲突 bug（取 last_mailed_at → 删 → 重插保留）
+
+**TDD**: RED（Undefined constant TAG_INTENT_OUTDATED 错误）→ GREEN（10/10 OK, 13 assertions）✅
+
+**commit**: `b5d7d29` push my master（0bbd62d..b5d7d29）
+
+**端到端验证**：
+- ✅ intent:refresh 跑通 5 tag 分布：5+23+0+0+**73**
+- ✅ dry-run 显示 73 真实用户（前 10 样本：test0703@vp92vip.com / 290201734@qq.com 等），过期日期全在 7-30 天范围
+- ✅ schedule:list 5 个 send cron + intent:refresh 全部在册（含周二 10:00 intent_outdated cron）
+- ✅ 模板验证：CONTENT_MAP 反射读出 "VP92 想您了 - 专属回归优惠等你领取" 完整模板
+
+**关键决策**：
+- ✅ 不新建 blade 模板（复用 notify，与 intent_high/intent_cold 一致模式）
+- ✅ 不新增 `intent_outdated_*` config keys（SendIntentCampaign 用全局 intent_latest_version/intent_latest_features/intent_promo_end_date 共享）
+
+**完整 v20.2 细节**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
 
 ---
 
@@ -114,13 +147,13 @@ v19 状态（2026-08-28）：
 | sub | 名称 | 状态 | commit |
 |-----|------|------|--------|
 | v20.1 | tracking 基建 | ✅ | 033efd1 |
-| v20.2 | intent_outdated 第 5 tag | ⏳ pending | — |
+| **v20.2** | **intent_outdated 第 5 tag** | ✅ | **b5d7d29** |
 | v20.3 | Bot tool 集成（4 tool） | ✅ | 033efd1 |
 | v20.4 | 周报自动推送 | ✅ | 16f7a24 |
 | v20.5 | Bot typing 状态 | ✅ | b5e2cbc |
 | v20.6 | Bot 知识 v15.16 面板 | ✅ | 10c0e7e/ed9f3ee |
 
-**唯一 pending**：v20.2 intent_outdated 第 5 tag（~1.5h）
+**v20 计划 6/6 全部完成 🎉**（包括 v20.2 intent_outdated 第 5 tag）
 
 ---
 
@@ -655,15 +688,15 @@ No syntax errors detected
 
 ## ⏳ 待处理事项（必须新窗口接手）
 
-### 🔴 v20.5 Bot sendChatAction typing 状态（~30min quick fix）
-**触发**：用户反馈 "Telegram bot 恢复时没有正在输入的状态"
-**实现**：3 Bot 文件（TelegramAdminAiPoll / TelegramAiPoll / TelegramKawuPoll）DeepSeek 调用前发送 `sendChatAction('typing')`
+### ✅ v20.5 Bot sendChatAction typing 状态 — 已完成
 **详细 plan**: `C:\Users\Administrator\.claude\plans\harmonic-wibbling-engelbart.md` §16
 
-### 🟡 v20.2 intent_outdated 第 5 tag（~1.5h）
-**目标**：补 v19 4 tag 漏掉的 7-30 天中等活跃用户群（未付费 + 有过登录/订阅活动）
-**改动**：UserIntent 常量 + IntentClassifier 末尾分支 + SendIntentCampaign TEMPLATE_MAP + Kernel.php cron（周二 10:00）+ ConfigController + ConfigSave 白名单
+### ✅ v20.2 intent_outdated 第 5 tag — 已完成
 **详细 plan**: `C:\Users\Administrator\.claude\plans\harmonic-wibbling-engelbart.md` §6
+**完成 wakeup**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
+**遗留**: IntentRefreshTest 未写（v21 加）
+
+### 🔴 v15.6 旧 bug 清单（详见下方历史段落）
 
 ### ✅ 已完成（v15.6 全部调查）：落地页注册订阅 bug 根因 3 个独立 bug
 - Bug A：jt() i18n section 错配（致命 — handleSubscribe 在前端校验时 TypeError 中断）
