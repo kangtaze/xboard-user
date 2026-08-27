@@ -15,6 +15,7 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\Output\QRGdImagePNG;
 use App\Models\GiftCardCode;
 use App\Models\GiftCardTemplate;
+use App\Services\TelegramChatAction;
 
 /**
  * 卡务AI Bot — 独立 Long Polling 守护进程
@@ -226,7 +227,7 @@ class TelegramKawuPoll extends Command
         }
 
         try {
-            $reply = $this->kawuAiChat($text);
+            $reply = $this->kawuAiChat($chatId, $text);
             $this->sendTelegram($chatId, $reply);
             $this->info("[{$userId}] 回复已发送");
         } catch (\Throwable $e) {
@@ -451,8 +452,11 @@ class TelegramKawuPoll extends Command
     // DeepSeek Function Calling AI
     // ========================================================
 
-    private function kawuAiChat(string $message): string
+    private function kawuAiChat(int|string $chatId, string $message): string
     {
+        // v20.5: 先发 "typing" 状态，让用户感知 Bot 在工作
+        TelegramChatAction::send($this->botToken, $chatId);
+
         $apiKey = env('DEEPSEEK_KAWU_API_KEY', '');
         $apiUrl = 'https://api.deepseek.com/v1/chat/completions';
 

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserIntent;
 use App\Services\EmailTrackingService;
 use App\Services\MailService;
+use App\Services\TelegramChatAction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -208,7 +209,7 @@ class TelegramAdminAiPoll extends Command
         }
 
         try {
-            $reply = $this->adminAiChat($text);
+            $reply = $this->adminAiChat($chatId, $text);
             $this->sendTelegram($chatId, $reply);
             $this->info("[{$userId}] 回复已发送");
         } catch (\Throwable $e) {
@@ -281,8 +282,11 @@ class TelegramAdminAiPoll extends Command
     // DeepSeek Function Calling AI
     // ========================================================
 
-    private function adminAiChat(string $message): string
+    private function adminAiChat(int|string $chatId, string $message): string
     {
+        // v20.5: 先发 "typing" 状态，让用户感知 Bot 在工作
+        TelegramChatAction::send($this->botToken, $chatId);
+
         $apiKey = config('deepseek.admin_api_key') ?: config('deepseek.api_key');
         $apiUrl = config('deepseek.api_url', 'https://api.deepseek.com/v1/chat/completions');
 

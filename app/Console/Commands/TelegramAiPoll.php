@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\AiChatService;
+use App\Services\TelegramChatAction;
 use App\Services\TelegramService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -203,7 +204,7 @@ class TelegramAiPoll extends Command
 
             if ($isAdminUser) {
                 // 管理员：使用工具调用（发公告等）
-                $reply = $this->adminAiChat($text);
+                $reply = $this->adminAiChat($chatId, $text);
                 $this->telegram->sendMessage($chatId, $reply);
                 $this->info("[{$chatId}] 管理员 AI 回复已发送");
             } else {
@@ -219,6 +220,9 @@ class TelegramAiPoll extends Command
                     $userContext = $this->buildUserContext($dbUser);
                     $this->info("[{$chatId}] 用户上下文: {$userContext}");
                 }
+
+                // v20.5: 先发 "typing" 状态，让用户感知 Bot 在工作
+                TelegramChatAction::send($this->botToken, $chatId);
 
                 $result = $this->aiChat->chat($dbUserId, $text, $history, $userContext);
                 $reply = $result['reply'] ?? '抱歉，我暂时无法回答，请稍后再试。';
@@ -547,8 +551,11 @@ class TelegramAiPoll extends Command
     /**
      * 管理员专属 AI 对话 — 带工具调用能力
      */
-    private function adminAiChat(string $message): string
+    private function adminAiChat(int|string $chatId, string $message): string
     {
+        // v20.5: 先发 "typing" 状态，让用户感知 Bot 在工作
+        TelegramChatAction::send($this->botToken, $chatId);
+
         $apiKey = env('DEEPSEEK_API_KEY', '');
         $apiUrl = 'https://api.deepseek.com/v1/chat/completions';
 
