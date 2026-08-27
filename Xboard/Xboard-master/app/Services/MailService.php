@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Services;
 
@@ -68,6 +68,52 @@ class MailService
 
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
         }, $template);
+    }
+
+    /**
+     * v20.1 — 邮件追踪占位符注入
+     *
+     * 替换 3 个占位符（公开为 static 便于测试）：
+     *   {{tracking_pixel}}     → <img src=".../track/open/{messageId}.{expiresAt}.{hash}.gif" ...>
+     *   {{tracking_click_base}} → "https://vp92vip.com/track/click/{messageId}.{expiresAt}.{hash}?to="
+     *                            （模板作者再拼 ?to=<encoded target_url>）
+     *   {{unsubscribe_url}}    → "https://vp92vip.com/track/unsubscribe/{messageId}.{expiresAt}.{hash}"
+     *
+     * @param string $html         渲染后的 HTML
+     * @param string $messageId    HMAC-safe 消息 ID（MailLog.message_id）
+     * @param int    $expiresAt    Unix ts（默认 90 天）
+     * @param string $secret       MAIL_TRACKING_SECRET
+     *
+     * 占位符不存在时原样返回（向下兼容未升级模板）
+     * secret 为空时原样返回（向下兼容旧部署）
+     */
+    public static function injectTracking(string $html, string $messageId, int $expiresAt, string $secret): string
+    {
+        if ($html === '' || !$messageId || !$expiresAt || !$secret) {
+            return $html;
+        }
+
+        $hash = \App\Http\Controllers\TrackController::makeHash($messageId, $expiresAt, $secret);
+        $base = 'https://vp92vip.com';
+
+        $pixel = sprintf(
+            '<img src="%s/track/open/%s.%d.%s.gif" width="1" height="1" style="display:none" alt="">',
+            $base, $messageId, $expiresAt, $hash
+        );
+        $clickBase = sprintf(
+            '%s/track/click/%s.%d.%s?to=',
+            $base, $messageId, $expiresAt, $hash
+        );
+        $unsubUrl = sprintf(
+            '%s/track/unsubscribe/%s.%d.%s',
+            $base, $messageId, $expiresAt, $hash
+        );
+
+        $html = str_replace('{{tracking_pixel}}', $pixel, $html);
+        $html = str_replace('{{tracking_click_base}}', $clickBase, $html);
+        $html = str_replace('{{unsubscribe_url}}', $unsubUrl, $html);
+
+        return $html;
     }
 
     /**
@@ -285,6 +331,11 @@ class MailService
         $vars = is_array($templateValue) ? ($templateValue['vars'] ?? []) : [];
         $contentMode = is_array($templateValue) ? ($templateValue['content_mode'] ?? null) : null;
 
+        // v20.1 — 邮件追踪 metadata（在 try 前生成，确保即使发送失败 mail_log 也带 message_id）
+        $messageId = 'msg_' . bin2hex(random_bytes(8));
+        $expiresAt = time() + 86400 * 90;  // 90 天有效期
+        $userId = is_array($params) ? ($params['user_id'] ?? null) : null;
+
         if (is_array($vars) && !empty($vars)) {
             $subject = self::renderPlaceholders((string) $subject, $vars);
 
@@ -323,6 +374,20 @@ class MailService
                 $renderedHtml = view($params['template_name'], $params['template_value'])->render();
             }
 
+            // v20.1 — 注入追踪占位符（pixel + click_base + unsubscribe）
+            // 失败时静默回退到原 HTML（不能因追踪破坏邮件）
+            $trackingSecret = config('mail.tracking_secret');
+            if (!empty($trackingSecret) && $renderedHtml !== '') {
+                try {
+                    $renderedHtml = self::injectTracking($renderedHtml, $messageId, $expiresAt, $trackingSecret);
+                } catch (\Throwable $e) {
+                    Log::warning('MailService::injectTracking failed', [
+                        'message_id' => $messageId,
+                        'err' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // Use Brevo HTTP API if API key is configured
             $error = self::sendViaBrevoApi($email, $subject, $renderedHtml);
         } catch (\Exception $e) {
@@ -334,7 +399,9 @@ class MailService
             'subject' => $params['subject'],
             'template_name' => $params['template_name'],
             'error' => $error,
-            'config' => config('mail')
+            'user_id' => $userId,
+            'message_id' => $messageId,
+            'config' => config('mail'),
         ];
         MailLog::create($log);
         return $log;

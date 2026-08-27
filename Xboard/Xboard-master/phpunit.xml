@@ -38,6 +38,7 @@
         <env name="MAIL_TRACKING_SECRET" value="test-tracking-secret-do-not-use-in-prod" force="true"/>
         <!-- 关闭外部依赖防止测试时真发邮件/真调 API -->
         <env name="TELEGRAM_ADMIN_BOT_TOKEN" value="" force="true"/>
-        <env name="BREVO_API_KEY" value="" force="true"/>
+        <!-- BREVO fake key + Http::fake() 拦截 api.brevo.com → MailServiceTrackingTest 的 sendEmail 测试可验证 success 路径 -->
+        <env name="BREVO_API_KEY" value="test-brevo-fake-key-for-phpunit" force="true"/>
     </php>
 </phpunit>

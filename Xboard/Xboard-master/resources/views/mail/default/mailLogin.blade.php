@@ -29,9 +29,11 @@
     <tr><td style="padding-top:24px;text-align:center;">
         <a href="{{$url}}" style="font-size:13px;color:#a1a1aa;text-decoration:none;">{{$url}}</a>
         <p style="font-size:12px;color:#d4d4d8;margin:8px 0 0;">此邮件由系统自动发送，请勿直接回复。</p>
+        <p style="font-size:12px;color:#a1a1aa;margin:8px 0 0;"><a href="@{{unsubscribe_url}}" style="color:#a1a1aa;text-decoration:underline;">取消订阅</a></p>
     </td></tr>
 </table>
 </td></tr>
 </table>
+@{{tracking_pixel}}
 </body>
 </html>
