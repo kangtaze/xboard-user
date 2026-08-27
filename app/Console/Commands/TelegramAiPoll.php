@@ -561,6 +561,17 @@ class TelegramAiPoll extends Command
 你拥有发送公告到 Telegram 频道的工具。当管理员要求发公告、通知频道、告诉大家某事时，自动调用 send_channel_announce 工具。
 根据公告内容自动判断分类：系统维护/版本更新选"系统通知"，优惠促销/限时活动选"活动公告"，紧急故障/安全提醒选"紧急通知"，其他选"系统通知"。
 回复简洁专业，用中文。
+
+【v15.16 增强信息面板 - 2026-08-27 admin SPA 注入】
+当管理员问起 "📍 VP92 增强信息"、"v15.16 面板"、"用户详情面板" 时，按以下事实回答：
+
+功能位置：admin SPA 的「用户详情」modal，点击用户列表 email 列触发模态框，在「订阅信息」卡片正下方自动注入 "📍 VP92 增强信息" 浮动面板。
+
+面板内容（6 字段）：最后登录 IP / 注册 IP / 客户端+版本 / 注册地+最后登录（ip2region 5 段：中国/省/市/ISP）/ 📱 设备列表 / 📡 订阅记录。
+
+v15.16 修复：cedar admin SPA kebab 只有「编辑」无「详情」→ 改点击 email 列打开 modal；panel 之前错位到 modal 末尾 → 用 div.rounded-lg.border.p-4 + startsWith('订阅信息') 精准定位；GeoIP ip2region off-by-one → parts[0,2,3,4]（parts[1] 是区域标记位总为 0）。
+
+回复口径：这是 admin SPA 注入的浮动面板，不是 Xboard 原生功能，用于识别异常登录和批量注册。
 PROMPT;
 
         $messages = [

@@ -305,6 +305,13 @@ class TelegramAdminAiPoll extends Command
 - 如果查询的用户不是您邀请的，请告知无权限
 回答简洁专业，给出具体数字。回答用中文。
 重要：不要使用任何 Markdown 格式，不要用 ** 加粗，不要用 ` 代码，用纯文本和 emoji 表达。
+
+【v15.16 增强信息面板 - 2026-08-27】
+admin SPA 的用户详情 modal 里，在「订阅信息」卡片正下方会自动注入名为 "📍 VP92 增强信息" 的浮动面板，包含：
+最后登录 IP / 注册 IP / 客户端类型版本 / 注册地 + 最后登录（ip2region 5 段解析：中国/省/市/ISP）
+/ 📱 设备列表（N 个）/ 📡 订阅记录（N 个）
+v15.16 修复了 cedar admin SPA kebab 只有「编辑」无「详情」的问题（点击 email 列打开 modal）
+和 panel 错位到 modal 末尾的 bug（用 div.rounded-lg.border.p-4 + startsWith('订阅信息') 精准定位）。
 PROMPT;
         } else {
             $systemPrompt = <<<'PROMPT'
@@ -316,6 +323,26 @@ PROMPT;
 - 时间戳转换为可读日期格式
 回答简洁专业，给出具体数字。不要说"建议登录后台查看"。回答用中文。
 重要：不要使用任何 Markdown 格式，不要用 ** 加粗，不要用 ` 代码，用纯文本和 emoji 表达。
+
+【v15.16 增强信息面板 - 2026-08-27 admin SPA 注入】
+当管理员询问 "📍 VP92 增强信息"、"v15.16 面板"、"用户详情面板"、"modal 上多出来的卡片" 时，按以下事实回答：
+
+功能位置：admin SPA 的「用户详情」modal 页面，点击用户列表中的 email 列触发模态框（不是 kebab 菜单），在「订阅信息」卡片正下方会自动注入 "📍 VP92 增强信息" 浮动面板。
+
+面板内容（6 字段，按顺序）：
+1. 最后登录 IP
+2. 注册 IP
+3. 客户端：设备类型（vp92-android / vp92-windows / shadowrocket / browser 等）+ 客户端版本号 + 平台
+4. 注册地 + 最后登录：基于 ip2region 5 段解析（国家/省/市/ISP，例如"中国/山东省/菏泽市/移动"）
+5. 📱 设备（N）：列出该用户绑定的所有设备
+6. 📡 订阅记录（N）：列出该用户的历史订阅更新记录
+
+v15.16 修复的 bug：
+- cedar admin SPA kebab 只有「编辑」无「详情」 → 改点击 email 列打开 modal
+- panel 之前错位到 modal 末尾（querySelectorAll('div') 误匹配 space-y-4 包装） → v15.16 用 div.rounded-lg.border.p-4 + startsWith('订阅信息') 精准定位
+- GeoIP ip2region 5 段解析 off-by-one → v15.16 用 parts[0,2,3,4]（parts[1] 是区域标记位总为 0）
+
+回复口径：告诉管理员这是 admin SPA 注入的浮动面板，不是 Xboard 原生功能，用于识别异常登录和批量注册。
 PROMPT;
         }
 
