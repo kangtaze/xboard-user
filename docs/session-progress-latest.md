@@ -1,11 +1,12 @@
 # 📌 v19 + v20 Wakeup Snapshot — 2026-08-28 VP92 营销自动化（最终完成态）
 
-> **当前最新进度**（v20.5 + v20.2 — 全部完成 🎉）
+> **当前最新进度**（v20.7 + v20.5 + v20.2 — 全部完成 🎉）
 > **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报 + UX
-> **状态**：✅ v19 + v20 全部 6 个 sub-version 完成入库（v20.1 / v20.2 / v20.3 / v20.4 / v20.5 / v20.6）
+> **状态**：✅ v19 + v20 全部 7 个 sub-version 完成入库（v20.1 / v20.2 / v20.3 / v20.4 / v20.5 / v20.6 / **v20.7**）
 > **完整 v20.2 细节**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
 > **完整 v20.5 细节**: [`docs/wakups/v20-5-bot-typing-indicator.md`](wakups/v20-5-bot-typing-indicator.md)
 > **完整 v20.6 细节**: [`docs/wakups/v20-6-bot-knowledge-v15-16-panel.md`](wakups/v20-6-bot-knowledge-v15-16-panel.md)
+> **完整 v20.7 细节**: [`docs/wakups/v20-7-ai-chat-paraphrase-rules.md`](wakups/v20-7-ai-chat-paraphrase-rules.md)
 
 ---
 
@@ -152,8 +153,9 @@ v19 状态（2026-08-28）：
 | v20.4 | 周报自动推送 | ✅ | 16f7a24 |
 | v20.5 | Bot typing 状态 | ✅ | b5e2cbc |
 | v20.6 | Bot 知识 v15.16 面板 | ✅ | 10c0e7e/ed9f3ee |
+| **v20.7** | **AI 客服转述规则加强（产品卖点角度）** | ✅ | **adbe66c** |
 
-**v20 计划 6/6 全部完成 🎉**（包括 v20.2 intent_outdated 第 5 tag）
+**v20 计划 7/7 全部完成 🎉**（包括 v20.2 intent_outdated 第 5 tag + v20.7 AI 转述硬规则）
 
 ---
 
@@ -695,6 +697,16 @@ No syntax errors detected
 **详细 plan**: `C:\Users\Administrator\.claude\plans\harmonic-wibbling-engelbart.md` §6
 **完成 wakeup**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
 **遗留**: IntentRefreshTest 未写（v21 加）
+
+### ✅ v20.7 AI 客服转述规则加强（产品卖点角度）— 已完成
+**完成 wakeup**: [`docs/wakups/v20-7-ai-chat-paraphrase-rules.md`](wakups/v20-7-ai-chat-paraphrase-rules.md)
+**commit**: `adbe66c` (rebased from `8282c25` due to non-fast-forward on push)
+**改动**: `app/Services/AiChatService.php` 3 处 SYSTEM_PROMPT【最新版本动态】段
+1. line 63-68 转述规则加"v20.6 硬规则"段（4 个产品卖点关键词 + 禁止逐条复述 + 黑名单加 checkOrder/状态范围/三端同步）
+2. line 510 Android 注入前缀：改"禁止直接复述或逐条翻译，必须按上方 v20.6 硬规则从产品卖点角度重新组织回答"
+3. line 518 Windows 注入前缀：同上
+**TDD**: RED → GREEN (3 tests, 7 assertions)
+**已知遗留**: R2 上 vp92-flclash/version.json 仍是技术 changelog，**APP 内自动升级弹窗仍显示原文**——只有 AI 客服回答被本规则保护。若用户要求改 APP 内弹窗文案，需改 R2（不在本任务范围）
 
 ### 🔴 v15.6 旧 bug 清单（详见下方历史段落）
 
