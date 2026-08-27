@@ -40,6 +40,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('reset:log')->daily()->onOneServer();
         // send
         $schedule->command('send:remindMail', ['--force'])->dailyAt('11:30')->onOneServer();
+        // 续费营销邮件 — 每天上午10点自动发送给到期用户（7天内不重复）
+        $schedule->command('send:renewal-marketing', ['--force'])->dailyAt('10:00')->onOneServer();
 
         // Intent campaign: daily refresh + optional auto send (v19 2026-08-27)
         $schedule->command('intent:refresh')->dailyAt('00:30')->onOneServer();
@@ -60,6 +62,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('horizon:snapshot')->everyFiveMinutes()->onOneServer();
         // cleanup stale online_count (GC for Redis TTL expiration)
         $schedule->command('cleanup:online-status')->everyFiveMinutes()->onOneServer();
+        // edgetunnel node sync — 关闭自动同步，改为手动在 Edgetunnel 节点管理页面点击「同步」
+        // $schedule->command('sync:edgetunnel-nodes')->everyThirtyMinutes()->onOneServer()->withoutOverlapping();
+        // edgetunnel KV user sync (global KV + per-worker KV)
+        // 每 30 分钟同步一次，避免 CF KV 免费版写入配额（1000次/天）耗尽
+        $schedule->command('sync:users-to-kv')->everyThirtyMinutes()->onOneServer()->withoutOverlapping();
         // backup Timing
         // if (env('ENABLE_AUTO_BACKUP_AND_UPDATE', false)) {
         //     $schedule->command('backup:database', ['true'])->daily()->onOneServer();
