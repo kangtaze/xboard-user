@@ -58,6 +58,12 @@ class Kernel extends ConsoleKernel
                 ->weekly()->fridays()->at('10:00');
         }
 
+        // v20.4 周报自动推送 — 每周一 09:30 把上周营销漏斗推送给所有管理员 Telegram
+        $schedule->command('vp92:send-weekly-report')
+            ->weekly()->mondays()->at('09:30')
+            ->withoutOverlapping(600)
+            ->onOneServer();
+
         // horizon metrics
         $schedule->command('horizon:snapshot')->everyFiveMinutes()->onOneServer();
         // cleanup stale online_count (GC for Redis TTL expiration)
