@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\Plan;
 use App\Models\Server;
 use App\Models\User;
+use App\Models\UserIntent;
+use App\Services\EmailTrackingService;
 use App\Services\MailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -281,11 +283,11 @@ class TelegramAdminAiPoll extends Command
 
     private function adminAiChat(string $message): string
     {
-        $apiKey = config('deepseek.api_key');
+        $apiKey = config('deepseek.admin_api_key') ?: config('deepseek.api_key');
         $apiUrl = config('deepseek.api_url', 'https://api.deepseek.com/v1/chat/completions');
 
         if (empty($apiKey)) {
-            return 'DeepSeek API Key 未配置。';
+            return 'DeepSeek Admin API Key 未配置。';
         }
 
         $tools = $this->currentRole === 'staff' ? $this->getStaffTools() : $this->getAdminTools();
@@ -696,6 +698,62 @@ PROMPT;
                     ],
                 ],
             ],
+            // === v20.3 营销漏斗 4 tool ===
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'funnel_report',
+                    'description' => '查看指定 tag 的营销漏斗（mailed→opened→clicked→paid）。管理员问"漏斗/转化率/某tag效果"时调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'tag' => [
+                                'type' => 'string',
+                                'enum' => ['expiring_soon', 'churned_warm', 'intent_high', 'intent_cold'],
+                                'description' => '可选，tag名称。不传则给所有tag各算一次',
+                            ],
+                            'days_back' => ['type' => 'integer', 'description' => '回溯天数，默认7（周报）'],
+                        ],
+                        'required' => [],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'open_rate',
+                    'description' => '查看各 tag 的打开率和点击率（最近 N 天）。管理员问"打开率/点击率/各tag效果对比"时调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'days_back' => ['type' => 'integer', 'description' => '回溯天数，默认7，最多30'],
+                        ],
+                        'required' => [],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'intent_stats',
+                    'description' => '查看 4 个 intent tag 的用户数 + 最近发邮件时间 + 7天转化数。管理员问"潜在用户多少/各tag还有多少/最近发过没"时调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'admin_help',
+                    'description' => '列出管理员可用的所有工具 + 自然语言触发示例。管理员问"能做什么/有什么命令/帮助"时调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -795,6 +853,10 @@ PROMPT;
                 'preview_renewal_bulk' => $this->toolPreviewRenewalBulk(),
                 'send_renewal_bulk' => $this->toolSendRenewalBulk((bool) ($args['confirm'] ?? false)),
                 'check_renewal_bulk_status' => $this->toolCheckRenewalBulkStatus(),
+                'funnel_report' => $this->toolFunnelReport($args),
+                'open_rate' => $this->toolOpenRate($args),
+                'intent_stats' => $this->toolIntentStats(),
+                'admin_help' => $this->toolAdminHelp(),
                 default => "未知工具函数: {$name}",
             };
         } catch (\Throwable $e) {
@@ -1516,6 +1578,111 @@ PROMPT;
         }
 
         return "您共邀请 " . count($users) . " 个用户：\n\n" . implode("\n", $lines);
+    }
+
+    // ========================================================
+    // v20.3 营销漏斗 tool 实现（4 个）
+    // ========================================================
+
+    /**
+     * funnel_report — 单 tag 或全 tag 漏斗
+     */
+    private function toolFunnelReport(array $args): string
+    {
+        $svc = new EmailTrackingService();
+        $daysBack = max(1, min(30, (int) ($args['days_back'] ?? 7)));
+        $tag = $args['tag'] ?? '';
+
+        $validTags = UserIntent::ALL_TAGS;
+        if ($tag !== '' && !in_array($tag, $validTags, true)) {
+            return "未知 tag: {$tag}。可选: " . implode(', ', $validTags);
+        }
+
+        if ($tag !== '') {
+            $f = $svc->funnel($tag, $daysBack);
+            return json_encode($f, JSON_UNESCAPED_UNICODE);
+        }
+
+        // 全 tag
+        $rows = $svc->openRate($daysBack);
+        return json_encode($rows, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * open_rate — 全 tag 打开率+点击率表
+     */
+    private function toolOpenRate(array $args): string
+    {
+        $svc = new EmailTrackingService();
+        $daysBack = max(1, min(30, (int) ($args['days_back'] ?? 7)));
+        $rows = $svc->openRate($daysBack);
+        return json_encode($rows, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * intent_stats — tag 用户数 + 最后发送时间 + 7d 转化
+     */
+    private function toolIntentStats(): string
+    {
+        $svc = new EmailTrackingService();
+        $stats = $svc->intentStats(7);
+
+        // 把 last_mailed_at 转成可读时间
+        $readableLast = [];
+        foreach ($stats['last_mailed_at'] as $tag => $ts) {
+            $readableLast[$tag] = $ts !== null ? date('Y-m-d H:i', $ts) : null;
+        }
+        $stats['last_mailed_at'] = $readableLast;
+
+        return json_encode($stats, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * admin_help — 管理员工具 + 自然语言触发示例
+     */
+    private function toolAdminHelp(): string
+    {
+        return <<<'HELP'
+📚 VP92 管理员 Bot 工具列表
+
+【营销漏斗 v20.3 新增】
+• "查漏斗" / "查 funnel" / "某 tag 转化" → funnel_report
+• "打开率" / "点击率" / "各 tag 效果" → open_rate
+• "潜在用户" / "各 tag 数量" / "intent 统计" → intent_stats
+• "帮助" / "能做什么" / "有什么命令" → admin_help (本工具)
+
+【用户管理】
+• "查用户 xxx@x.com" → lookup_user
+• "封禁/解封 xxx@x.com" → ban_user / unban_user
+• "修改 xxx@x.com 流量 100GB" → update_user
+• "重置 xxx@x.com 流量" → reset_traffic
+• "查 xxx@x.com 流量" → user_traffic
+
+【订单】
+• "查订单 xxx" / "查 xxx@x.com 订单" → lookup_order
+• "今日订单" → today_orders
+• "今日新用户" → today_new_users
+
+【续费邮件】
+• "给 xxx@x.com 发续费邮件" → send_renewal_email
+• "群发预览" / "给所有到期用户发邮件" → preview_renewal_bulk
+• "确认发送" → send_renewal_bulk
+• "群发进度" / "发完了吗" → check_renewal_bulk_status
+
+【系统】
+• "节点状态" → node_status
+• "系统状态" / "服务器负载" → system_status
+• "用户统计" → user_stats
+• "发公告 xxx" → send_announcement
+
+【兑换码】
+• "查兑换码 xxx" → lookup_code
+
+【卡片】
+• "创建/管理礼品卡" → 走礼品卡页面 / 用卡片 Bot 私聊
+
+💡 提示：直接说人话即可，例如 "查漏斗" 或 "上周打开率怎么样"
+HELP;
     }
 
     private function stop(): void
