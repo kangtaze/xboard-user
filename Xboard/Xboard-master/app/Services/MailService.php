@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Services;
 
@@ -12,8 +12,37 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+use Illuminate\Support\Facades\Http;
+
 class MailService
 {
+    /**
+     * Send email via Brevo HTTP API (no SMTP, no IP whitelist needed).
+     */
+    private static function sendViaBrevoApi(string $email, string $subject, string $htmlContent): ?string
+    {
+        $apiKey = env('BREVO_API_KEY');
+        if (!$apiKey) return 'BREVO_API_KEY not set';
+
+        $fromName = env('MAIL_FROM_NAME', 'VP92');
+        $fromEmail = env('MAIL_FROM_ADDRESS', 'noreply@mail.ferrari.cc.cd');
+
+        $response = Http::withHeaders([
+            'api-key' => $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.brevo.com/v3/smtp/email', [
+            'sender' => ['name' => $fromName, 'email' => $fromEmail],
+            'to' => [['email' => $email]],
+            'subject' => $subject,
+            'htmlContent' => $htmlContent,
+        ]);
+
+        if ($response->successful()) {
+            return null; // success
+        }
+        return 'Brevo API error: ' . $response->body();
+    }
+
     // Render {{key}} / {{key|default}} placeholders.
     private static function renderPlaceholders(string $template, array $vars): string
     {
@@ -282,27 +311,20 @@ class MailService
         }
 
         try {
+            $renderedHtml = '';
             if ($dbTemplate) {
                 $renderVars = self::buildSafeVars($templateValue);
                 $renderedSubject = self::renderPlaceholders($dbTemplate->subject, $renderVars);
-                $renderedContent = self::renderPlaceholders($dbTemplate->content, $renderVars);
+                $renderedHtml = self::renderPlaceholders($dbTemplate->content, $renderVars);
                 $subject = $renderedSubject ?: $subject;
-
-                Mail::html($renderedContent, function ($message) use ($email, $subject) {
-                    $message->to($email)->subject($subject);
-                });
                 $params['template_name'] = 'db:' . $templateName;
             } else {
                 $params['template_name'] = 'mail.default.' . $templateName;
-                Mail::send(
-                    $params['template_name'],
-                    $params['template_value'],
-                    function ($message) use ($email, $subject) {
-                        $message->to($email)->subject($subject);
-                    }
-                );
+                $renderedHtml = view($params['template_name'], $params['template_value'])->render();
             }
-            $error = null;
+
+            // Use Brevo HTTP API if API key is configured
+            $error = self::sendViaBrevoApi($email, $subject, $renderedHtml);
         } catch (\Exception $e) {
             Log::error($e);
             $error = $e->getMessage();

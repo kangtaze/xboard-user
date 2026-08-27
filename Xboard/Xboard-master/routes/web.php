@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Services\ThemeService;
 use App\Services\UpdateService;
