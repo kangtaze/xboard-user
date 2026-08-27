@@ -45,13 +45,20 @@ class PlanController extends Controller
             
             DB::beginTransaction();
             try {
+                // 当套餐 device_limit 字段变化时，无条件同步所有该套餐下用户的 device_limit
+                // 避免依赖 force_update 复选框（Xboard 设备限制实际用 user.device_limit，不是 plan）
+                if (array_key_exists('device_limit', $params) && (int) $plan->device_limit !== (int) $params['device_limit']) {
+                    $newDeviceLimit = (int) $params['device_limit'] > 0 ? (int) $params['device_limit'] : null;
+                    User::where('plan_id', $plan->id)->update([
+                        'device_limit' => $newDeviceLimit,
+                    ]);
+                }
                 if ($request->input('force_update')) {
                     User::where('plan_id', $plan->id)->update([
                         'group_id' => $params['group_id'],
                         'transfer_enable' => $params['transfer_enable'] * 1073741824,
                         'speed_limit' => $params['speed_limit'],
-                        'device_limit' => $params['device_limit'],
-                    ]);
+                        ]);
                 }
                 $plan->update($params);
                 DB::commit();
