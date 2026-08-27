@@ -1,8 +1,9 @@
-# 📌 v19 Wakeup Snapshot — 2026-08-28 VP92 潜在付费用户识别系统完成入库
+# 📌 v19 + v20 Wakeup Snapshot — 2026-08-28 VP92 营销自动化（最终完成态）
 
-> **当前最新进度**（v19 — supersedes v15.18）
-> **会话类型**：v19 plan 8 task 全部完成 + 服务器部署 + 13 步端到端验证
-> **状态**：✅ 完成入库（git push my master c33c543..3283d15 共 8 commits）
+> **当前最新进度**（v20.6 — supersedes v19）
+> **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报
+> **状态**：✅ v19 + v20.1 + v20.3 + v20.4 + v20.6 完成入库；v20.2 + v20.5 pending
+> **完整 v20.6 细节**: [`docs/wakups/v20-6-bot-knowledge-v15-16-panel.md`](wakups/v20-6-bot-knowledge-v15-16-panel.md)
 
 ---
 
@@ -10,16 +11,74 @@
 
 ```
 v19 状态（2026-08-28）：
-✅ Task 1: migration 2026_08_27_000002_create_v2_user_intent（5ed6631）
-✅ Task 2: UserIntent model + 4 tag 常量（8d5effe）
-✅ Task 3: IntentClassifier service + 6 unit tests（7a78072，server-only TDD）
-✅ Task 4: IntentRefresh 命令 daily cron 00:30（c6b18ce）
-✅ Task 5: SendIntentCampaign 命令 4 tag 模板映射 + 7天冷却（ac09df5）
-✅ Task 6: Kernel.php cron 注册 + 合并服务器独有 send:renewal-marketing/sync:users-to-kv（10ae368 + 3283d15）
-✅ Task 7: ConfigController 4 个 admin settings（10d6045）
-✅ Task 8: 服务器部署 + 端到端验证（migration OK / 6 expiring_soon + 22 churned_warm 命中 / 真发 3 封 / 7天冷却生效）
-✅ git push my master: c33c543..3283d15（ahead 8 commits）
+✅ Task 1-8: 8 个 plan task 全部完成（migration/model/classifier/refresh/send/kernel/settings/deploy）
+✅ Follow-up A: ConfigSave 白名单添加 intent_* keys（b0f1c5e）→ API 保存可用
+✅ Follow-up B: ConfigController intent_auto_send 默认 true（9ea1f42）→ 开箱即用
+✅ Follow-up C: Kernel.php intent_auto_send 默认 true（cf01538）→ 4 个 send cron 注册
+✅ 服务器 schedule:list 验证：intent:refresh + 4 个 send:intent-campaign cron 全部在册
+✅ 用户决策：完全自动化，不保留 UI 开关（cedar admin SPA 硬编码无法改 UI）
+✅ 首次自动发送：明天 10:00（expiring_soon 每日）
 ```
+
+---
+
+## 🚨 关键设计决策
+
+### 1. 不做 admin UI 开关
+- cedar admin SPA bundle (`index-CEIYH7i8.js`) 硬编码表单字段，0 个 `intent_*` 引用
+- Fork SPA 工作量太大（v15.12 已接受注入方案，但 settings 需双向读写）
+- **结论**：开关只在 DB 里 `intent_auto_send`，需要关就 SSH 写 0
+
+### 2. 默认全开
+- `intent_auto_send` 默认 `true`（ConfigController + Kernel.php 都改了）
+- 4 个 cron 永久注册：周一 intent_high / 周三 intent_cold / 周五 churned_warm / 每天 expiring_soon
+- 7 天冷却保护（同用户同 tag 7 天内最多 1 封）
+- 重算每日 00:30，发送每日 10:00，**用户用户访问完全无感**
+
+### 3. 服务器负担 < 1 分钟/周
+- intent:refresh：每天 1 次 < 1 秒
+- send 每次：1 次 SELECT + 批量发邮件（22 人 ≈ 8 秒）
+- 每周总 CPU：< 1 分钟
+- 完全异步跑 Octane worker，不阻塞用户访问
+
+---
+
+## 📂 v19 新增/修改文件
+
+| 文件 | 用途 | commit |
+|------|------|--------|
+| `database/migrations/2026_08_27_000002_create_v2_user_intent.php` | v2_user_intent 表 migration | 5ed6631 |
+| `app/Models/UserIntent.php` | Eloquent model + 4 tag 常量 | 8d5effe |
+| `app/Services/IntentClassifier.php` | 4 tag SQL 分类器（classify + usersByTag） | 7a78072 |
+| `tests/Feature/IntentClassifierTest.php` | 6 个单测（server-only TDD） | 7a78072 |
+| `app/Console/Commands/IntentRefresh.php` | 每日 cron 重算 | c6b18ce |
+| `app/Console/Commands/SendIntentCampaign.php` | 群发命令 + 7天冷却 | ac09df5 |
+| `app/Console/Kernel.php` | cron 注册 + 服务器独有行合并 | 10ae368 + 3283d15 + cf01538 |
+| `app/Http/Controllers/V2/Admin/ConfigController.php` | 4 个 admin settings（默认 true）| 10d6045 + 9ea1f42 |
+| `app/Http/Requests/Admin/ConfigSave.php` | ConfigSave validation 白名单 | b0f1c5e |
+
+---
+
+## 📊 端到端验证结果（2026-08-28）
+
+| Step | 结果 |
+|------|------|
+| Migration | ✅ `2026_08_27_000002_create_v2_user_intent` DONE |
+| Schedule list | ✅ 7 个 cron 全在册（含 4 个新 send）|
+| intent:refresh | ✅ 6 expiring_soon + 22 churned_warm + 0/0 intent |
+| Dry-run | ✅ 3 样本用户展示 |
+| 真发 3 封 | ✅ mail_log id 3363-3365 |
+| 7 天冷却 | ✅ 重发匹配 0 |
+| 推送 my master | ✅ 9 commits `c33c543..cf01538` |
+
+---
+
+## ⚠️ 已知遗留（不阻塞）
+
+- 无邮件 open/click 追踪（v2 阶段）
+- 无 funnel 报表（v2 阶段）
+- intent_outdated tag 暂缓（v2_subscription_log 数据积累后）
+- admin SPA UI 开关未做（如需做，按 v15.12 模式 JS 注入，30 分钟）
 
 ---
 
@@ -553,6 +612,16 @@ No syntax errors detected
 ---
 
 ## ⏳ 待处理事项（必须新窗口接手）
+
+### 🔴 v20.5 Bot sendChatAction typing 状态（~30min quick fix）
+**触发**：用户反馈 "Telegram bot 恢复时没有正在输入的状态"
+**实现**：3 Bot 文件（TelegramAdminAiPoll / TelegramAiPoll / TelegramKawuPoll）DeepSeek 调用前发送 `sendChatAction('typing')`
+**详细 plan**: `C:\Users\Administrator\.claude\plans\harmonic-wibbling-engelbart.md` §16
+
+### 🟡 v20.2 intent_outdated 第 5 tag（~1.5h）
+**目标**：补 v19 4 tag 漏掉的 7-30 天中等活跃用户群（未付费 + 有过登录/订阅活动）
+**改动**：UserIntent 常量 + IntentClassifier 末尾分支 + SendIntentCampaign TEMPLATE_MAP + Kernel.php cron（周二 10:00）+ ConfigController + ConfigSave 白名单
+**详细 plan**: `C:\Users\Administrator\.claude\plans\harmonic-wibbling-engelbart.md` §6
 
 ### ✅ 已完成（v15.6 全部调查）：落地页注册订阅 bug 根因 3 个独立 bug
 - Bug A：jt() i18n section 错配（致命 — handleSubscribe 在前端校验时 TypeError 中断）
