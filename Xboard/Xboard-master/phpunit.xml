@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
+         backupGlobals="false"
+         backupStaticProperties="false"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <!-- 测试环境隔离：使用 in-memory SQLite 防污染生产数据库 -->
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_DEBUG" value="true" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <!-- Xboard config/database.php:41 强行 base_path() 包裹 DB_DATABASE，绝对路径和 :memory: 都会被破坏。用 storage 下相对路径 → /www/storage/framework/testing.sqlite（正确）。RefreshDatabase 自动迁移并在测试间清空。 -->
+        <env name="DB_DATABASE" value="storage/framework/testing.sqlite" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="MAIL_TRACKING_SECRET" value="test-tracking-secret-do-not-use-in-prod" force="true"/>
+        <!-- 关闭外部依赖防止测试时真发邮件/真调 API -->
+        <env name="TELEGRAM_ADMIN_BOT_TOKEN" value="" force="true"/>
+        <env name="BREVO_API_KEY" value="" force="true"/>
+    </php>
+</phpunit>

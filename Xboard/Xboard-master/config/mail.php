@@ -133,4 +133,22 @@ return [
 
     'log_channel' => env('MAIL_LOG_CHANNEL'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Tracking Secret (v20 邮件追踪)
+    |--------------------------------------------------------------------------
+    |
+    | 用于 HMAC-SHA256 签名追踪 URL 的 secret。
+    | 由 `openssl rand -base64 48` 生成，部署到 .env 的 MAIL_TRACKING_SECRET。
+    |
+    | 用途:
+    | - App\Http\Controllers\TrackController::parseHash() 验证 URL 完整性
+    | - MailService::injectTracking() 生成 pixel/click/unsubscribe URL
+    | - EmailEventLog::ip_hash 哈希 IP（GDPR — 不存明文）
+    |
+    | 历史: v20.1 新增，v19 漏建。
+    */
+
+    'tracking_secret' => env('MAIL_TRACKING_SECRET'),
+
 ];

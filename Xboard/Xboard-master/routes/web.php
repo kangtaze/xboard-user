@@ -151,3 +151,12 @@ Route::get('/forgot', $dashboardShell);
 // SPA 路径：dashboard, auth 全部命中（Vue router 内部处理）
 Route::get('/dashboard/{path?}', $dashboardShell)->where('path', '.*');
 Route::get('/auth/{path?}', $dashboardShell)->where('path', '.*');
+
+// XboardFerrari: v20 邮件追踪路由（{hashParam} = "{messageId}.{expiresAt}.{hash}")
+// 不依赖 cookie/session — 邮件客户端通常不发送 Cookie
+Route::get('/track/open/{hashParam}', [\App\Http\Controllers\TrackController::class, 'open'])
+    ->name('track.open');
+Route::get('/track/click/{hashParam}', [\App\Http\Controllers\TrackController::class, 'click'])
+    ->name('track.click');
+Route::get('/track/unsubscribe/{hashParam}', [\App\Http\Controllers\TrackController::class, 'unsubscribe'])
+    ->name('track.unsubscribe');
