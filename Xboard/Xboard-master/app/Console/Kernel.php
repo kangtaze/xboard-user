@@ -46,8 +46,8 @@ class Kernel extends ConsoleKernel
         // Intent campaign: daily refresh + optional auto send (v19 2026-08-27)
         $schedule->command('intent:refresh')->dailyAt('00:30')->onOneServer();
 
-        // 自动发送（仅当 admin_setting('intent_auto_send', false) == true 时启用）
-        if (admin_setting('intent_auto_send', false)) {
+        // 自动发送（默认开启 - v19 2026-08-28）
+        if (admin_setting('intent_auto_send', true)) {
             $schedule->command('send:intent-campaign --tag=intent_high --force')
                 ->weekly()->mondays()->at('10:00');
             $schedule->command('send:intent-campaign --tag=intent_cold --force')
