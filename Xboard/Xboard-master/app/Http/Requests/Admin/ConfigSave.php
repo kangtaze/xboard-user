@@ -81,6 +81,11 @@ class ConfigSave extends FormRequest
         'macos_download_url' => '',
         'android_version' => '',
         'android_download_url' => '',
+        // Intent campaign (v19 潜在付费用户识别 2026-08-28)
+        'intent_latest_version' => '',
+        'intent_latest_features' => '',
+        'intent_promo_end_date' => '',
+        'intent_auto_send' => 'boolean',
         // safe
         'email_whitelist_enable' => 'boolean',
         'email_whitelist_suffix' => 'nullable|array',
