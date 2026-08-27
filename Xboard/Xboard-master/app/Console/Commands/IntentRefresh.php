@@ -23,34 +23,39 @@ class IntentRefresh extends Command
         $isDry = $this->option('dry');
         $now = time();
 
-        if (!$isDry) {
-            // 清空已发送过邮件的记录之外的（即保留 last_mailed_at 历史，重新计算）
-            DB::table('v2_user_intent')->whereNull('last_mailed_at')->delete();
-        }
-
         $counts = [];
         foreach (UserIntent::ALL_TAGS as $tag) {
             $userIds = IntentClassifier::usersByTag($tag);
             $counts[$tag] = count($userIds);
 
-            if (!$isDry) {
-                // 批量插入（last_mailed_at 有值的历史记录保留，不重写）
+            if (!$isDry && !empty($userIds)) {
+                // 取 (user_id, last_mailed_at) 历史映射
+                $existingMailed = DB::table('v2_user_intent')
+                    ->where('tag', $tag)
+                    ->whereIn('user_id', $userIds)
+                    ->pluck('last_mailed_at', 'user_id')
+                    ->toArray();
+
+                // 删 (user_id, tag) 旧记录
+                DB::table('v2_user_intent')
+                    ->where('tag', $tag)
+                    ->whereIn('user_id', $userIds)
+                    ->delete();
+
+                // 重插，保留 last_mailed_at（避免 UNIQUE 冲突 + 保留发过邮件的历史）
                 $rows = [];
                 foreach ($userIds as $userId) {
                     $rows[] = [
                         'user_id' => $userId,
                         'tag' => $tag,
-                        'last_mailed_at' => null,
+                        'last_mailed_at' => $existingMailed[$userId] ?? null,
                         'computed_at' => $now,
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
                 }
-                if (!empty($rows)) {
-                    // 分批插入避免 SQLite 参数限制 (999/批)
-                    foreach (array_chunk($rows, 500) as $chunk) {
-                        DB::table('v2_user_intent')->insert($chunk);
-                    }
+                foreach (array_chunk($rows, 500) as $chunk) {
+                    DB::table('v2_user_intent')->insert($chunk);
                 }
             }
         }

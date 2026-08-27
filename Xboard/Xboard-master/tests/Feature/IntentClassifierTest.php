@@ -99,4 +99,69 @@ class IntentClassifierTest extends TestCase
 
         $this->assertNull(IntentClassifier::classify($user));
     }
+
+    // ===================== v20.2 intent_outdated (过期 7-30 天) =====================
+
+    public function test_intent_outdated_returns_user_expired_7_to_30_days(): void
+    {
+        $user = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 15 * 86400, // 15 天前过期
+        ]);
+
+        $result = IntentClassifier::classify($user);
+
+        $this->assertEquals(UserIntent::TAG_INTENT_OUTDATED, $result);
+    }
+
+    public function test_intent_outdated_priority_below_churned_warm(): void
+    {
+        // 7 天过期（边界） → 应为 churned_warm（更高优先级）
+        $user = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 7 * 86400 + 60, // 7 天前过期（少 60 秒，让 7 天边界归 churned_warm）
+        ]);
+
+        $result = IntentClassifier::classify($user);
+
+        $this->assertEquals(UserIntent::TAG_CHURNED_WARM, $result);
+    }
+
+    public function test_intent_outdated_excludes_users_still_active(): void
+    {
+        // 30 天前过期（边界外） → 不应命中任何 tag
+        $user = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 30 * 86400,
+        ]);
+
+        $result = IntentClassifier::classify($user);
+
+        $this->assertNull($result);
+    }
+
+    public function test_intent_outdated_usersByTag_returns_only_expired_7_to_30_days(): void
+    {
+        // 过期 5 天 → churned_warm，不应出现
+        $warm = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 5 * 86400,
+        ]);
+        // 过期 15 天 → intent_outdated，应出现
+        $outdated = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 15 * 86400,
+        ]);
+        // 过期 40 天 → null，不应出现
+        $old = $this->makeUser([
+            'plan_id' => 1,
+            'expired_at' => time() - 40 * 86400,
+        ]);
+
+        $result = IntentClassifier::usersByTag(UserIntent::TAG_INTENT_OUTDATED);
+
+        $this->assertContains($outdated->id, $result);
+        $this->assertNotContains($warm->id, $result);
+        $this->assertNotContains($old->id, $result);
+    }
 }

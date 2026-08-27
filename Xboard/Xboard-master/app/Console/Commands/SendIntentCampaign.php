@@ -39,6 +39,7 @@ class SendIntentCampaign extends Command
         UserIntent::TAG_CHURNED_WARM => 'renewalCampaign',
         UserIntent::TAG_INTENT_HIGH => 'notify',
         UserIntent::TAG_INTENT_COLD => 'notify',
+        UserIntent::TAG_INTENT_OUTDATED => 'notify',  // v20.2: 复用 notify 模板
     ];
 
     // tag → 邮件主题
@@ -47,12 +48,14 @@ class SendIntentCampaign extends Command
         UserIntent::TAG_CHURNED_WARM => 'VP92 全新升级 - 更快更稳更多节点，欢迎回来！',
         UserIntent::TAG_INTENT_HIGH => '解锁 VP92 全球加速 - 新用户专属优惠',
         UserIntent::TAG_INTENT_COLD => 'VP92 限时回归优惠 - 老用户专享',
+        UserIntent::TAG_INTENT_OUTDATED => 'VP92 想您了 - 专属回归优惠等你领取',  // v20.2
     ];
 
-    // tag → notify 模板的 content（仅 intent_high/intent_cold 用）
+    // tag → notify 模板的 content（仅 intent_high/intent_cold/intent_outdated 用）
     private const CONTENT_MAP = [
         UserIntent::TAG_INTENT_HIGH => "感谢您注册 VP92！\n\n我们注意到您还未体验我们的全球加速服务。\n\n当前版本：{{latest_version}}\n{{latest_features}}\n\n新用户首月仅需 ¥{{price}}，立即解锁：\n• 全球 50+ 高速节点\n• 智能分流，4K 流畅观看\n• 7×24 专属客服支持",
         UserIntent::TAG_INTENT_COLD => "好久不见！\n\nVP92 已全新升级，更多节点、更快连接、更稳定。\n\n当前版本：{{latest_version}}\n{{latest_features}}\n\n老用户专属回归优惠，续费立享折扣。\n{{promo_end_date}}\n\n立即查看：{{url}}",
+        UserIntent::TAG_INTENT_OUTDATED => "您已经有一段时间没用了，VP92 想念您！\n\n自从您上次订阅，VP92 已大幅升级：\n• 节点数量翻倍，全球 50+ 国家覆盖\n• 连接速度提升 30%，4K 视频秒开\n• 新增多端同步，电脑/手机/平板无缝切换\n\n当前版本：{{latest_version}}\n{{latest_features}}\n\n作为曾经的 VIP 用户，您可享受专属回归折扣：\n{{promo_end_date}}\n\n立即查看：{{url}}",  // v20.2
     ];
 
     public function handle(): int
@@ -156,7 +159,7 @@ class SendIntentCampaign extends Command
                     ];
 
                     // notify 模板需要 content 字段
-                    if (in_array($tag, [UserIntent::TAG_INTENT_HIGH, UserIntent::TAG_INTENT_COLD])) {
+                    if (in_array($tag, [UserIntent::TAG_INTENT_HIGH, UserIntent::TAG_INTENT_COLD, UserIntent::TAG_INTENT_OUTDATED])) {
                         $content = self::CONTENT_MAP[$tag] ?? '';
                         $content = str_replace(
                             ['{{latest_version}}', '{{latest_features}}', '{{promo_end_date}}', '{{url}}'],

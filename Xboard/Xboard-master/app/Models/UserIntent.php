@@ -26,11 +26,13 @@ class UserIntent extends Model
     public const TAG_CHURNED_WARM = 'churned_warm';
     public const TAG_INTENT_HIGH = 'intent_high';
     public const TAG_INTENT_COLD = 'intent_cold';
+    public const TAG_INTENT_OUTDATED = 'intent_outdated';  // v20.2 (2026-08-28): 过期 7-30 天，中段漏斗用户
 
     public const ALL_TAGS = [
         self::TAG_EXPIRING_SOON,
         self::TAG_CHURNED_WARM,
         self::TAG_INTENT_HIGH,
         self::TAG_INTENT_COLD,
+        self::TAG_INTENT_OUTDATED,
     ];
 }

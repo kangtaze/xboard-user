@@ -50,12 +50,14 @@ class Kernel extends ConsoleKernel
         if (admin_setting('intent_auto_send', true)) {
             $schedule->command('send:intent-campaign --tag=intent_high --force')
                 ->weekly()->mondays()->at('10:00');
+            $schedule->command('send:intent-campaign --tag=intent_outdated --force')
+                ->weekly()->tuesdays()->at('10:00');  // v20.2: 周二 10:00（中段漏斗）
             $schedule->command('send:intent-campaign --tag=intent_cold --force')
                 ->weekly()->wednesdays()->at('10:00');
-            $schedule->command('send:intent-campaign --tag=expiring_soon --force')
-                ->dailyAt('10:00');
             $schedule->command('send:intent-campaign --tag=churned_warm --force')
                 ->weekly()->fridays()->at('10:00');
+            $schedule->command('send:intent-campaign --tag=expiring_soon --force')
+                ->dailyAt('10:00');
         }
 
         // v20.4 周报自动推送 — 每周一 09:30 把上周营销漏斗推送给所有管理员 Telegram

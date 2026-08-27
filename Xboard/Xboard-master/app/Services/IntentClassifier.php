@@ -56,6 +56,14 @@ class IntentClassifier
             return UserIntent::TAG_INTENT_COLD;
         }
 
+        // 5. intent_outdated (v20.2): 曾订阅但过期 7-30 天 — 中段漏斗，4 tag 漏洞
+        if ($user->plan_id !== null
+            && $user->expired_at !== null
+            && $user->expired_at < $now - 7 * 86400
+            && $user->expired_at > $now - 30 * 86400) {
+            return UserIntent::TAG_INTENT_OUTDATED;
+        }
+
         return null;
     }
 
@@ -100,6 +108,16 @@ class IntentClassifier
                     ->where('is_admin', 0)
                     ->whereNull('plan_id')
                     ->where('created_at', '<', $now - 7 * 86400)
+                    ->pluck('id')
+                    ->toArray();
+
+            case UserIntent::TAG_INTENT_OUTDATED:
+                return User::where('banned', 0)
+                    ->where('is_admin', 0)
+                    ->whereNotNull('plan_id')
+                    ->whereNotNull('expired_at')
+                    ->where('expired_at', '<', $now - 7 * 86400)
+                    ->where('expired_at', '>', $now - 30 * 86400)
                     ->pluck('id')
                     ->toArray();
 
