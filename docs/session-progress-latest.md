@@ -1,23 +1,48 @@
-# 🚨 v15.9 Wakeup Snapshot — 2026-08-26 Bug C 完整修复 + Bug D 按钮文案统一
+# 📌 v19 Wakeup Snapshot — 2026-08-28 VP92 潜在付费用户识别系统完成入库
 
-> **当前最新进度**（v15.9 — supersedes v15.6/v15.7/v15.8）
-> **会话类型**：v15.8 待办决策 → 完整修复 Bug C + Bug D
-> **状态**：v15.9 完成（frontend 4 文件改动 + landing blade 改动 + 部署 + chrome 验证 + git push vp92-master）
+> **当前最新进度**（v19 — supersedes v15.18）
+> **会话类型**：v19 plan 8 task 全部完成 + 服务器部署 + 13 步端到端验证
+> **状态**：✅ 完成入库（git push my master c33c543..3283d15 共 8 commits）
 
 ---
 
 ## ⚡ 一句话状态总结
 
 ```
-v15.9 状态（2026-08-26 晚）：
-✅ v15.5 完成（AI 客服 + widget + 隐私 URL rename）
-✅ v15.6+v15.7 PlanController 完整修复（device_limit 双向同步）
-✅ v15.8 Bug A+B 修复 + 隐私 URL 完整修复 + push 入库
-✅ v15.9 Bug C 完整修复（前端 4 文件改动 + 利用已有 guest/plan/fetch 端点 fallback + 401 redirect 保留 query）
-✅ v15.9 Bug D 按钮文案统一（PlanPurchase.vue + landing.blade.php hero/footer → '立即订阅'）
-✅ v15.9 chrome-devtools 实测：landing 立即订阅按钮 → modal OK; /dashboard/plans?checkout_plan=2 → 路由守卫跳 /auth/login?redirect=... 保留 query OK; guest/plan/fetch 200 OK; user/plan/fetch 无 token 403 OK
-✅ v15.9 git push my-frontend vp92-master：356b23d（ahead of d978e87）
-✅ v15.9 部署：vite build → scp assets → blade hash 更新 → view:clear/cache:clear/octane:reload（landing blade 单独 scp + 重 reload）
+v19 状态（2026-08-28）：
+✅ Task 1: migration 2026_08_27_000002_create_v2_user_intent（5ed6631）
+✅ Task 2: UserIntent model + 4 tag 常量（8d5effe）
+✅ Task 3: IntentClassifier service + 6 unit tests（7a78072，server-only TDD）
+✅ Task 4: IntentRefresh 命令 daily cron 00:30（c6b18ce）
+✅ Task 5: SendIntentCampaign 命令 4 tag 模板映射 + 7天冷却（ac09df5）
+✅ Task 6: Kernel.php cron 注册 + 合并服务器独有 send:renewal-marketing/sync:users-to-kv（10ae368 + 3283d15）
+✅ Task 7: ConfigController 4 个 admin settings（10d6045）
+✅ Task 8: 服务器部署 + 端到端验证（migration OK / 6 expiring_soon + 22 churned_warm 命中 / 真发 3 封 / 7天冷却生效）
+✅ git push my master: c33c543..3283d15（ahead 8 commits）
+```
+
+---
+
+# 🚨 v15.10 Wakeup Snapshot — 2026-08-26 落地页 hero/footer CTA 改'免费注册'跳转 /auth/register
+
+> **当前最新进度**（v15.10 — supersedes v15.9）
+> **会话类型**：v15.9 后续微调 — 落地页 hero + footer "立即订阅" 改回 "免费注册"，点击跳 /auth/register 注册页（不走 modal）
+> **状态**：v15.10 完成（landing.blade.php 4 处编辑 + 服务器双路径同步 + view/cache/octane reload + chrome 3 语言 + 登录态验证 + git push my-frontend vp92-master commit 6979e75）
+
+---
+
+## ⚡ 一句话状态总结
+
+```
+v15.10 状态（2026-08-26 深夜）：
+✅ v15.9 完成（Bug C 完整修复 + Bug D 按钮文案统一）→ ae09719/356b23d push vp92-master
+✅ v15.10 落地页 hero/footer CTA 改回 '免费注册'：立即订阅 → 免费注册，跳转 /auth/register 注册页（不再开 modal）
+✅ v15.10 i18n 同步：cta_button + btn_register 三语言全部改为 免费注册/免費註冊/Free Register
+✅ v15.10 Plan cards 不变：line 847/888/930 仍为"立即订阅"+ openSubscribeModal 弹窗订阅（用户确认不动）
+✅ v15.10 Dashboard 端 PlanPurchase.vue 不变（不在本次范围）
+✅ v15.10 chrome-devtools 验证：zh-CN/zh-TW/en 三语言切换正确；未登录 hero 点击 → /auth/register 注册表单正确渲染；登录态 hero 点击 → /dashboard
+✅ v15.10 服务器双路径 md5 一致（2ab36c761e8acf9c11a0aa1f9a3aa7d8）
+✅ v15.10 git push my-frontend vp92-master：6979e75（ahead of ae09719）
 ```
 
 ---
@@ -760,15 +785,292 @@ git push my master
 ## 🚨 新窗口唤醒词（直接复制粘贴）
 
 ```
-读取 E:\jiedian\docs\session-progress-latest.md，这是 v15.8 wakeup snapshot。
-今天是 2026-08-26，v15.8 全部完成（3 个 commit 已 push kangtaze/xboard-ze）：
-- 9c5e97a fix(landing): jt() lookup 结构 bug + handleSubscribe try/catch 防护
-- 7c97568 fix(landing): footer 隐私政策链接改 /privacy-privacy.html
-- 2ba411d feat(theme): 补 commit /privacy-privacy.html 路由 + blade 文件
-待办（用户决策）：Bug C（PlanPurchase.vue auto-checkout 静默失败）是否修。
-按"待处理事项"段开始工作。
+读取 E:\jiedian\docs\session-progress-latest.md，这是 v15.10 wakeup snapshot。
+今天是 2026-08-26 深夜，v15.9 + v15.10 全部完成：
+- v15.9 commit ae09719/356b23d push kangtaze/xboard-user vp92-master（Bug C + Bug D 修复）
+- v15.10 commit 6979e75 push kangtaze/xboard-user vp92-master（落地页 hero/footer 改'免费注册'+ 跳 /auth/register）
+待办：见 v15.10 章节末尾的"待处理事项"。
+按"v15.10 变更详情"段开始工作。
 ```
 
 ---
 
-**维护规则**：本文件是 v15.8 SINGLE SOURCE OF TRUTH。supersedes v15.7/v15.6。任何 v15.8+ 的代码修改必须在 commit message 引用本文件，并更新对应段。
+**维护规则**：本文件是 v15.10 SINGLE SOURCE OF TRUTH。supersedes v15.9/v15.8/v15.7/v15.6。任何 v15.10+ 的代码修改必须在 commit message 引用本文件，并更新对应段。
+
+---
+
+# 📌 v15.10 — 落地页 hero/footer CTA 改'免费注册'跳转 /auth/register
+
+> **本会话目标**：v15.9 Bug D 把 landing hero/footer 的"免费注册"统一改成了"立即订阅"，但用户实际反馈落地页顶部 CTA **应当叫"免费注册"**（语义匹配副标题"免费体验 24 小时"），点击后**应该跳转注册页面**（`/auth/register`），而不是打开落地页自带的 `#subscribeModal` 注册弹窗。本次 revert 仅针对 landing hero + footer 两个顶级 CTA。
+
+## ⚡ 一句话状态
+
+```
+✅ v15.10 完成（landing.blade.php 4 处编辑 + 服务器双路径同步 + chrome 验证 + git push）
+- 部署：ssh docker cp + 双路径 md5 一致 (2ab36c761e8acf9c11a0aa1f9a3aa7d8)
+- 验证：zh-CN/zh-TW/en 三语言按钮文案正确；未登录 hero 点击 → /auth/register 注册表单；登录态 hero 点击 → /dashboard
+- commit: 6979e75 fix(landing): hero + footer CTA 改'免费注册'跳转 /auth/register
+- push: my-frontend vp92-master (ae09719..6979e75)
+```
+
+## 🎯 改动汇总（4 处编辑，1 个文件）
+
+**目标文件**: `E:\jiedian\vp92-frontend\theme\landing.blade.php`
+**部署后服务器路径**: 
+- `/www/theme/VP92/landing.blade.php`（Octane 渲染源文件）
+- `/www/public/theme/VP92/landing.blade.php`（nginx 静态副本，必须 md5 一致）
+
+### Edit #1 — Hero 按钮 onclick + fallback 文案（line 764）
+
+```diff
+-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
+-                    立即订阅
+-                </button>
++<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
++                    免费注册
++                </button>
+```
+
+要点：
+- 已登录态保留跳 `/dashboard`（已注册用户不应再走注册页）
+- 未登录态由 `openSubscribeModal('VIP 1')` 改为 `window.location.href='/auth/register'`（SPA 接管渲染注册表单）
+- 硬编码 fallback 文案同步改为"免费注册"
+
+### Edit #2 — Hero i18n key `cta_button`（line 57）
+
+```diff
+-cta_button:{'zh-CN':'立即订阅','zh-TW':'立即訂閱','en':'Subscribe Now'},
++cta_button:{'zh-CN':'免费注册','zh-TW':'免費註冊','en':'Free Register'},
+```
+
+### Edit #3 — Footer 按钮 onclick + fallback 文案（line 1478）
+
+```diff
+-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':openSubscribeModal('VIP 1')" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">立即订阅</button>
++<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
+```
+
+要点：与 hero 完全平行，确保 footer 行为一致。
+
+### Edit #4 — Footer i18n key `btn_register`（line 185）
+
+```diff
+-btn_register:{'zh-CN':'立即订阅','zh-TW':'立即訂閱','en':'Subscribe Now'},
++btn_register:{'zh-CN':'免费注册','zh-TW':'免費註冊','en':'Free Register'},
+```
+
+## 🚨 关键 Bug Fix: 跳转 /register → /auth/register
+
+**问题**: 初次部署后 hero 点击 → 跳转到 `/auth/login` 而非预期的注册表单。
+
+**根因排查**:
+1. **假设 1**（错误）：localStorage 有遗留 token → 走 `:'/dashboard'` 分支 → Vue SPA auth guard 重定向到 `/auth/login`
+2. **清空 localStorage 后重试** → 仍然到 `/auth/login`（假设 1 被否决）
+3. **真实根因**：Vue Router 仅注册了 `/auth/{path?}` catch-all 路由，**没有**顶层 `/register` 的 SPA 子路由
+4. **证据**：`/auth/login` 页面里的"立即注册"链接指向 `/auth/register`（不是 `/register`），证明 SPA 内部约定就是 `/auth/register`
+
+**修复**: 把两处 onclick 从 `/register` 改为 `/auth/register`
+
+**验证**: hero 点击 → `/auth/register` → 注册表单（含邮箱 + 密码 + 邀请码 + 提交按钮）正确渲染 ✅
+
+**经验教训**: Vue SPA 路径必须看 `src/router/index.ts` 实际注册了什么，不能凭 `routes/web.php` 后端路由推断前端可用路径。
+
+## ❌ 不动 / 重要约束
+
+| 文件 / 位置 | 状态 | 原因 |
+|------------|------|------|
+| `landing.blade.php:847/888/930` Plan cards | ❌ 不动 | 套餐选择区按钮，应保持 `openSubscribeModal('VIP X')` 弹窗订阅 |
+| `landing.blade.php:2018-2044` `openSubscribeModal` 函数 | ❌ 不动 | Plan cards 仍调用 |
+| `landing.blade.php:237` `btn_registering` | ❌ 不动 | modal loading 文案，不同 key |
+| `landing.blade.php:2085` `handleSubscribe` | ❌ 不动 | modal 提交逻辑 |
+| `PlanPurchase.vue:352` Dashboard "立即订阅" | ❌ 不动 | dashboard 侧，文件不同步 |
+| `web.php:138` `/register` 路由 | ❌ 不动 | 路由已存在，本次只是跳转目标 |
+| `/api/v1/passport/auth/register` API | ❌ 不动 | 不变 |
+| `E:\jiedian\edgetunnel-extracted\` | ❌ 不读 | 用户铁令 |
+
+## 🚀 部署流程（已执行）
+
+### 1. 编辑 + md5 对比
+```bash
+md5sum E:/jiedian/vp92-frontend/theme/landing.blade.php
+# 改前：a22474b467532b02dc3ad97737869cf5（v15.9 baseline）
+# 改后：d20028c5c6e9c4f3...（4 处编辑后 hash）
+```
+
+### 2. 上传 + 同步
+```bash
+scp -i C:/Users/Administrator/.ssh/id_ed25519 \
+  E:/jiedian/vp92-frontend/theme/landing.blade.php \
+  root@154.3.38.212:/tmp/landing_new.blade.php
+
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker cp /tmp/landing_new.blade.php xboard:/www/theme/VP92/landing.blade.php && \
+   docker exec xboard cp -f /www/theme/VP92/landing.blade.php /www/public/theme/VP92/landing.blade.php"
+```
+
+⚠️ **踩坑**：第一次用 host-level `cp /www/theme/... /www/public/theme/...` 失败（host 看不到 container 的 in-flight 写入），改用 `docker exec xboard cp -f` 容器内复制才生效。
+
+### 3. md5 验证
+```bash
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker exec xboard md5sum /www/theme/VP92/landing.blade.php /www/public/theme/VP92/landing.blade.php"
+# 两条 hash 必须相同 = 2ab36c761e8acf9c11a0aa1f9a3aa7d8
+```
+
+### 4. 清缓存 + reload
+```bash
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker exec xboard sh -c 'php artisan view:clear && php artisan cache:clear && php artisan octane:reload'"
+```
+
+## ✅ 验证（chrome-devtools MCP）
+
+| 项 | 结果 | 备注 |
+|----|------|------|
+| zh-CN hero 文案 | ✅ "免费注册" | |
+| zh-TW hero 文案 | ✅ "免費註冊" | |
+| en hero 文案 | ✅ "Free Register" | |
+| zh-CN footer 文案 | ✅ "免费注册" | |
+| zh-TW footer 文案 | ✅ "免費註冊" | |
+| en footer 文案 | ✅ "Free Register" | |
+| zh-CN plan card VIP1/2/3 | ✅ "立即订阅"（不变） | openSubscribeModal 弹窗仍工作 |
+| zh-TW plan card | ✅ "立即訂閱"（不变） | |
+| en plan card | ✅ "Subscribe Now"（不变） | |
+| 未登录 hero 点击 | ✅ → /auth/register 注册表单 | Bug fix 后正确 |
+| 未登录 footer 点击 | ✅ → /auth/register 注册表单 | |
+| 登录态 hero 点击 | ✅ → /dashboard | localStorage token 命中 ternary 真分支 |
+| i18n 切换按钮文案同步 | ✅ 切语言时按钮文案跟着切换 | 不依赖硬编码 fallback |
+| 服务器双路径 md5 | ✅ 一致 (2ab36c76...) | |
+
+## 📦 Git 入库
+
+```bash
+cd E:/jiedian/vp92-frontend
+git config --global --get-all http.proxy   # 必空
+git add theme/landing.blade.php
+git diff --cached --stat   # +5/-5 = 10 行变更
+git commit -m "fix(landing): hero + footer CTA 改'免费注册'跳转 /auth/register\n
+\n
+- hero (line 764): 立即订阅 → 免费注册, onclick 跳 /auth/register\n
+- footer (line 1478): 立即订阅 → 免费注册, onclick 跳 /auth/register\n
+- i18n cta_button (line 57) + btn_register (line 185): 3 语言文案同步\n
+- plan cards (line 847/888/930) 不变, 仍走 openSubscribeModal 订阅弹窗\n
+- dashboard PlanPurchase.vue 不变\n
+\n
+注: 跳 /auth/register 而非 /register\n
+   Vue Router 仅注册 /auth/{path?}, /register 顶层路由无 SPA 子路由\n
+   未注册时会被 SPA auth guard 重定向到 /auth/login\n
+   验证: 已确认 hero 点击 → /auth/register 注册表单正确渲染"
+
+git push my-frontend master:vp92-master
+# ae09719..6979e75  master -> vp92-master
+```
+
+**commit hash**: `6979e75`
+**remote**: `my-frontend` = `kangtaze/xboard-user.git`
+**branch**: `master` (本地) → `vp92-master` (远程)
+
+## 🎓 经验教训（v15.10 新增）
+
+1. **Vue SPA 路由必须查 router 文件**：不能从后端 `routes/web.php` 推断前端可用路径。前端只有 `/auth/{path?}` catch-all，没有顶层 `/register`。
+2. **docker cp + host cp 时序坑**：host-level `cp` 在 docker cp 完成后立即执行可能拿到旧文件，必须用 `docker exec xboard cp -f` 容器内复制才能保证一致。
+3. **i18n 改文案要查 2 处**：dict（数据源）+ HTML 硬编码 fallback（数据源失效时显示），必须同步改才能保证所有路径下文案一致。
+4. **commit message 含中文标点要 -F 文件**：Bash tool 不解析 PowerShell here-string，含中文引号/逗号的 commit message 必须先写文件再用 `git commit -F`。
+
+## 📂 关键文件路径速查
+
+| 用途 | 路径 |
+|------|------|
+| 本地编辑 | `E:\jiedian\vp92-frontend\theme\landing.blade.php` |
+| 部署目标 1 | `/www/theme/VP92/landing.blade.php`（xboard Octane 渲染） |
+| 部署目标 2 | `/www/public/theme/VP92/landing.blade.php`（nginx 静态副本） |
+| Vue Router 路由表 | `E:\jiedian\vp92-frontend\src\router\index.ts` |
+| 注册 API（已存在） | `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Http\Controllers\V1\Passport\AuthController.php::register` |
+
+# 📌 v15.11 — Admin 用户详情页 GeoIP + 订阅日志（方案 B1）
+
+> **状态**：✅ 完成 + 入库（commit cc580f2 + push my master，2026-08-27）
+> **目标**：admin 后台用户管理 → 用户详情补 5 字段（客户端类型/版本、IP 字符串、国家/省/市/ISP、多设备列表、订阅拉取记录）
+> **范围**：仅改后端 API（admin SPA 是 cedar 上游 bundle，本次不动）
+
+## ⚡ 一句话状态
+
+```
+v15.11 状态（2026-08-27 凌晨）：
+✅ 方案 B1 完整跑通：8 文件改动（5 新建 + 3 编辑）+ 1 migration + 1 push (cc580f2)
+✅ v2_subscription_log 表已写 10 行（用户 328 真实拉订阅被记录: vp92-windows/1.2.5/Windows、shadowrocket/1234/iOS 等）
+✅ LogSubAccess.HIT 探针 1686 次 → 验证中间件被 swoole 正确调用
+⚠️ 已知问题: GeoIP country/province/city/isp 空（Caddy+CF 把 IPv6 edge IP 透传到 octane, ip2region.xdb 只 IPv4, 需要配置 Laravel TrustProxies 解析 X-Forwarded-For）
+```
+
+## 🎯 改动汇总（8 文件 +547 行）
+
+### 新增（5 文件）
+
+| 文件 | 用途 |
+|------|------|
+| `database/migrations/2026_08_27_000001_create_v2_subscription_log.php` | v2_subscription_log 表（11 字段 + 3 索引） |
+| `app/Models/SubscriptionLog.php` | Eloquent 模型 |
+| `app/Services/GeoIpService.php` | ip2region 封装 + Laravel Cache 24h TTL |
+| `app/Utils/ClientFingerprint.php` | UA 解析（VP92/SR/Clash/v2rayN/sing-box/浏览器） |
+| `app/Http/Middleware/LogSubscriptionAccess.php` | 拉订阅中间件，写 v2_subscription_log |
+
+### 编辑（3 文件）
+
+| 文件 | 改动 |
+|------|------|
+| `app/Http/Kernel.php` | 注册 LogSubscriptionAccess 到全局 $middleware |
+| `app/Services/AuthService.php` | line 55 写 GeoIP country 到 Sanctum token |
+| `app/Http/Controllers/V2/Admin/UserController.php` | transformUserData 补 5 字段（register_geo/last_login_geo/last_login_client/devices/subscription_logs） |
+
+## 🚨 踩坑总结
+
+1. **swoole worker 没真正 reload**：`octane:reload` 后 worker PID 不变 = PHP 类没刷新。必须 `pkill -9 -f "swoole_http_server: worker"` 让 swoole master 重新 fork 新 worker（PID 262 → 416 → 验证有效）
+2. **`$request->route('token')` 在 swoole 下返回空字符串**：路由参数访问不可靠。改用 `explode('/', $request->path(), 2)` 从 path 直接 split 出 token
+3. **opcache.validate_timestamps=0**：导致 PHP 文件改动不会被 swoole worker 检测，必须 kill worker
+4. **Log::info 探针打哪**：写到 `laravel-YYYY-MM-DD.log`（按天分文件），不是 `laravel.log`（已废弃的旧文件）
+5. **ip2region.xdb 只 IPv4**：Caddy + Cloudflare edge 把 IPv6 透传到 octane，country/province/city/isp 全空。需要 Laravel TrustProxies 解析 X-Forwarded-For（**已知遗留问题**，本次不动）
+
+## ✅ 验证
+
+| 验证项 | 结果 |
+|--------|------|
+| migration 跑通 | ✅ `2026_08_27_000001_create_v2_subscription_log` 表创建成功 |
+| 中间件注册 | ✅ Kernel::$middleware[8] = LogSubscriptionAccess |
+| AuthService 写 country | ✅ line 55 有 GeoIpService::lookup 调用 |
+| 真实拉订阅触发 | ✅ 5 次 curl → 表 5 行（再 curl 至 10 行） |
+| 客户端解析 | ✅ shadowrocket/1234/iOS, vp92-windows/1.2.5/Windows, browser/Windows, unknown（curl） |
+| 数据完整性 | ✅ 10 行写入，user_id/client_type/client_version/os/subscription_token 全部填 |
+| GeoIP 字段 | ⚠️ 空（IPv6 透传已知问题） |
+
+## 📦 Git 入库
+
+```
+commit cc580f2 — feat(admin): 方案 B1 GeoIP + 订阅日志
+8 files changed, 547 insertions(+), 6 deletions(-)
+remote my master: 2ba411d..cc580f2
+```
+
+## 🎓 经验教训
+
+1. **永远验证中间件**：加 Log::info 探针到 handle() 顶部，确认它真的被 swoole 调用（v15.11 = 1686 次 HIT 验证）
+2. **swoole worker reload 不可靠**：`octane:reload` 只是发 SIGTERM，PID 变化不定；要确认换 worker 就 pkill + 看 ps 新 PID
+3. **route 参数在 swoole 下不可靠**：直接用 `$request->path()` split 更稳
+
+## 📂 关键文件路径速查
+
+| 路径 | 用途 |
+|------|------|
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Http\Middleware\LogSubscriptionAccess.php` | 拉订阅中间件 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Services\GeoIpService.php` | GeoIP 封装 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Utils\ClientFingerprint.php` | UA 解析 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Models\SubscriptionLog.php` | Eloquent 模型 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\database\migrations\2026_08_27_000001_create_v2_subscription_log.php` | 新表 migration |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Http\Controllers\V2\Admin\UserController.php` | admin transformUserData 补字段 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\database\migrations\2026_08_27_000002_create_v2_user_intent.php` | **v19** intent 表 migration |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Models\UserIntent.php` | **v19** intent model + 4 tag 常量 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Services\IntentClassifier.php` | **v19** 4 tag SQL 分类器 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\tests\Feature\IntentClassifierTest.php` | **v19** 6 个单测（server-only） |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Console\Commands\IntentRefresh.php` | **v19** 每日 cron 重算 |
+| `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Console\Commands\SendIntentCampaign.php` | **v19** 群发命令 |
+| `/www/.docker/.data/database.sqlite` | SQLite（含 v2_subscription_log 表） |
