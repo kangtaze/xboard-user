@@ -1,8 +1,9 @@
 # 📌 v19 + v20 Wakeup Snapshot — 2026-08-28 VP92 营销自动化（最终完成态）
 
-> **当前最新进度**（v20.6 — supersedes v19）
-> **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报
-> **状态**：✅ v19 + v20.1 + v20.3 + v20.4 + v20.6 完成入库；v20.2 + v20.5 pending
+> **当前最新进度**（v20.5 — supersedes v20.6）
+> **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报 + UX
+> **状态**：✅ v19 + v20.1 + v20.3 + v20.4 + v20.5 + v20.6 全部完成入库；v20.2 pending
+> **完整 v20.5 细节**: [`docs/wakups/v20-5-bot-typing-indicator.md`](wakups/v20-5-bot-typing-indicator.md)
 > **完整 v20.6 细节**: [`docs/wakups/v20-6-bot-knowledge-v15-16-panel.md`](wakups/v20-6-bot-knowledge-v15-16-panel.md)
 
 ---
@@ -77,8 +78,49 @@ v19 状态（2026-08-28）：
 
 - 无邮件 open/click 追踪（v2 阶段）
 - 无 funnel 报表（v2 阶段）
-- intent_outdated tag 暂缓（v2_subscription_log 数据积累后）
+- **v20.2 intent_outdated 第 5 tag pending**（v2_subscription_log 数据积累后）
 - admin SPA UI 开关未做（如需做，按 v15.12 模式 JS 注入，30 分钟）
+
+---
+
+## ✅ v20.5 — Bot sendChatAction typing 指示器（2026-08-28 完成）
+
+**目标**：3 个 Bot DeepSeek 调用期间显示 "typing..." 状态，让用户感知 Bot 在工作（5-15s UX 提升）
+
+**5 文件改动**：
+- `app/Services/TelegramChatAction.php` (NEW) — 封装 sendChatAction，try/catch 静默
+- `app/Console/Commands/TelegramAdminAiPoll.php` — `adminAiChat()` 加 typing
+- `app/Console/Commands/TelegramAiPoll.php` — 2 处：客服 chat + admin-via-customer
+- `app/Console/Commands/TelegramKawuPoll.php` — `kawuAiChat()` 加 typing
+- `tests/Feature/TelegramChatActionTest.php` (NEW) — 4 测试（default typing / custom / HTTP 错 / 异常）
+
+**TDD**: RED（class missing 错误）→ GREEN（4/4 OK, 6 assertions）✅
+
+**commit**: `b5e2cbc` push my master（ed9f3ee..b5e2cbc）
+
+**验证**：
+- ✅ md5 一致（4 文件本地 = 服务器）
+- ✅ 测试 4/4 通过
+- ✅ Bot alive（getUpdates 200 OK，**不是 409** — 409 是 stale /tmp/admin-ai-poll.log Aug 27 旧日志）
+- ✅ 测试消息发送 + Bot 处理（message_id 332 → 333 detected）
+- 📱 **手机 Telegram 实测**：给 3 个 Bot 发消息应能看到 "typing..."
+
+**签名变更**：`adminAiChat(string $message)` → `adminAiChat(int|string $chatId, string $message)`（其他 2 Bot 同样）
+
+---
+
+## 📊 v20 进度总览
+
+| sub | 名称 | 状态 | commit |
+|-----|------|------|--------|
+| v20.1 | tracking 基建 | ✅ | 033efd1 |
+| v20.2 | intent_outdated 第 5 tag | ⏳ pending | — |
+| v20.3 | Bot tool 集成（4 tool） | ✅ | 033efd1 |
+| v20.4 | 周报自动推送 | ✅ | 16f7a24 |
+| v20.5 | Bot typing 状态 | ✅ | b5e2cbc |
+| v20.6 | Bot 知识 v15.16 面板 | ✅ | 10c0e7e/ed9f3ee |
+
+**唯一 pending**：v20.2 intent_outdated 第 5 tag（~1.5h）
 
 ---
 
