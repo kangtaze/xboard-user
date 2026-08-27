@@ -167,7 +167,12 @@ class ConfigController extends Controller
                 'macos_version' => admin_setting('macos_version', ''),
                 'macos_download_url' => admin_setting('macos_download_url', ''),
                 'android_version' => admin_setting('android_version', ''),
-                'android_download_url' => admin_setting('android_download_url', '')
+                'android_download_url' => admin_setting('android_download_url', ''),
+                // Intent campaign (v19 潜在付费用户识别 2026-08-27)
+                'intent_latest_version' => admin_setting('intent_latest_version', 'v1.2.6'),
+                'intent_latest_features' => admin_setting('intent_latest_features', ''),
+                'intent_promo_end_date' => admin_setting('intent_promo_end_date', ''),
+                'intent_auto_send' => (bool) admin_setting('intent_auto_send', false),
             ],
             'safe' => [
                 'email_verify' => (bool) admin_setting('email_verify', 0),
