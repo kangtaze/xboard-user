@@ -1,12 +1,13 @@
-# 📌 v19 + v20 Wakeup Snapshot — 2026-08-28 VP92 营销自动化（最终完成态）
+# 📌 v19 + v20 + v21 Wakeup Snapshot — 2026-08-30 VP92 营销自动化 + 回归保护（最终完成态）
 
-> **当前最新进度**（v20.7 + v20.5 + v20.2 — 全部完成 🎉）
-> **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报 + UX
-> **状态**：✅ v19 + v20 全部 7 个 sub-version 完成入库（v20.1 / v20.2 / v20.3 / v20.4 / v20.5 / v20.6 / **v20.7**）
+> **当前最新进度**（v21 + v20.7 + v20.5 + v20.2 — 全部完成 🎉）
+> **会话类型**：v19 潜在付费用户识别 + v20 邮件追踪/营销漏斗/Bot 自动汇报 + UX + **v21 回归保护**
+> **状态**：✅ v19 + v20 全部 7 个 sub-version + v21 IntentRefreshTest 入库
 > **完整 v20.2 细节**: [`docs/wakups/v20-2-intent-outdated-5th-tag.md`](wakups/v20-2-intent-outdated-5th-tag.md)
 > **完整 v20.5 细节**: [`docs/wakups/v20-5-bot-typing-indicator.md`](wakups/v20-5-bot-typing-indicator.md)
 > **完整 v20.6 细节**: [`docs/wakups/v20-6-bot-knowledge-v15-16-panel.md`](wakups/v20-6-bot-knowledge-v15-16-panel.md)
 > **完整 v20.7 细节**: [`docs/wakups/v20-7-ai-chat-paraphrase-rules.md`](wakups/v20-7-ai-chat-paraphrase-rules.md)
+> **完整 v21 细节**: MEMORY `v21-intent-refresh-test.md`（2026-08-30，今天完成）
 
 ---
 
@@ -156,6 +157,60 @@ v19 状态（2026-08-28）：
 | **v20.7** | **AI 客服转述规则加强（产品卖点角度）** | ✅ | **adbe66c** |
 
 **v20 计划 7/7 全部完成 🎉**（包括 v20.2 intent_outdated 第 5 tag + v20.7 AI 转述硬规则）
+
+---
+
+## ✅ v20.7 — AI 客服转述规则加强（产品卖点角度）
+
+**目标**：客户反馈"AI 客服把技术 changelog 翻成大白话（支付状态细节），没突出网络稳定卖点"，要求**强制产品卖点角度回答**，禁止逐条复述。
+
+**commit**：`adbe66c` push my master（159e6bf..e75bdb7 含 docs wakeup）
+
+**改动**：`app/Services/AiChatService.php` 3 处 SYSTEM_PROMPT【最新版本动态】段
+1. **line 63-68 转述规则加"v20.6 硬规则"段**：
+   - 4 个产品卖点关键词：网络稳定 / 多设备同步 / 海外加速 / 隐私保护
+   - 禁止逐条复述或翻译
+   - 黑名单加 `checkOrder` / 状态范围 / 三端同步
+2. **line 510 Android 注入前缀**：改"禁止直接复述或逐条翻译，必须按上方 v20.6 硬规则从产品卖点角度重新组织回答"
+3. **line 518 Windows 注入前缀**：同上
+
+**TDD**: RED → GREEN (3 tests, 7 assertions)
+
+**已知遗留**：
+- R2 `vp92-flclash/version.json` 仍是技术 changelog → APP 内自动升级弹窗仍显示原文（**只有 AI 客服被本规则保护**）
+- 这是 v20.7 时遗留，**v22 候选任务**
+
+**教训**：commit 提交时命名 v20.6 vs 文档编号 v20.7 区分（既有 v20.6 = Bot v15.16 面板）
+
+---
+
+## ✅ v21 — IntentRefreshTest 7 个回归测试（2026-08-30 完成）
+
+**目标**：v20.2 commit b5d7d29 修复 IntentRefresh UNIQUE(user_id, tag) 冲突（delete-then-insert 模式），但仅手测验证。补单测保护未来重构。
+
+**commit**：`e75bdb7` push my master（159e6bf..e75bdb7）
+
+**文件**：`tests/Feature/IntentRefreshTest.php`（215 行 / 7 tests / 15 assertions）
+
+**7 个测试覆盖**：
+1. `test_refresh_inserts_users_for_each_tag` — 基础 5 tag 用户入库
+2. `test_refresh_preserves_last_mailed_at_when_user_keeps_same_tag` — **关键**：7 天冷却机制核心（last_mailed_at 字段必须保留）
+3. `test_refresh_can_run_twice_without_unique_constraint_violation` — **关键**：防 SQLSTATE 23000（连续跑两次不冲突）
+4. `test_refresh_dry_mode_does_not_write_to_db` — `--dry` 模式不写库
+5. `test_refresh_new_user_has_null_last_mailed_at` — 新用户场景（首次入库 last_mailed_at=null）
+6. `test_refresh_skips_healthy_active_users` — 健康用户不入库
+7. `test_refresh_skips_banned_and_admin_users` — banned/admin 排除
+
+**TDD 流程**：
+- RED 写测试（5 个核心 + 2 个边界）
+- 服务器跑 `docker exec xboard /www/vendor/bin/phpunit --filter IntentRefreshTest`
+- **7 tests, 15 assertions, OK** ✅
+
+**为什么需要**：当前实现完全正确，但**未来有人改 IntentRefresh 时**（如简化 delete-then-insert 为 upsert）会立即被这 7 个测试 catch 住。
+
+**Memory 入库**：`v21-intent-refresh-test.md` + MEMORY.md 索引（2026-08-30）
+
+**关联**：v19 plan Task 4 + v20.2 commit b5d7d29
 
 ---
 
@@ -1230,3 +1285,19 @@ remote my master: 2ba411d..cc580f2
 | `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Console\Commands\IntentRefresh.php` | **v19** 每日 cron 重算 |
 | `E:\jiedian\xboard-repo\Xboard\Xboard-master\app\Console\Commands\SendIntentCampaign.php` | **v19** 群发命令 |
 | `/www/.docker/.data/database.sqlite` | SQLite（含 v2_subscription_log 表） |
+
+---
+
+## 🚨 最新唤醒词（直接复制粘贴 — **v21**）
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md，这是 v19 + v20 + v21 最终完成态。
+今天是 2026-08-30，v21 IntentRefreshTest 刚完成入库（commit e75bdb7 push my master 159e6bf..e75bdb7）。
+v20 计划 7/7 全部完成（v20.1-v20.7），v21 补 7 个回归测试覆盖 UNIQUE 冲突 fix。
+SSOT 头部已更新到 v21，详细段落按需展开。
+待办候选（不阻塞，按优先级）：
+  1. 🟡 R2 vp92-flclash/version.json 改写产品卖点文案（v20.7 遗留，APP 内升级弹窗仍显示技术 changelog）
+  2. 🟡 邮件追踪 UI（v20.1 基础设施已有，缺 funnel/open_rate 可视化）
+  3. 🟡 admin SPA 注入 intent_auto_send 开关（v15.12 JS 注入模式，约 30 分钟）
+按"待办候选"段开始工作。
+```
