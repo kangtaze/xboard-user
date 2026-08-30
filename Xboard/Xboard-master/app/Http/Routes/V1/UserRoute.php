@@ -7,6 +7,7 @@ use App\Http\Controllers\V1\User\GiftCardController;
 use App\Http\Controllers\V1\User\InviteController;
 use App\Http\Controllers\V1\User\AiController;
 use App\Http\Controllers\V1\User\KnowledgeController;
+use App\Http\Controllers\V1\User\MessageController;
 use App\Http\Controllers\V1\User\NoticeController;
 use App\Http\Controllers\V1\User\OrderController;
 use App\Http\Controllers\V1\User\PlanController;
@@ -54,6 +55,9 @@ class UserRoute
             $router->get('/invite/details', [InviteController::class, 'details']);
             // Notice
             $router->get('/notice/fetch', [NoticeController::class, 'fetch']);
+            // Message（Task #17 PR-B1，统一消息中心）
+            $router->get('/message/fetch', [MessageController::class, 'fetch']);
+            $router->post('/message/markRead', [MessageController::class, 'markRead']);
             // Ticket
             $router->post('/ticket/reply', [TicketController::class, 'reply']);
             $router->post('/ticket/close', [TicketController::class, 'close']);
@@ -82,6 +86,8 @@ class UserRoute
             $router->get('/knowledge/getCategory', [KnowledgeController::class, 'getCategory']);
             // Stat
             $router->get('/stat/getTrafficLog', [StatController::class, 'getTrafficLog']);
+            // App 版本与下载信息（Dashboard 应用下载卡片）
+            $router->get('/app/getVersion', [\App\Http\Controllers\V1\Client\AppController::class, 'getVersion']);
         });
     }
 }

@@ -143,6 +143,20 @@ class OrderService
         }
 
         HookManager::call('order.open.after', $order);
+
+        // 充值到账消息推送（Task #17 PR-B1，统一消息中心）
+        try {
+            (new MessageService())->push(
+                $order->user_id,
+                \App\Models\UserMessage::TYPE_ORDER,
+                '充值到账通知',
+                '您已成功购买「' . ($plan->name ?? '套餐') . '」，已到账，请查收。',
+                $order->id,
+                null
+            );
+        } catch (\Throwable $e) {
+            Log::error('[Message] order push failed: ' . $e->getMessage());
+        }
     }
 
 
@@ -154,6 +168,18 @@ class OrderService
         } else if ($user->plan_id !== NULL && $order->plan_id !== $user->plan_id && ($user->expired_at > time() || $user->expired_at === NULL)) {
             if (!(int) admin_setting('plan_change_enable', 1))
                 throw new ApiException('目前不允许更改订阅，请联系客服或提交工单操作');
+
+            // 禁止降级：只允许升级到更高级套餐
+            $currentPlan = Plan::find($user->plan_id);
+            $newPlan = Plan::find($order->plan_id);
+            if ($currentPlan && $newPlan) {
+                $currentPrice = $currentPlan->getPriceByPeriod($order->period);
+                $newPrice = $newPlan->getPriceByPeriod($order->period);
+                if ($newPrice < $currentPrice) {
+                    throw new ApiException('不支持降级套餐，只能续费当前套餐或升级到更高级套餐');
+                }
+            }
+
             $order->type = Order::TYPE_UPGRADE;
             if ((int) admin_setting('surplus_enable', 1))
                 $this->getSurplusValue($user, $order);

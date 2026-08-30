@@ -104,6 +104,19 @@ class TicketService
                     'content' => "主题：{$ticket->subject}\r\n回复内容：{$ticketMessage->message}"
                 ]
             ]);
+            // 工单回复消息推送（Task #17 PR-B1，统一消息中心）
+            try {
+                (new MessageService())->push(
+                    $ticket->user_id,
+                    \App\Models\UserMessage::TYPE_TICKET,
+                    '工单回复',
+                    "主题：{$ticket->subject}\r\n回复内容：{$ticketMessage->message}",
+                    $ticket->id,
+                    null
+                );
+            } catch (\Throwable $e) {
+                \Log::error('[Message] ticket push failed: ' . $e->getMessage());
+            }
         }
     }
 }

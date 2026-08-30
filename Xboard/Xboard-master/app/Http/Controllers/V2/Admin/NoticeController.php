@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\NoticeSave;
 use App\Models\Notice;
+use App\Services\MessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,6 +34,26 @@ class NoticeController extends Controller
         if (!$request->input('id')) {
             if (!Notice::create($data)) {
                 return $this->fail([500, '保存失败']);
+            }
+            // 公告全员推送（Task #17 PR-B1，仅 show=true 时；异步 Job 不阻塞 admin save）
+            if (!empty($data['show'])) {
+                $noticeTags = [];
+                if (!empty($data['tags'])) {
+                    $noticeTags = is_array($data['tags']) ? $data['tags'] : [$data['tags']];
+                }
+                if (!empty($data['popup'])) {
+                    $noticeTags[] = \App\Models\UserMessage::TAG_POPUP;
+                }
+                try {
+                    (new MessageService())->pushNoticeToAll(
+                        $data['title'],
+                        $data['content'],
+                        null,
+                        $noticeTags ?: null
+                    );
+                } catch (\Throwable $e) {
+                    \Log::error('[Message] notice push failed: ' . $e->getMessage());
+                }
             }
         } else {
             try {
