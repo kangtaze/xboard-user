@@ -134,8 +134,11 @@
       // v15.16: 用 class 选择器 div.rounded-lg.border.p-4 + MutationObserver 等卡片渲染
       const old = document.getElementById('vp92-geo-panel');
       if (old) old.remove();
+      // v15.18+: 同时清理旧的邀请人卡片, 避免 geo-panel 重建时 invite-panel 成孤儿
+      const oldInvite = document.getElementById('vp92-invite-panel');
+      if (oldInvite) oldInvite.remove();
       const sheet = document.querySelector('div[role="dialog"][data-state="open"]');
-      if (!sheet) { document.body.appendChild(makePanel(user)); return; }
+      if (!sheet) { document.body.appendChild(makePanel(user)); makeInvitePanel(user); return; }
       // Card 容器: div.rounded-lg.border.p-4 (cedar 用户详情卡片通用类)
       // 用 startsWith 防止匹配到嵌套子元素或大容器
       const findSubInfoCard = () => Array.from(sheet.querySelectorAll('div.rounded-lg.border.p-4')).find(d => {
@@ -168,6 +171,8 @@
       });
       cardObserver.observe(sheet, { childList: true, subtree: true });
       setTimeout(() => cardObserver.disconnect(), 3000);
+      // v15.18+: 在 geo-panel 之后挂邀请人卡片
+      makeInvitePanel(user);
     }
     function makePanel(user) {
       const panel = document.createElement('div');
@@ -183,6 +188,30 @@
         <details style="margin-top:8px"><summary style="cursor:pointer;color:#0f3460">📱 设备 (${user.devices ? user.devices.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.devices || []).map(d => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(d.browser) + ' / ' + esc(d.os) + ' / ' + esc(d.country) + ' / ' + fmt(d.last_used_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
         <details><summary style="cursor:pointer;color:#0f3460">📡 订阅记录 (${user.subscription_logs ? user.subscription_logs.length : 0})</summary><div style="margin-top:6px;padding-left:12px">${(user.subscription_logs || []).map(s => '<div style="padding:3px 0;border-bottom:1px dashed #e2e8f0">' + esc(s.client_type) + ' ' + esc(s.client_version) + ' / ' + esc(s.country) + ' / ' + fmt(s.created_at) + '</div>').join('') || '<div style="color:#64748b">无</div>'}</div></details>
       `;
+      return panel;
+    }
+    // v15.18+: 邀请人独立卡片, 挂在 vp92-geo-panel 之后
+    function makeInvitePanel(user) {
+      const old = document.getElementById('vp92-invite-panel');
+      if (old) old.remove();
+      const panel = document.createElement('div');
+      panel.id = 'vp92-invite-panel';
+      panel.style.cssText = 'margin-top:12px;padding:14px 16px;background:#f8fafc;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;font-family:system-ui;font-size:13px;line-height:1.7';
+      const inv = user.invite_user;
+      const hasInvite = inv && inv.id;
+      panel.innerHTML = `
+        <h4 style="margin:0 0 10px;font-size:14px;color:#0f3460;border-bottom:1px solid #e2e8f0;padding-bottom:6px">📨 邀请信息 #${esc(user.id)}</h4>
+        <div><b>邀请人:</b> ${hasInvite ? esc(inv.email) : '<span style="color:#64748b">无 (直接注册)</span>'}</div>
+        <div><b>邀请人ID:</b> ${hasInvite ? esc(inv.id) : '<span style="color:#64748b">-</span>'}</div>
+      `;
+      // 挂到 vp92-geo-panel 之后; 没有 geo-panel 则追加到 sheet 末尾
+      const geoPanel = document.getElementById('vp92-geo-panel');
+      if (geoPanel && geoPanel.parentElement) {
+        geoPanel.parentElement.insertBefore(panel, geoPanel.nextSibling);
+      } else {
+        const sheet = document.querySelector('div[role="dialog"][data-state="open"]');
+        if (sheet) sheet.appendChild(panel);
+      }
       return panel;
     }
     function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
