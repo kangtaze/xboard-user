@@ -198,7 +198,7 @@ return [
             ],
             'notification' => [
                 'connection' => 'redis',
-                'queue' => ['send_email', 'send_telegram', 'send_email_mass', 'node_sync'],
+                'queue' => ['send_email', 'send_telegram', 'send_email_mass', 'node_sync', 'push_message'],
                 'balance' => 'auto',
                 'autoScalingStrategy' => 'size',
                 'minProcesses' => 1,
@@ -223,7 +223,8 @@ return [
                     'send_email_mass',
                     'send_telegram',
                     'user_alive_sync',
-                    'node_sync'
+                    'node_sync',
+                    'push_message'
                 ],
                 'balance' => 'auto',
                 'minProcesses' => 1,
