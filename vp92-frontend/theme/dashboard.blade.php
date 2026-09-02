@@ -34,6 +34,6 @@
       theme_config: {!! json_encode($theme_config ?? new stdClass()) !!}
     };
   </script>
-  <script type="module" crossorigin src="/theme/VP92/assets/index-BJSyzJy0.js"></script>
+  <script type="module" crossorigin src="/theme/VP92/assets/index-B6BLgp3m.js"></script>
 </body>
 </html>

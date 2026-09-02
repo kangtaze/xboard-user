@@ -37,7 +37,7 @@
           </div>
           <div class="input-group">
             <label>邀请码 <span class="optional">（选填）</span></label>
-            <input v-model="form.inviteCode" type="text" placeholder="填写好友邀请码，双方可获奖励" :readonly="isInviteLocked" />
+            <input v-model="form.inviteCode" type="text" :placeholder="t('auth.register.inviteCodePlaceholder')" :readonly="isInviteLocked" />
           </div>
           <div class="input-group">
             <label>邮箱验证码</label>
@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { register, sendEmailVerify, trackInvitePv } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -89,6 +90,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const { t } = useI18n()
 
 const form = reactive({
   email: '',
