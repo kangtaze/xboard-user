@@ -25,6 +25,27 @@ $orgSchema = '{"@context":"https://schema.org","@type":"Organization","name":"VP
 $webSchema = '{"@context":"https://schema.org","@type":"WebSite","name":"VP92极速加速器","url":"https://vp92vip.com","potentialAction":{"@type":"SearchAction","target":"https://vp92vip.com/?q={search_term_string}","query-input":"required name=search_term_string"}}';
 $faqSchema = '{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"VP92极速加速器是什么？","acceptedAnswer":{"@type":"Answer","text":"VP92极速加速器是一款专业的全球网络加速服务，基于 Cloudflare 全球边缘网络技术构建。提供 30+ 海外优质节点，覆盖香港、日本、韩国、新加坡、美国、英国、德国、澳大利亚等地区。支持高速解锁全球流媒体、游戏加速、AI工具访问等功能。"}},{"@type":"Question","name":"VP92支持哪些平台和设备？","acceptedAnswer":{"@type":"Answer","text":"VP92 支持 Windows、Android、iOS 三大主流平台。此外还支持 Base64、Clash、SingBox、Shadowsocks、Trojan、V2Ray 等多种通用订阅格式，可在 macOS、Linux 及路由器等第三方客户端上使用。"}},{"@type":"Question","name":"VP92安全吗？我的数据会被记录吗？","acceptedAnswer":{"@type":"Answer","text":"VP92 采用端到端加密传输，不记录用户的浏览历史、DNS 查询或连接日志。基于 Cloudflare 全球 CDN 网络，数据通过安全隧道传输，即使在公共 WiFi 环境下也能确保信息安全。"}},{"@type":"Question","name":"如何联系 VP92 客服？","acceptedAnswer":{"@type":"Answer","text":"VP92 提供 7x24小时客户支持，可通过 Telegram、WhatsApp、Facebook、X(Twitter)、Instagram 联系我们，也可使用 AI 智能客服即时解答问题。"}},{"@type":"Question","name":"VP92提供哪些订阅套餐？","acceptedAnswer":{"@type":"Answer","text":"VP92 提供三种订阅套餐：基础版（28元/月起）、专业版（38元/月起）和旗舰版（58元/月起）。所有套餐均包含每月流量重置、多平台使用、7x24小时技术支持、不限速连接。新用户注册即送24小时免费试用。"}},{"@type":"Question","name":"如何开始使用 VP92？","acceptedAnswer":{"@type":"Answer","text":"只需3步：注册账户（邮箱+密码），下载客户端（Windows/Android/iOS），登录一键连接。注册后获得24小时免费试用，详细教程可在使用教程页面查看。"}},{"@type":"Question","name":"VP92可以解锁哪些流媒体服务？","acceptedAnswer":{"@type":"Answer","text":"VP92 可解锁 Netflix、YouTube、Disney+、HBO Max、Twitch 等视频平台，WhatsApp、Instagram、Facebook、X、TikTok 等社交媒体，Spotify、Apple Music 等音乐平台，以及 ChatGPT 等 AI 工具。支持4K/8K高清视频流畅播放。"}},{"@type":"Question","name":"流量用完了怎么办？","acceptedAnswer":{"@type":"Answer","text":"VP92 流量按月自动重置，每月初恢复满额。流量不够可随时升级套餐。轻度使用建议选择基础版，重度使用建议选择旗舰版。"}}]}';
 @endphp
+<script>
+// === Invite Code Helper (2026-09-02) ===
+// 优先从 URL ?code= 读取并写入 sessionStorage；fallback 读 sessionStorage
+// 用途: 落地页 5 处入口（hero/footer/套餐按钮/Modal POST/Modal 跳转）带 ?code= 让邀请码跨页面保持
+function _vp92GetInvite() {
+  try {
+    var u = new URLSearchParams(location.search).get('code') || '';
+    if (u && /^[A-Za-z0-9_-]{1,64}$/.test(u)) {
+      sessionStorage.setItem('vp92_invite_code', u);
+      return u;
+    }
+    var s = sessionStorage.getItem('vp92_invite_code') || '';
+    if (s && /^[A-Za-z0-9_-]{1,64}$/.test(s)) return s;
+    return '';
+  } catch (e) { return ''; }
+}
+function _vp92InviteQ() {
+  var c = _vp92GetInvite();
+  return c ? '?code=' + encodeURIComponent(c) : '';
+}
+</script>
 <script type="application/ld+json" data-i18n-schema="faq">{!! $faqSchema !!}</script>
 @verbatim
 <script>
@@ -761,7 +782,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <p class="font-body-lg text-body-lg mb-stack-lg" style="color:#9398b0;" data-i18n="hero.subtitle">
                     全球加速节点一键连接，高速稳定，畅享全球网络
                 </p>
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
+<button onclick="var t=localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token');window.location.href=t?'/dashboard':'/auth/register'+_vp92InviteQ()" class="bg-primary text-on-primary px-stack-xl py-4 font-headline-md text-headline-md mb-2 transition-all duration-300 hover:scale-105 hero-cta-btn" data-i18n="hero.cta_button">
                     免费注册
                 </button>
                 <p class="font-body-sm mb-stack-xl" style="color:#666;" data-i18n="hero.trial_note">新注册用户免费体验 24 小时</p>
@@ -1475,7 +1496,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="flex flex-col md:flex-row items-center justify-between border-t border-outline-variant pt-stack-md gap-stack-md">
 <p class="font-label-md text-on-surface-variant">© 2026 VP92 PRECISION ENGINEERING</p>
 <div class="flex gap-stack-lg">
-<button onclick="(localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token'))?window.location.href='/dashboard':window.location.href='/auth/register'" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
+<button onclick="var t=localStorage.getItem('fe_auth_token')||localStorage.getItem('auth_token');window.location.href=t?'/dashboard':'/auth/register'+_vp92InviteQ()" class="bg-primary text-on-primary font-bold px-stack-lg py-stack-md transition-transform active:scale-95 duration-150" data-i18n="footer.btn_register">免费注册</button>
 <button class="text-on-surface-variant font-label-md hover:text-primary transition-colors" data-i18n="footer.btn_learn_more">了解更多</button>
 </div>
 </div>
@@ -2025,7 +2046,7 @@ function openSubscribeModal(plan) {
   var _t = localStorage.getItem('fe_auth_token') || localStorage.getItem('auth_token');
   if (_t) {
     var planInfo = PLAN_DATA[plan] || {};
-    var url = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=monthly';
+    var url = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=monthly' + (function(){var q=_vp92InviteQ();return q?'&'+q.substring(1):'';})();
     window.location.href = url;
     return;
   }
@@ -2100,7 +2121,7 @@ function handleSubscribe() {
 
   fetch('/api/v1/passport/auth/register', {
     method: 'POST', headers: {'Content-Type':'application/json','Accept':'application/json'},
-    body: JSON.stringify({email: email, password: password, password_confirm: password, email_code: emailCode})
+    body: JSON.stringify({email: email, password: password, password_confirm: password, email_code: emailCode, invite_code: _vp92GetInvite()})
   }).then(r => r.json()).then(data => {
     if (data.status === 'success') {
       // Login first, then redirect to checkout
@@ -2115,11 +2136,11 @@ function handleSubscribe() {
         }
         // Redirect to plans page with auto-checkout params (Dashboard SPA reads them)
         const planInfo = PLAN_DATA[selectedPlan] || {};
-        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle + (function(){var q=_vp92InviteQ();return q?'&'+q.substring(1):'';})();
         window.location.href = checkoutUrl;
       }).catch(() => {
         const planInfo = PLAN_DATA[selectedPlan] || {};
-        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle;
+        const checkoutUrl = '/dashboard/plans?checkout_plan=' + (planInfo.plan_id || '') + '&checkout_cycle=' + selectedCycle + (function(){var q=_vp92InviteQ();return q?'&'+q.substring(1):'';})();
         window.location.href = checkoutUrl;
       });
     } else {

@@ -6,6 +6,7 @@ import { getToken } from '@/api/client'
 import CheckoutDialog from '@/components/common/CheckoutDialog.vue'
 import Toast from '@/components/common/Toast.vue'
 import type { Plan } from '@/api/types'
+import { clearInviteCode } from '@/utils/invite'
 
 const route = useRoute()
 const router = useRouter()
@@ -228,6 +229,7 @@ async function handleSelectPlan(plan: Plan) {
 function handleCheckoutSuccess() {
   showCheckout.value = false
   pendingConflict.value = false
+  clearInviteCode()  // 注册+结账链路完成,清理 invite_code sessionStorage
   loadPlans()
 }
 
