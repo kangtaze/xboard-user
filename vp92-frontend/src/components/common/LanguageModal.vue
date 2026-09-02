@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 
 const { locale, t } = useI18n()
 const appStore = useAppStore()
 
-const languages = [
-  { code: 'zh-CN', label: '简体中文', native: '中文' },
-  { code: 'zh-TW', label: '繁體中文', native: '繁體' },
-  { code: 'en-US', label: 'English', native: 'EN' },
-]
+const LOCALE_CODES = ['zh-CN', 'zh-TW', 'en-US'] as const
+const languages = computed(() =>
+  LOCALE_CODES.map(code => ({
+    code,
+    label: t(`languages.${code}.label`),
+    native: t(`languages.${code}.native`),
+  }))
+)
 
 const selectedCode = ref(locale.value)
 
@@ -53,8 +56,8 @@ function handleBackdrop(e: MouseEvent) {
         <!-- Header -->
         <div class="modal-header">
           <div>
-            <h2 class="modal-title">SELECT REGION</h2>
-            <p class="modal-subtitle">{{ t('auth.login.or') }} {{ t('invite.code') }}</p>
+            <h2 class="modal-title">{{ t('languageModal.title') }}</h2>
+            <p class="modal-subtitle">{{ t('languageModal.subtitle') }}</p>
           </div>
           <button class="modal-close" @click="close">
             <span class="material-symbols-outlined">close</span>

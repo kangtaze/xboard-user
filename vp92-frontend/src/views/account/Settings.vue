@@ -3,18 +3,18 @@
     <div class="grid-2col gap-6">
       <!-- Left: Profile -->
       <div class="card">
-        <div class="card-header">个人信息</div>
+        <div class="card-header">{{ t('settings.profile.title') }}</div>
         <div v-if="loading" class="loading-state">
           <span class="material-symbols-outlined spinning">progress_activity</span>
-          <span>加载中...</span>
+          <span>{{ t('settings.profile.loading') }}</span>
         </div>
         <template v-else-if="user">
           <div class="account-profile">
             <div class="profile-avatar">{{ avatarLetter }}</div>
             <div class="profile-info">
-              <div class="profile-label">邮箱</div>
+              <div class="profile-label">{{ t('settings.profile.email') }}</div>
               <div class="profile-value">{{ user.email }}</div>
-              <div class="profile-label mt-4">昵称</div>
+              <div class="profile-label mt-4">{{ t('settings.profile.nickname') }}</div>
               <div class="profile-value">{{ user.email.split('@')[0] }}</div>
             </div>
           </div>
@@ -24,10 +24,10 @@
       <!-- Right: Invite -->
       <div class="card">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>邀请好友</span>
-          <router-link to="/invite" style="font-size:12px;color:#0066ff;text-decoration:none;font-weight:600;">查看详情 →</router-link>
+          <span>{{ t('settings.invite.title') }}</span>
+          <router-link to="/invite" style="font-size:12px;color:#0066ff;text-decoration:none;font-weight:600;">{{ t('settings.invite.viewDetail') }}</router-link>
         </div>
-        <p style="font-size:13px;color:#5c6078;margin-bottom:16px;">邀请好友注册，双方均可获得奖励</p>
+        <p style="font-size:13px;color:#5c6078;margin-bottom:16px;">{{ t('settings.invite.description') }}</p>
         <div style="display:flex;gap:8px;align-items:center;">
           <input
             :value="inviteUrl"
@@ -44,93 +44,79 @@
       </div>
     </div>
 
-    <!-- Language -->
-    <div class="card mt-6">
-      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-        <span>{{ t('settings.language.title') }}</span>
-        <button class="action-btn" @click="openLanguageModal" style="white-space:nowrap;padding:0 14px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">language</span>
-          <span style="margin-left:6px;">{{ t('settings.language.switch') }}</span>
-        </button>
-      </div>
-      <p style="font-size:13px;color:#5c6078;">
-        {{ t('settings.language.current') }}: <strong>{{ currentLanguageLabel }}</strong>
-      </p>
-    </div>
-
     <!-- Subscription Management -->
     <div class="card mt-6">
-      <div class="card-header">订阅管理</div>
+      <div class="card-header">{{ t('settings.subscribe.title') }}</div>
       <div class="account-actions">
-          <button class="action-btn" :disabled="resetting" @click="handleResetSub">
-            <span v-if="resetting" class="material-symbols-outlined spinning">progress_activity</span>
-            <span v-else>重置订阅链接</span>
-          </button>
-          <button class="action-btn" disabled>
-            自定义订阅后缀
-          </button>
-        </div>
+        <button class="action-btn" :disabled="resetting" @click="handleResetSub">
+          <span v-if="resetting" class="material-symbols-outlined spinning">progress_activity</span>
+          <span v-else>{{ t('settings.subscribe.reset') }}</span>
+        </button>
+        <button class="action-btn" disabled>
+          {{ t('settings.subscribe.customSuffix') }}
+        </button>
       </div>
     </div>
 
     <!-- Password -->
     <div class="card mt-6">
-      <div class="card-header">修改密码</div>
+      <div class="card-header">{{ t('settings.password.title') }}</div>
       <div class="password-form">
         <div class="input-row">
-          <label class="input-label">当前密码</label>
+          <label class="input-label">{{ t('settings.password.currentPassword') }}</label>
           <input
             v-model="passwords.old_password"
             type="password"
-            placeholder="请输入当前密码"
+            :placeholder="t('settings.password.currentPlaceholder')"
             class="form-input"
           />
         </div>
         <div class="input-row">
-          <label class="input-label">新密码</label>
+          <label class="input-label">{{ t('settings.password.newPassword') }}</label>
           <input
             v-model="passwords.new_password"
             type="password"
-            placeholder="请输入新密码（至少 8 位）"
+            :placeholder="t('settings.password.newPlaceholder')"
             class="form-input"
           />
         </div>
         <div class="input-row">
-          <label class="input-label">确认新密码</label>
+          <label class="input-label">{{ t('settings.password.confirmPassword') }}</label>
           <input
             v-model="passwords.confirm_password"
             type="password"
-            placeholder="请再次输入新密码"
+            :placeholder="t('settings.password.confirmPlaceholder')"
             class="form-input"
           />
         </div>
         <button class="save-btn" :disabled="changingPwd" @click="handleChangePassword">
           <span v-if="changingPwd" class="material-symbols-outlined spinning">progress_activity</span>
-          <span v-else>保存修改</span>
+          <span v-else>{{ t('settings.password.save') }}</span>
         </button>
       </div>
     </div>
 
     <!-- Third Party -->
     <div class="card mt-6">
-      <div class="card-header">第三方绑定</div>
+      <div class="card-header">{{ t('settings.bindings.title') }}</div>
       <div class="bind-list">
         <div class="bind-item">
           <div class="bind-icon">
             <span class="material-symbols-outlined" style="font-size: 28px;">send</span>
           </div>
           <div class="bind-info">
-            <div class="bind-name">Telegram</div>
+            <div class="bind-name">{{ t('settings.bindings.telegram') }}</div>
             <div class="bind-status" :style="{ color: user?.telegram_id ? '#16a34a' : '#424656' }">
-              {{ user?.telegram_id ? '已绑定' : '未绑定' }}
+              {{ user?.telegram_id ? t('settings.bindings.bound') : t('settings.bindings.unbound') }}
             </div>
           </div>
           <button class="bind-btn" :disabled="unbindingTelegram" @click="handleTelegramBind">
             <span v-if="unbindingTelegram" class="material-symbols-outlined spinning" style="font-size:16px;">progress_activity</span>
-            <span v-else>{{ user?.telegram_id ? '解绑' : '绑定' }}</span>
+            <span v-else>{{ user?.telegram_id ? t('settings.bindings.unbind') : t('settings.bindings.bind') }}</span>
           </button>
         </div>
       </div>
+    </div>
 
       <!-- Toast -->
     <div v-if="toast.show" class="toast" :class="{ show: toast.show }">
@@ -142,23 +128,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores/app'
 import { getUserInfo, changePassword, resetSecurity, getInviteSummary, generateInviteCode } from '@/api/user'
 import type { UserInfo } from '@/api/types'
 
-const { t, locale } = useI18n()
-const appStore = useAppStore()
-
-const languageNames: Record<string, string> = {
-  'zh-CN': '简体中文',
-  'zh-TW': '繁體中文',
-  'en-US': 'English',
-}
-const currentLanguageLabel = computed(() => languageNames[locale.value] ?? locale.value)
-
-function openLanguageModal() {
-  appStore.showLanguageModal = true
-}
+const { t } = useI18n()
 
 const user = ref<UserInfo | null>(null)
 const loading = ref(false)
@@ -177,7 +150,7 @@ const unbindingTelegram = ref(false)
 
 function copyInvite() {
   navigator.clipboard.writeText(inviteUrl.value)
-  showToast('邀请链接已复制')
+  showToast(t('settings.invite.copied'))
 }
 
 async function loadInviteCode() {
@@ -215,7 +188,7 @@ async function loadUser() {
     const res = (await getUserInfo()) as any
     user.value = res.data || null
   } catch (e: any) {
-    showToast(e.message || '加载用户信息失败')
+    showToast(e.message || t('settings.profile.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -223,15 +196,15 @@ async function loadUser() {
 
 async function handleChangePassword() {
   if (!passwords.old_password || !passwords.new_password) {
-    showToast('请填写所有密码字段')
+    showToast(t('settings.password.messages.fillAll'))
     return
   }
   if (passwords.new_password.length < 8) {
-    showToast('新密码至少 8 位')
+    showToast(t('settings.password.messages.tooShort'))
     return
   }
   if (passwords.new_password !== passwords.confirm_password) {
-    showToast('两次输入的新密码不一致')
+    showToast(t('settings.password.messages.passwordMismatch'))
     return
   }
   changingPwd.value = true
@@ -243,9 +216,9 @@ async function handleChangePassword() {
     passwords.old_password = ''
     passwords.new_password = ''
     passwords.confirm_password = ''
-    showToast('密码修改成功')
+    showToast(t('settings.password.messages.success'))
   } catch (e: any) {
-    showToast(e.message || '修改失败')
+    showToast(e.message || t('common.actionFailed'))
   } finally {
     changingPwd.value = false
   }
@@ -255,9 +228,9 @@ async function handleResetSub() {
   resetting.value = true
   try {
     await resetSecurity()
-    showToast('订阅链接已重置')
+    showToast(t('settings.subscribe.messages.resetSuccess'))
   } catch (e: any) {
-    showToast(e.message || '重置失败')
+    showToast(e.message || t('common.actionFailed'))
   } finally {
     resetting.value = false
   }
@@ -275,9 +248,9 @@ async function handleTelegramBind() {
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json' }
       })
       user.value = { ...user.value, telegram_id: null }
-      showToast('Telegram 已解绑')
+      showToast(t('settings.bindings.messages.unbindSuccess'))
     } catch (e) {
-      showToast('解绑失败，请稍后再试')
+      showToast(t('common.actionFailed'))
     } finally {
       unbindingTelegram.value = false
     }
@@ -285,7 +258,7 @@ async function handleTelegramBind() {
     // Bind — redirect to Telegram bot
     const botName = telegramBotUsername.value || 'vp92VPN_bot'
     window.open(`https://t.me/${botName}?start=bind`, '_blank')
-    showToast('请在 Telegram 中完成绑定后刷新页面')
+    showToast(t('settings.bindings.bindHint'))
   }
 }
 
