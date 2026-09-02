@@ -1,61 +1,67 @@
-# 📌 v28 Wakeup Snapshot — 2026-09-03 商业三页完整 i18n
+# 📌 v29 Wakeup Snapshot — 2026-09-03 用户面板语言切换入口
 
-> **当前最新进度**（v28 完成 🎉）
-> **会话类型**：v28 commerce pages i18n
-> **状态**：✅ PlanPurchase/CheckoutDialog/Orders 三页完整 i18n + vite build + 部署 + e2e + memory 入库
-> **完整 v28 细节**: MEMORY `vp92-v28-commerce-pages-i18n.md`
+> **当前最新进度**（v29 完成 🎉）
+> **会话类型**：v29 Settings.vue 语言卡 + LanguageModal 全局挂载 + 持久化
+> **状态**：✅ 5 source + 3 locales 改动 + 部署 + e2e 三语言 + commit + push 完成
+> **完整 v29 细节**: MEMORY `vp92-v29-language-switcher.md`
 
 ---
 
 ## ⚡ 一句话状态总结
 
 ```
-v28 状态（2026-09-03）：
-✅ PlanPurchase.vue 完整 i18n（20+ 处硬编码 t() 化 + 新 plans.badge.unknown + plans.periods 9 key）
-✅ CheckoutDialog.vue 完整 i18n（template 18 处 + script countdown + 2 个新 key）
-✅ Orders.vue 整体 Write 重写（useI18n + getDateLocale + 7 列头 + 5 status + 9 period + 4 toast）
-✅ 3 locales 补 9 个新 key (payment.planLabel/checkout.timeoutRetry/orders.currency × 3 语言)
-✅ vite build 1.52s ✅
-✅ 部署（docker cp + docker exec cp） + curl 200 ✅
-✅ e2e 验证：zh-CN/zh-TW/en-US 三语言 PlanPurchase/Orders/CheckoutDialog 全过
-✅ 清理 dist-new/dist3/theme/dist/ 等 11 个临时文件
-✅ commit d78193a 入库（4 files changed, 333 insertions(+), 73 deletions(-)）
-✅ memory vp92-v28-commerce-pages-i18n.md + MEMORY.md 索引入库
-⏳ push my master 重试中（network 已重试 5 次全失败，最终 unset https.proxy 重试）
+v29 状态（2026-09-03）：
+✅ LanguageModal 孤儿组件 → DashboardLayout 全局挂载（仅 auth 范围）
+✅ Settings.vue 新增「语言」卡片（grid-2col 后 + 订阅管理前）
+✅ appStore.setLocale() 加 saveLocale() 调用 → 刷新保持 locale
+✅ LanguageModal 语言列表 5→3（删 ja-JP/ko-KR/de-DE 与 locales 不一致）
+✅ 3 locales 加 settings.language.{title,current,switch}（zh-CN/zh-TW/en-US 各 3 key）
+✅ vite build 1.48s + index-Cpv6i3cD→Bg0NCkCU / index-DS761ScJ→D6abmHlS
+✅ 部署：tar + scp + docker cp + blade 双路径覆盖 + view:clear/cache:clear/octane:reload
+✅ curl 验证：新 hash 200 OK + 旧 hash 404（彻底清理）
+✅ e2e 三语言切换 + 持久化全过（Sidebar 切繁简 + F5 保持 + localStorage.fe_locale=en-US）
+✅ commit f1e4a66 入库 + push my master (b166b2d..f1e4a66)
+✅ memory vp92-v29-language-switcher.md + MEMORY.md 索引入库
 ```
 
 ---
 
 ## 📁 文件改动
 
-### 入库 (4 文件)
-- `src/views/commerce/Orders.vue`（Write 重写，+128 行）
-- `src/components/common/CheckoutDialog.vue`（template + script 改动）
-- `src/views/commerce/PlanPurchase.vue`（已 v27 完成，v28 收尾微调）
-- `theme/dashboard.blade.php`（hash: index-DxfXx_xS.js → index-Cpv6i3cD.js）
+### 入库（5 文件 — 4 new + 1 modified）
+- `src/views/account/Settings.vue`（new track，A mode）
+- `src/components/layout/DashboardLayout.vue`（new track，mount LanguageModal）
+- `src/components/common/LanguageModal.vue`（new track，从孤儿变 active）
+- `src/stores/app.ts`（new track，setLocale 加 saveLocale）
+- `theme/dashboard.blade.php`（modified，hash 同步）
 
-### 不入库 (边界维持)
-- `src/locales/zh-CN.json` / `zh-TW.json` / `en-US.json` — 各补 3 个新 key
-- `src/locales/index.ts` — 未改
+### 不入库（边界维持）
+- `src/locales/{zh-CN,zh-TW,en-US}.json` — 各补 3 个新 key（v25 铁律）
+- 其他 src/* untracked 文件（vp92-frontend git 边界现状仅 2 tracked）
+
+### vp92-frontend git 边界现状
+仅 `theme/dashboard.blade.php` 修改 + 4 source 文件首次入库。CheckoutDialog.vue / AppSidebar.vue 是早期 tracked，其他全部 untracked（locales 边界 + 其他 source 长期 untracked）。
 
 ---
 
-## 🚨 v28 关键修复
+## 🚨 v29 关键修复
 
-### 修复 1：移除 `t(key, { interpolation })` 错配
-- **问题**：CheckoutDialog 模板写 `t('checkout.timeoutRetry', { action: t('checkout.payNow') })`
-- **根因**：`checkout.timeoutRetry` 字符串本身不需要插值参数
-- **修复**：改为 `t('checkout.timeoutRetry')` 直接调用
-- **教训**：`t(key, params)` 的 key 必须真有 `{{action}}` 占位符，否则污染 i18n namespace
+### 修复 1：LanguageModal 孤儿组件
+- **问题**：组件写好但全代码库零 mount，零触发按钮
+- **根因**：开发时挂载逻辑写漏
+- **修复**：DashboardLayout 全局 mount + Settings.vue 新增卡片触发
+- **教训**：写完组件必查 `grep '<ComponentName' src/` 验证 mount
 
-### 修复 2：「套餐」label 复用 `plans.title` 语义错
-- **问题**：CheckoutDialog 订单摘要的 "套餐" label 用了 `t('plans.title')`
-- **根因**：`plans.title` 是页面标题 ("选择您的加速方案")，不是 "套餐" label
-- **修复**：新增 `payment.planLabel: "套餐"` 专用 key
-- **教训**：复用 key 前查语义，专用 label 就要专用 key
+### 修复 2：appStore.setLocale 不持久化
+- **问题**：只更新 ref，刷新即重置
+- **根因**：setLocale 缺 saveLocale 调用
+- **修复**：store action 加 saveLocale 调用，store 变 locale 持久化单点入口
+- **教训**：store action 应是副作用唯一入口，不应让调用方各自处理持久化
 
-### 修复 3：zh-TW 字符串不能是简体
-- **手工写繁体时习惯性用简体的坑**：orders.title "订单"→"訂單" 等
+### 修复 3：LanguageModal 5→3 语言
+- **问题**：提供 5 语言但 locales 只支持 3，点 ja-JP/ko-KR/de-DE 不切任何东西
+- **根因**：LanguageModal 与 locales 维护不同步
+- **修复**：删除 ja-JP/ko-KR/de-DE，加入缺失的 zh-TW
 
 ---
 
@@ -63,21 +69,25 @@ v28 状态（2026-09-03）：
 
 ```
 读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件。
-里面包含了当前状态（v28 完成，三页完整 i18n）、
-待处理事项（push 重试 + v29 候选）和精确技术细节。
-按 v29 候选决定下一步。
+里面包含了当前状态（v29 完成，用户面板语言切换入口已上线）、
+待处理事项（v30 候选）和精确技术细节。
+按 v30 候选决定下一步。
 ```
 
-**最新 commit**: `d78193a feat(i18n): PlanPurchase/CheckoutDialog/Orders 三页完整 i18n v28`
-**当前 master HEAD**: `d78193a` ✅ (本地)
-**远端同步**: ⏳ 待 push（v26 a9cb919 + v27 b2762dc + v28 d78193a 都在本地 ahead 3 commit）
-**重试命令**: `git -c http.sslBackend=openssl push my master`（**先确认 https.proxy 已 unset**）
+**最新 commit**: `f1e4a66 feat(i18n): Settings 页面新增语言切换入口 + LanguageModal 全局挂载 v29`
+**当前 master HEAD**: `f1e4a66` ✅
+**远端同步**: ✅ 已 push my master（b166b2d..f1e4a66）
+**重置命令（如再卡）**:
+```bash
+git config --global --unset https.proxy
+cd E:/jiedian/vp92-frontend && git -c http.sslBackend=openssl push my master
+```
 
 **Wakeup 完。** 下次会话直接读这个文件就能恢复上下文。
 
 ---
 
-## 📜 v22→v28 演化路径
+## 📜 v22→v29 演化路径
 
 | 版本 | commit | 类型 | 范围 | 详情 |
 |------|--------|------|------|------|
@@ -88,42 +98,43 @@ v28 状态（2026-09-03）：
 | v26 | `a9cb919` | feat (i18n) | AppSidebar 完整 i18n + overlayfs 铁律扩展 (theme/) | MEMORY `vp92-v26-sidebar-i18n.md` |
 | v27 | `b2762dc` | docs | CLAUDE.md theme/ overlayfs 段（v26 踩坑沉淀）| MEMORY `vp92-v27-claude-md-theme-overlayfs.md` |
 | v28 | `d78193a` | feat (i18n) | PlanPurchase/CheckoutDialog/Orders 三页完整 i18n | MEMORY `vp92-v28-commerce-pages-i18n.md` |
+| v29 | `f1e4a66` | feat (i18n) | Settings 语言卡 + LanguageModal 全局挂载 + setLocale 持久化 | MEMORY `vp92-v29-language-switcher.md` |
 
 ---
 
 ## 🔗 关联引用
 
-- **v28 Commit**: `d78193a feat(i18n): PlanPurchase/CheckoutDialog/Orders 三页完整 i18n v28`
+- **v29 Commit**: `f1e4a66 feat(i18n): Settings 页面新增语言切换入口 + LanguageModal 全局挂载 v29`
+- **v29 Memory**: `~/.claude/projects/E--jiedian/memory/vp92-v29-language-switcher.md`
 - **v28 Memory**: `~/.claude/projects/E--jiedian/memory/vp92-v28-commerce-pages-i18n.md`
-- **v27 Memory**: `~/.claude/projects/E--jiedian/memory/vp92-v27-claude-md-theme-overlayfs.md`
 - **Memory 索引**: `~/.claude/projects/E--jiedian/memory/MEMORY.md`
 - **CLAUDE.md 铁令**: 「代码-文档双轨制」「git 备份常规」「严谨 + 拒绝敷衍」「不抢跑」
 - **Windows git push**: 需 `-c http.sslBackend=openssl` + **必须先 unset https.proxy**
+- **部署流程**: docker cp + docker exec cp blade（v26/v27 铁律）
 
 ---
 
-## 🎯 v29 候选（v28 已完成三页 i18n）
+## 🎯 v30 候选
 
-### 候选 1：`<title>` 标签 i18n（v27b 留待）
-- **当前**：`dashboard.blade.php line 9/23/30` 写死 `'VP92极速加速器'` + `window.settings.title`
-- **方案**：服务端 Laravel `__()` 渲染（最小侵入，Vue i18n 不动）
-- **工作量**：小（dashboard.blade.php 1 文件改动 + Laravel resources/lang 加 zh-CN/en-US/zh-TW）
+### 候选 1：`<title>` Laravel 服务端 i18n
+- **当前**：`dashboard.blade.php line 9/23/30` 写死 `'VP92极速加速器'`
+- **方案**：服务端 `__()` 渲染（最小侵入，Vue i18n 不动）
 - **风险**：中（需验证 locale 切换时 title 跟随，且 controller 传 locale）
 
-### 候选 2：其他零散 Vue 页面 i18n
-- **当前**：可能还有 Profile / Invite / Server / Nodes / Docs 等页面有硬编码中文
-- **工作量**：需要 grep 摸底
+### 候选 2：Settings.vue 现有 30+ 处硬编码中文化
+- **当前**：「个人信息」「邀请好友」「重置订阅链接」等都是硬编码
+- **方案**：settings.* key 已存在（en-US.json lines 487-539），统一 t()-化
 - **风险**：低
 
-### 候选 3：locales key 规范
-- **当前**：locales 增长到 ~150+ key，缺乏分组
-- **方案**：拆分为 auth.json / commerce.json / common.json / nav.json
-- **风险**：中（破坏 v22-v28 所有已 t() 调用，需 t('group.key') 调整）
-
-### 候选 4：push my master 网络优化
-- **当前**：持续 Recv failure 或 Failed to connect github.com:443
-- **方案**：考虑 SSH over 443 / gh CLI 替代 / 用代理 fallback
+### 候选 3：LanguageModal.vue 自身硬编码清理
+- **当前**：「SELECT REGION」标题、「或」文案、5 个语言 label 都硬编码
+- **方案**：modal header/subtitle 走 t()，语言 label 也走 t()
 - **风险**：低
+
+### 候选 4：locales key 拆分（auth.json / commerce.json / common.json）
+- **当前**：locales 已 ~150+ key
+- **方案**：拆分按 domain 加载
+- **风险**：中（破坏所有 t() 调用）
 
 ---
 
@@ -131,22 +142,22 @@ v28 状态（2026-09-03）：
 
 | 项 | 状态 | 影响 | 下次处理 |
 |---|------|------|---------|
-| v26 push `a9cb919` | ⏳ 待 push | 远端落后 3 commit | 任意时段重试 |
-| v27 push `b2762dc` | ⏳ 待 push | 远端落后 3 commit | 任意时段重试 |
-| v28 push `d78193a` | ⏳ 待 push | 远端落后 3 commit | 任意时段重试 |
-| `git config --global https.proxy` | ✅ 已 unset (本次会话) | push 不受影响 | 监控（设回会被静默忽略）|
-| `<title>` 标签 i18n | ⏸️ 待 v29 | SEO + 浏览器 tab 体验 | v29 候选 #1 |
+| Settings.vue 其他硬编码中文 | ⏸️ 待 v30 | 仅 language 卡 t()-化 | v30 候选 #2 |
+| LanguageModal 自身硬编码 | ⏸️ 待 v30 | 用户面看不到，但 modal title 永远是「SELECT REGION」 | v30 候选 #3 |
+| `<title>` i18n | ⏸️ 待 v30 | 浏览器 tab + SEO | v30 候选 #1 |
+| locales key 拆分 | ⏸️ 待 v30+ | 单文件 600+ 行 | v30 候选 #4 |
+| push 网络 | ⏸️ 持续不稳 | 已 unset https.proxy | 监控 |
 
 ---
 
 ## 🧪 验证
 
-- ✅ vite build: 1.52s, vue-vendor-CohP-jTm.js + index-Cpv6i3cD.js
-- ✅ curl -sI: index-Cpv6i3cD.js 200 OK
-- ✅ e2e PlanPurchase: zh-CN "选择您的加速方案" / en-US "Choose Your Plan" / zh-TW "選擇您的加速方案"
-- ✅ e2e Orders: zh-CN "我的订单" / en-US "My Orders" / zh-TW "我的訂單"
-- ✅ e2e CheckoutDialog: zh-CN "套餐 ¥XX.XX" / en-US "Plan $XX.XX"
-- ✅ Orders period map 9 个全 t() 化（monthly/quarterly/halfYear/yearly/twoYear/threeYear/onetime/resetTraffic + aliases）
-- ✅ Orders status map 5 个全 t() 化（pending/processing/cancelled/completed/credited/unknown）
-- ✅ git diff 校验: 4 files changed, 333 insertions(+), 73 deletions(-)
-- ⏳ push 验证未完成（network 持续失败，本次会话 unset https.proxy 后重试中）
+- ✅ vite build: 1.48s, vue-vendor-CohP-jTm.js + index-Bg0NCkCU.js + index-D6abmHlS.css
+- ✅ curl -sI: 新 hash 200 OK + 旧 hash 404（彻底清理）
+- ✅ e2e zh-CN: 「语言 / 当前语言: 简体中文」
+- ✅ e2e en-US: 「Language / Current Language: English」+ Sidebar 全英文
+- ✅ e2e zh-TW: 「**語言** / **當前語言: 繁體中文**」（繁简完全分流）
+- ✅ localStorage.fe_locale = 'en-US' 持久化 ✅
+- ✅ F5 刷新保持 locale ✅
+- ✅ git diff 校验: 5 files changed (4 new + 1 modified), 660 insertions(+), 2 deletions(-)
+- ✅ push my master (b166b2d..f1e4a66) ✅
