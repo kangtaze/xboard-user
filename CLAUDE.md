@@ -30,6 +30,30 @@ theme::  →  /www/storage/theme/      (用户主题，优先级更高)
 | `/www/public/theme/VP92/` | ❌ 仅静态资源服务 | assets JS/CSS 文件 |
 | `/www/resources/views/theme/VP92/` | ❌ 不参与 | 不要改这里 |
 
+### ⚠️ `/www/public/theme/VP92/` 容器外 vs 容器内不同物理路径（致命避坑！）
+
+Docker overlayfs 行为：**容器内** `/www/public/theme/VP92/` 是 image layer + 容器可写 layer（**web 服务从这里读**）；**host** 上同名路径是 image 内置只读 inode（**Octane 看不到这里**）。
+
+| 视角 | 路径 | 性质 |
+|------|------|------|
+| 容器内 | `/www/public/theme/VP92/assets/` | web 服务实际读取层 |
+| host | `/www/public/theme/VP92/assets/` | image 内置只读 inode |
+
+**正确验证部署**：
+```bash
+# ✅ 推荐：真实 HTTP 请求（最权威）
+curl -sI https://vp92vip.com/theme/VP92/assets/index-CWK9ecsc.js  # 200 OK = 成功
+curl -sI https://vp92vip.com/theme/VP92/assets/index-Dux9ywbC.js  # 404 = 旧 hash 已清
+
+# ✅ 推荐：容器内 ls
+docker exec xboard sh -c 'ls -la /www/public/theme/VP92/assets/'  # 看到新 hash = 成功
+
+# ❌ 错误：host ls（会误导，看到的是 image 内置旧 inode）
+ls /www/public/theme/VP92/assets/  # 仍显示旧 hash, 不要被误导
+```
+
+**历史教训**：v22/v23 memory 写「`md5 服务器 = md5 本地` 验证部署成功」是错的，那个 md5 是 host 视角，跟 web 服务实际读的不一致。v24 已发现并明确化。
+
 ### 前端部署流程（VP92 Vue SPA）
 1. **本地构建**: `cd E:\jiedian\vp92-frontend && npx vite build`
 2. **打包 assets**: `tar czf vp92-assets.tar.gz -C dist/assets .`
@@ -38,6 +62,26 @@ theme::  →  /www/storage/theme/      (用户主题，优先级更高)
 5. **更新 blade hash（关键！）**: 改 `/www/theme/VP92/dashboard.blade.php` 中的 JS/CSS hash
 6. **同步 public 副本**: `cp /www/theme/VP92/dashboard.blade.php /www/public/theme/VP92/dashboard.blade.php`
 7. **清缓存 + reload**: `php artisan view:clear && php artisan cache:clear && php artisan octane:reload`
+
+### vp92-frontend 边界（关键！）
+
+vp92-frontend 是 jiedian monorepo 子目录，**仅 tracked 16 个文件**（src/views/auth/{Register,Login,Forgot}Password.vue + theme/dashboard.blade.php + 必要 entry 等）。**`src/locales/*` 4 文件不入库**（zh-CN.json / en-US.json / zh-TW.json / index.ts）。
+
+**决策（v25 边界确认）**：
+- ✅ **维持不入库**：locale 改动频繁（每次 i18n 改动 50KB+ diff 噪音），不入库保持 git history 干净
+- ✅ v24 已验证：3 auth pages i18n 化 + zh-TW 新增 599 行全不入库，部署 + e2e 9/9 全部正常
+- ✅ 跨会话靠 session memory 沉淀（`vp92-v24-auth-i18n-full.md` 记录了所有 locale 增量）
+
+**灾难恢复**（locale 文件丢失时）：
+1. `git log --all --diff-filter=D --name-only | grep locales` — 但因不入库, 默认查不到
+2. **真实恢复路径**：从 session memory (`~/.claude/projects/E--jiedian/memory/`) 找 `vp92-v24-auth-i18n-full.md` 重建
+3. 或手动从 vue-vendor chunk (`vue-vendor-CohP-jTm.js`) 反编译 t() key（不推荐，容易漏）
+
+**改动 locales 的标准流程**：
+1. 修改 + vite build 本地验证 OK
+2. 写 session memory（必须！否则下次会话不知道改了啥）
+3. **不要** `git add src/locales/`，下次会话维持 untracked
+4. 极端情况（团队接入或 monorepo 拆分 vp92-frontend 独立仓库）才考虑入库
 
 ## 关键目录
 
