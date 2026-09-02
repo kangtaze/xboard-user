@@ -3,46 +3,46 @@
     <div class="forgot-card">
       <img v-if="configStore.guestConfig.logo" :src="configStore.guestConfig.logo" class="logo" alt="Logo"/>
       <div v-else class="logo"><span>VP</span></div>
-      <h1>重置密码</h1>
-      <p class="subtitle">通过邮箱验证码重置您的密码</p>
+      <h1>{{ t('auth.forgot.title') }}</h1>
+      <p class="subtitle">{{ t('auth.forgot.subtitle') }}</p>
 
       <form @submit.prevent="handleReset">
         <div class="input-group">
-          <label>邮箱地址</label>
-          <input v-model="form.email" type="email" placeholder="请输入注册邮箱" required autocomplete="email" />
+          <label>{{ t('auth.forgot.email') }}</label>
+          <input v-model="form.email" type="email" :placeholder="t('auth.forgot.emailPlaceholder')" required autocomplete="email" />
         </div>
         <div class="input-group">
-          <label>邮箱验证码</label>
+          <label>{{ t('auth.forgot.verifyCode') }}</label>
           <div class="input-group-with-btn">
-            <input v-model="form.emailCode" type="text" placeholder="输入验证码" required maxlength="6" />
+            <input v-model="form.emailCode" type="text" :placeholder="t('common.verifyCodePlaceholder')" required maxlength="6" />
             <button type="button" class="code-btn" :disabled="codeCooldown > 0" @click="handleSendCode">
-              {{ codeCooldown > 0 ? `${codeCooldown}s 后重试` : '发送验证码' }}
+              {{ codeCooldown > 0 ? t('common.resendCooldown', { seconds: codeCooldown }) : t('auth.forgot.sendCode') }}
             </button>
           </div>
           <p class="email-tip">
             <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px;">info</span>
-            验证码邮件可能被归入垃圾箱，请检查垃圾箱/广告邮件夹（QQ邮箱需特别注意）
+            {{ t('common.emailTip') }}
           </p>
         </div>
         <div class="input-group">
-          <label>新密码</label>
-          <input v-model="form.newPassword" type="password" placeholder="至少 8 位字符" required minlength="8" autocomplete="new-password" />
+          <label>{{ t('auth.forgot.newPassword') }}</label>
+          <input v-model="form.newPassword" type="password" :placeholder="t('auth.forgot.newPasswordPlaceholder')" required minlength="8" autocomplete="new-password" />
         </div>
 
         <button type="submit" class="reset-btn" :disabled="loading">
           <span v-if="loading" class="vp-spinner vp-spinner-sm"></span>
-          <span v-else>重置密码</span>
+          <span v-else>{{ t('auth.forgot.submit') }}</span>
         </button>
       </form>
 
       <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
       <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
 
-      <div class="divider"><span>或者</span></div>
+      <div class="divider"><span>{{ t('common.or') }}</span></div>
       <div class="back-link">
-        <router-link :to="{ name: 'login', query: route.query }">返回登录</router-link>
+        <router-link :to="{ name: 'login', query: route.query }">{{ t('auth.forgot.backLogin') }}</router-link>
         <span class="sep">|</span>
-        <router-link :to="{ name: 'register', query: route.query }">注册账户</router-link>
+        <router-link :to="{ name: 'register', query: route.query }">{{ t('auth.forgot.registerAccount') }}</router-link>
       </div>
     </div>
 
@@ -54,6 +54,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { forgotPassword, sendEmailVerify } from '@/api/auth'
 import { useConfigStore } from '@/stores/config'
@@ -61,6 +62,7 @@ import { useConfigStore } from '@/stores/config'
 const router = useRouter()
 const route = useRoute()
 const configStore = useConfigStore()
+const { t } = useI18n()
 
 const form = reactive({
   email: '',
@@ -82,7 +84,7 @@ function showToast(msg: string) {
 
 async function handleSendCode() {
   if (!form.email || !form.email.includes('@')) {
-    errorMsg.value = '请输入有效的邮箱地址'
+    errorMsg.value = t('common.invalidEmail')
     return
   }
   codeCooldown.value = 60
@@ -92,9 +94,9 @@ async function handleSendCode() {
   }, 1000)
   try {
     await sendEmailVerify(form.email)
-    showToast('验证码已发送')
+    showToast(t('common.codeSent'))
   } catch (e: any) {
-    errorMsg.value = e?.message || '验证码发送失败'
+    errorMsg.value = e?.message || t('common.codeSendFailed')
     codeCooldown.value = 0
     clearInterval(timer)
   }
@@ -102,11 +104,11 @@ async function handleSendCode() {
 
 async function handleReset() {
   if (!form.email || !form.emailCode || !form.newPassword) {
-    errorMsg.value = '请填写完整信息'
+    errorMsg.value = t('common.completeInfo')
     return
   }
   if (form.newPassword.length < 8) {
-    errorMsg.value = '密码至少 8 位'
+    errorMsg.value = t('common.passwordTooShort')
     return
   }
   loading.value = true
@@ -118,11 +120,11 @@ async function handleReset() {
       email_code: form.emailCode,
       new_password: form.newPassword,
     })
-    successMsg.value = '密码重置成功，请使用新密码登录'
-    showToast('密码重置成功')
+    successMsg.value = t('auth.forgot.resetSuccess')
+    showToast(t('auth.forgot.resetSuccessToast'))
     setTimeout(() => { router.push('/auth/login') }, 2000)
   } catch (e: any) {
-    errorMsg.value = e?.message || '重置失败，请稍后重试'
+    errorMsg.value = e?.message || t('auth.forgot.resetFailed')
   } finally {
     loading.value = false
   }

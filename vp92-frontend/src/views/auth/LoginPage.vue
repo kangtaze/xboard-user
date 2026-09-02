@@ -6,7 +6,7 @@
         <img v-if="configStore.guestConfig.logo" :src="configStore.guestConfig.logo" class="globe-brand-logo" alt="Logo"/>
         <div v-else class="globe-brand-logo"><span>VP</span></div>
         <div>
-          <div class="globe-brand-name">VP92 极速加速器</div>
+          <div class="globe-brand-name">{{ t('common.brandName') }}</div>
           <div class="globe-brand-sub">Stable &middot; Fast &middot; Secure</div>
         </div>
       </div>
@@ -19,26 +19,26 @@
       <div class="login-card">
         <img v-if="configStore.guestConfig.logo" :src="configStore.guestConfig.logo" class="logo" alt="Logo"/>
         <div v-else class="logo"><span>VP</span></div>
-        <h1>欢迎回来</h1>
-        <p class="subtitle">登录您的 VP92 账户</p>
+        <h1>{{ t('auth.login.title') }}</h1>
+        <p class="subtitle">{{ t('auth.login.subtitle') }}</p>
 
         <form @submit.prevent="handleLogin">
           <div class="input-group">
-            <label>邮箱地址</label>
+            <label>{{ t('auth.login.email') }}</label>
             <input
               v-model="email"
               type="email"
-              placeholder="请输入邮箱"
+              :placeholder="t('auth.login.emailPlaceholder')"
               required
               autocomplete="email"
             />
           </div>
           <div class="input-group">
-            <label>密码</label>
+            <label>{{ t('auth.login.password') }}</label>
             <input
               v-model="password"
               type="password"
-              placeholder="请输入密码"
+              :placeholder="t('auth.login.passwordPlaceholder')"
               required
               autocomplete="current-password"
             />
@@ -46,21 +46,21 @@
           <div class="input-row">
             <label class="remember">
               <input v-model="remember" type="checkbox" />
-              记住我
+              {{ t('auth.login.remember') }}
             </label>
-            <router-link to="/auth/forgot" class="forgot">忘记密码？</router-link>
+            <router-link to="/auth/forgot" class="forgot">{{ t('auth.login.forgot') }}</router-link>
           </div>
           <button type="submit" class="login-btn" :disabled="loading">
             <span v-if="loading" class="vp-spinner vp-spinner-sm"></span>
-            <span v-else>登 录</span>
+            <span v-else>{{ t('auth.login.submit') }}</span>
           </button>
         </form>
 
         <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
 
-        <div class="divider"><span>或者</span></div>
+        <div class="divider"><span>{{ t('common.or') }}</span></div>
         <div class="register">
-          还没有账户？<router-link :to="{ name: 'register', query: route.query }">立即注册</router-link>
+          {{ t('auth.login.noAccount') }}<router-link :to="{ name: 'register', query: route.query }">{{ t('auth.login.register') }}</router-link>
         </div>
       </div>
     </div>
@@ -72,9 +72,9 @@
   </div>
 </template>
 
-// Logo dynamic: reads from configStore.guestConfig.logo (set via admin panel)
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -84,6 +84,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const { t } = useI18n()
 
 const email = ref('')
 const password = ref('')
@@ -102,7 +103,7 @@ function showToast(msg: string) {
 
 async function handleLogin() {
   if (!email.value || !password.value) {
-    errorMsg.value = '请填写邮箱和密码'
+    errorMsg.value = t('auth.login.completeEmailPassword')
     return
   }
   loading.value = true
@@ -110,11 +111,11 @@ async function handleLogin() {
   try {
     await login({ email: email.value, password: password.value })
     await authStore.fetchUser()
-    showToast('登录成功，正在跳转...')
+    showToast(t('auth.login.loginSuccess'))
     const redirect = (route.query.redirect as string) || '/dashboard'
     setTimeout(() => { router.push(redirect) }, 800)
   } catch (e: any) {
-    errorMsg.value = e?.message || '登录失败，请检查邮箱和密码'
+    errorMsg.value = e?.message || t('auth.login.loginFailed')
   } finally {
     loading.value = false
   }

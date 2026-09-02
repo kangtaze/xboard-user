@@ -6,7 +6,7 @@
         <img v-if="configStore.guestConfig.logo" :src="configStore.guestConfig.logo" class="globe-brand-logo" alt="Logo"/>
         <div v-else class="globe-brand-logo"><span>VP</span></div>
         <div>
-          <div class="globe-brand-name">VP92 极速加速器</div>
+          <div class="globe-brand-name">{{ t('common.brandName') }}</div>
           <div class="globe-brand-sub">Stable &middot; Fast &middot; Secure</div>
         </div>
       </div>
@@ -19,54 +19,59 @@
       <div class="register-card">
         <img v-if="configStore.guestConfig.logo" :src="configStore.guestConfig.logo" class="logo" alt="Logo"/>
         <div v-else class="logo"><span>VP</span></div>
-        <h1>创建账户</h1>
-        <p class="subtitle">开始使用 VP92 极速加速</p>
+        <h1>{{ t('auth.register.title') }}</h1>
+        <p class="subtitle">{{ t('auth.register.subtitle') }}</p>
 
         <form @submit.prevent="handleRegister">
           <div class="input-group">
-            <label>邮箱地址</label>
-            <input v-model="form.email" type="email" placeholder="请输入邮箱" required autocomplete="email" />
+            <label>{{ t('auth.register.email') }}</label>
+            <input v-model="form.email" type="email" :placeholder="t('auth.register.emailPlaceholder')" required autocomplete="email" />
           </div>
           <div class="input-group">
-            <label>密码</label>
-            <input v-model="form.password" type="password" placeholder="至少 8 位字符" required minlength="8" autocomplete="new-password" />
+            <label>{{ t('auth.register.password') }}</label>
+            <input v-model="form.password" type="password" :placeholder="t('auth.register.passwordPlaceholder')" required minlength="8" autocomplete="new-password" />
           </div>
           <div class="input-group">
-            <label>确认密码</label>
-            <input v-model="form.passwordConfirm" type="password" placeholder="再次输入密码" required autocomplete="new-password" />
+            <label>{{ t('auth.register.passwordConfirm') }}</label>
+            <input v-model="form.passwordConfirm" type="password" :placeholder="t('auth.register.passwordConfirmPlaceholder')" required autocomplete="new-password" />
           </div>
           <div class="input-group">
-            <label>邀请码 <span class="optional">（选填）</span></label>
+            <label>{{ t('auth.register.inviteCode') }} <span class="optional">{{ t('auth.register.inviteOptional') }}</span></label>
             <input v-model="form.inviteCode" type="text" :placeholder="t('auth.register.inviteCodePlaceholder')" :readonly="isInviteLocked" />
           </div>
           <div class="input-group">
-            <label>邮箱验证码</label>
+            <label>{{ t('auth.register.verifyCode') }}</label>
             <div class="input-group-with-btn">
-              <input v-model="form.emailCode" type="text" placeholder="输入验证码" required maxlength="6" />
+              <input v-model="form.emailCode" type="text" :placeholder="t('common.verifyCodePlaceholder')" required maxlength="6" />
               <button type="button" class="code-btn" :disabled="codeCooldown > 0" @click="handleSendCode">
-                {{ codeCooldown > 0 ? `${codeCooldown}s 后重试` : '发送验证码' }}
+                {{ codeCooldown > 0 ? t('common.resendCooldown', { seconds: codeCooldown }) : t('auth.register.sendCode') }}
               </button>
             </div>
             <p class="email-tip">
               <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px;">info</span>
-              验证码邮件可能被归入垃圾箱，请检查垃圾箱/广告邮件夹（QQ邮箱需特别注意）
+              {{ t('common.emailTip') }}
             </p>
           </div>
           <div class="agree-row">
             <input v-model="form.agree" type="checkbox" required id="agree" />
-            <label for="agree">我已阅读并同意 <a href="javascript:void(0)">用户协议</a> 和 <a href="javascript:void(0)">隐私政策</a></label>
+            <label for="agree">
+              {{ t('auth.register.agree') }}
+              <a href="javascript:void(0)">{{ t('auth.register.tos') }}</a>
+              {{ t('common.connector') }}
+              <a href="javascript:void(0)">{{ t('auth.register.privacy') }}</a>
+            </label>
           </div>
           <button type="submit" class="register-btn" :disabled="loading">
             <span v-if="loading" class="vp-spinner vp-spinner-sm"></span>
-            <span v-else>注 册</span>
+            <span v-else>{{ t('auth.register.submit') }}</span>
           </button>
         </form>
 
         <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
 
-        <div class="divider"><span>或者</span></div>
+        <div class="divider"><span>{{ t('common.or') }}</span></div>
         <div class="register">
-          已有账户？<router-link :to="{ name: 'login', query: route.query }">立即登录</router-link>
+          {{ t('auth.register.hasAccount') }}<router-link :to="{ name: 'login', query: route.query }">{{ t('auth.register.login') }}</router-link>
         </div>
       </div>
     </div>
@@ -116,7 +121,7 @@ function showToast(msg: string) {
 
 async function handleSendCode() {
   if (!form.email || !form.email.includes('@')) {
-    errorMsg.value = '请输入有效的邮箱地址'
+    errorMsg.value = t('common.invalidEmail')
     return
   }
   codeCooldown.value = 60
@@ -126,9 +131,9 @@ async function handleSendCode() {
   }, 1000)
   try {
     await sendEmailVerify(form.email)
-    showToast('验证码已发送')
+    showToast(t('common.codeSent'))
   } catch (e: any) {
-    errorMsg.value = e?.message || '验证码发送失败'
+    errorMsg.value = e?.message || t('common.codeSendFailed')
     codeCooldown.value = 0
     clearInterval(timer)
   }
@@ -136,19 +141,19 @@ async function handleSendCode() {
 
 async function handleRegister() {
   if (!form.email || !form.password || !form.emailCode) {
-    errorMsg.value = '请填写完整信息'
+    errorMsg.value = t('common.completeInfo')
     return
   }
   if (form.password.length < 8) {
-    errorMsg.value = '密码至少 8 位'
+    errorMsg.value = t('common.passwordTooShort')
     return
   }
   if (form.password !== form.passwordConfirm) {
-    errorMsg.value = '两次密码不一致'
+    errorMsg.value = t('common.passwordMismatch')
     return
   }
   if (!form.agree) {
-    errorMsg.value = '请阅读并同意用户协议'
+    errorMsg.value = t('auth.register.agreeError')
     return
   }
 
@@ -163,12 +168,12 @@ async function handleRegister() {
       email_code: form.emailCode,
     })
     await authStore.fetchUser()
-    showToast('注册成功，正在跳转...')
+    showToast(t('auth.register.registerSuccess'))
     const redirect = (route.query.redirect as string) || '/dashboard'
     clearInviteCode()
     setTimeout(() => { router.push(redirect) }, 800)
   } catch (e: any) {
-    errorMsg.value = e?.message || '注册失败，请稍后重试'
+    errorMsg.value = e?.message || t('common.actionFailed')
   } finally {
     loading.value = false
   }
