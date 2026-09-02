@@ -1,136 +1,123 @@
-# 📌 v30 Wakeup Snapshot — 2026-09-03 header 语言下拉切换
+# 📌 v31 Wakeup Snapshot — 2026-09-03 tutorial.* deadcode 清理
 
-> **当前最新进度**（v30 完成 🎉）
-> **会话类型**：撤回 v29 Settings 语言卡 → header 铃铛左边 LanguageMenu 下拉 + Settings/LanguageModal 硬编码清理
-> **状态**：✅ 5 files (2 new tracked + 3 modified) + 3 locales + 部署 + e2e + commit + push 完成
-> **完整 v30 细节**: MEMORY `vp92-v30-header-lang-menu.md`
+> **当前最新进度**（v31 完成 🎉）
+> **会话类型**：v30 wakeup 候选的"en-US tutorial.* 78 缺失" → 验证后是 dead code → 删除清理
+> **状态**：✅ 3 locales 完美对齐 433×3 + vite build 1.41s + 部署 + e2e 3 语言 + commit + push
+> **完整 v31 细节**: MEMORY `vp92-v31-tutorial-deadcode-cleanup.md`
 
 ---
 
 ## ⚡ 一句话状态总结
 
 ```
-v30 状态（2026-09-03）：
-✅ 撤回 v29 Settings.vue「语言」卡 → 新建 LanguageMenu.vue header 铃铛左边下拉（1 步直达）
-✅ AppTopbar.vue 接入 LanguageMenu（top-actions 和 notif-wrapper 之间 = 铃铛左边）
-✅ Settings.vue 三件事：删 v29 语言卡 + 修 v29 orphan `</div>` + 修 v29 missing `</div>` (Third Party) + 30+ 处 t()-化
-✅ LanguageModal.vue 硬编码清理（languages array / SELECT REGION / namespace 误用）
-✅ 3 locales 补 20 key（languageModal 5 + languages 6 + settings.profile 2 + settings.password.messages 2 + settings.invite 4 + settings.bindings 1）
-✅ vite build 1.40s ✅ + curl 3 新 hash 200 OK ✅ + 旧 hash cf-cache-status:HIT (Cache-Control:max-age=14400 自然过期)
-✅ docker cp 铁律全程遵守（v25/v26/v27 主题路径）
-✅ commit ba5365f 入库 (5 files changed, 363 insertions, 78 deletions) + push my master (27ed6c2..ba5365f)
-✅ memory vp92-v30-header-lang-menu.md + MEMORY.md 索引入库
+v31 状态（2026-09-03）：
+✅ 反预期发现: v30 wakeup 候选 "en-US 补 78 tutorial.*" 验证后是 zombie code
+   - grep src/**/*.vue t('tutorial.') 0 命中
+   - grep theme/*.blade.php data-i18n="tutorial.tabs/..." 0 命中
+   - theme/tutorial.blade.php 完全硬编码中文，未走 i18n
+✅ 用户决策: 删除 78 死 key (zh-CN/zh-TW 各 -105 行, en-US 本就无)
+✅ 3 locales 完美对齐: 433 leaf keys × 3, 0 missing
+✅ vite build 1.41s ✅ + index-8whh1liI→B4DW_UGC + curl 200 ✅ + e2e 3 语言切 0 error
+✅ docker cp + docker exec cp blade (overlayfs 铁律)
+✅ commit adfdfbe 入库 (1 file 改 1 行) + push my master (7a5f962..adfdfbe)
+✅ memory vp92-v31-tutorial-deadcode-cleanup.md + MEMORY.md 索引入库
 ```
 
 ---
 
-## 📁 v30 文件改动
+## 📁 v31 文件改动
 
 | 文件 | 类型 | 关键改动 |
 |------|------|---------|
-| `src/components/layout/LanguageMenu.vue` | **NEW** | header 下拉组件，scoped document click 关闭 + 双写 locale |
-| `src/components/layout/AppTopbar.vue` | **NEW TRACKED** | line 9-10 之间插入 `<LanguageMenu />`（铃铛**左边**） |
-| `src/views/account/Settings.vue` | modified | 删 v29 Language 卡 + 修 orphan `</div>` + 修 missing `</div>` + 30+ 处 t()-化 |
-| `src/components/common/LanguageModal.vue` | modified | 硬编码 languages 数组 → computed + SELECT REGION → t() + 修正 namespace 误用 |
-| `theme/dashboard.blade.php` | modified | line 17 CSS: `D6abmHlS`→`CrfcEOxX` / line 37 JS: `Bg0NCkCU`→`8whh1liI` / vue-vendor `CohP-jTm` unchanged |
-| `src/locales/{zh-CN,zh-TW,en-US}.json` | untracked | v25 铁律新增 20 key（不入库） |
+| `src/locales/zh-CN.json` | untracked | 删除 lines 196-300 tutorial section (-105 行) |
+| `src/locales/zh-TW.json` | untracked | 删除 lines 196-300 tutorial section (-105 行) |
+| `src/locales/en-US.json` | untracked | 本就无 tutorial.*，无需操作 |
+| `theme/dashboard.blade.php` | modified | line 37 JS hash: `8whh1liI`→`B4DW_UGC` (1 行) |
 
 ---
 
-## 🚨 v30 新增铁律（必读）
+## 🚨 v31 新增铁律
 
-### 1. Vue i18n locale 双写铁律
-```ts
-function switchLocale(code: string) {
-  locale.value = code            // CRITICAL: 触发 vue-i18n 响应式
-  appStore.setLocale(code)       // CRITICAL: 持久化到 localStorage
-  dropdownOpen.value = false
-}
+### 1. Locale key 缺失 → 先 grep 验证，不要直接补
 ```
-**单写 `appStore.setLocale()` 不触发 i18n update**（UI 不刷新）。
-**单写 `locale.value = code` 不持久化**（F5 后丢失）。
-
-### 2. vp92-frontend tracked 边界扩展（重要架构决策）
-v30 后入库 **25 个文件**（新增 2）：
-- AppTopbar.vue（从 untracked → tracked）— **修复 DashboardLayout 依赖漏洞**：v29 之后 DashboardLayout 引用的 AppTopbar 仍是 untracked，下次重建 vp92-frontend build 会失败
-- LanguageMenu.vue（new）— 核心新组件
-
-### 3. CF 边缘缓存 200 旧 hash 不是部署失败
-```http
-cf-cache-status: HIT
-Cache-Control: max-age=14400   ← 4 小时 TTL
-Age: 2954                       ← 49min 已缓存
+locale key X 缺失 → grep `t('X.')` / `$t('X.')` / `data-i18n="X.*"`
+├─ 0 命中 → dead code → 从源头删除（节省 bundle + 消除死代码）
+└─ N 命中 → 真缺失
+    ├─ 引用方是 SPA 组件 → 翻译目标 locale
+    └─ 引用方是 blade → wire-up blade 用 data-i18n（更大范围）
 ```
-容器内文件已删 (验证 OK)，CF 4h 后自然回源验证拿 404。**不要触发 CF API 强制 purge**。
 
----
+### 2. artisan chain 在 docker exec + ssh 内会 hang
+**问题**：`docker exec xboard sh -c 'php artisan view:clear && php artisan cache:clear && php artisan octane:reload'` 在 ssh 链路上 ≥5 分钟不返回
 
-## 🔧 v30 部署命令（完整流程参考）
-
+**修复**：3 条 artisan 命令**分开独立执行**，每条独立 timeout + 独立 error check：
 ```bash
-# 1. 构建
-cd E:\jiedian\vp92-frontend && npx vite build  # 1.40s
-
-# 2. assets 上传
-tar czf vp92-assets.tar.gz -C dist/assets .
-scp vp92-assets.tar.gz root@154.3.38.212:/tmp/
-docker cp /tmp/vp92-assets.tar.gz xboard:/tmp/
-docker exec xboard sh -c 'cd /www/public/theme/VP92/assets && rm -rf * && tar xzf /tmp/vp92-assets.tar.gz'
-
-# 3. blade hash 同步（v25/v26 铁律：docker cp + docker exec cp）
-# 本地修改 theme/dashboard.blade.php line 17 CSS / line 37 JS
-scp theme/dashboard.blade.php root@154.3.38.212:/tmp/v30-blade.php
-docker cp /tmp/v30-blade.php xboard:/tmp/v30-blade.php
-docker exec xboard sh -c 'cp /tmp/v30-blade.php /www/theme/VP92/dashboard.blade.php'
-docker exec xboard sh -c 'cp /tmp/v30-blade.php /www/public/theme/VP92/dashboard.blade.php'
-
-# 4. 清缓存 + reload
-docker exec xboard sh -c 'cd /www && php artisan view:clear && php artisan cache:clear && php artisan octane:reload'
-
-# 5. 验证
-docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.blade.php'
-curl -sI https://vp92vip.com/theme/VP92/assets/<新-hash>.js | grep 200
+ssh server "docker exec xboard php artisan view:clear"   # <5s
+ssh server "docker exec xboard php artisan cache:clear" # <5s
+ssh server "docker exec xboard php artisan octane:reload" # <5s
 ```
+
+### 3. git push 在某些 Windows 网络环境下需要显式 proxy
+- CLAUDE.md 说"路由器透明代理"
+- 实测：`git push my master` 报 `fatal: Recv failure: Connection was reset`
+- 修复：`git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 push my master`
+- **路由器透明代理的端口不一定全局透明**，push 前验证
 
 ---
 
-## 📊 v30 验证记录
+## 📊 v31 验证记录
 
-### Locales 同步检查
+### Locales 对齐（关键指标）
 ```
-counts: 510 510 432
-missing in zh-TW: []  ← 完美对齐
-missing in en-US: [78 个 tutorial.* 旧账, 与 v30 无关]
+counts (leaf keys): zh-CN 433 / zh-TW 433 / en-US 433
+counts (total nested): 513 / 513 / 513
+missing in zh-TW (vs zh-CN): []
+missing in zh-CN (vs zh-TW): []
+missing in en-US (vs zh-CN): []
+extra in en-US (vs zh-CN): []
+== 完美对齐 ==
 ```
 
 ### HTTP 验证
 ```
 新 hash 200 OK ✅:
-- /theme/VP92/assets/index-8whh1liI.js  → 200
-- /theme/VP92/assets/index-CrfcEOxX.css → 200
+- /theme/VP92/assets/index-B4DW_UGC.js  → 200  (Content-Length: 50901)
+- /theme/VP92/assets/i18n-BPipN7-r.js  → 200  (i18n chunk 大小未变 = dead code 删除)
 - /theme/VP92/assets/vue-vendor-CohP-jTm.js → 200
+- /theme/VP92/assets/index-CrfcEOxX.css → 200
 
-旧 hash 200 = CF cache HIT (非部署失败):
-- /theme/VP92/assets/index-Bg0NCkCU.js → 200 (cf-cache-status: HIT, max-age=14400, Age: 2954)
+/dashboard 渲染新 hash ✅:
+- vue-vendor-CohP-jTm (line 16) unchanged
+- index-CrfcEOxX.css (line 17) unchanged
+- index-B4DW_UGC.js (line 37) ✅ NEW
 ```
 
 ### 容器内 blade 验证
 ```bash
 docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.blade.php'
-# index-CrfcEOxX.css (line 17)
-# index-8whh1liI.js (line 37)
-# vue-vendor-CohP-jTm.js (line 16)
+# vue-vendor-CohP-jTm ✓
+# index-CrfcEOxX ✓
+# index-B4DW_UGC ✓
+```
+
+### chrome-devtools e2e
+```
+1. /dashboard 默认 zh-CN → sidebar 中文正常 ✓
+2. localStorage.fe_locale = en-US, reload → sidebar 全部英文 (Dashboard/Nodes/Plans/Orders/Tickets/AI Chat/Referral/Gift Card/Settings/Logout) ✓ 0 console error
+3. localStorage.fe_locale = zh-TW, reload → sidebar 全部繁中 (控制面板/節點列表/方案計畫/我的訂單/客服支援/AI 客服/邀請返利/禮品卡/帳戶設定/退出) ✓
+> 注: Dashboard 主区中文是 pre-existing Dashboard.vue 硬编码（v28 之前的范围，与 v31 无关）
 ```
 
 ---
 
-## 🚧 v31 候选（next session 待决定）
+## 🚧 v32 候选（next session 待决定）
 
-- **en-US locale tutorial.* 78 缺失 key** — 旧账，与 v30 无关，e2e 英文环境会显示空字符串。是否在 v31 一次性补齐？
-- **`<title>` i18n** — v27b 决策留作 v28+，dashboard.blade.php line 9 仍是硬编码 "VP92极速加速器"。可用服务端 Laravel `__()` 渲染
-- **t(key, { interpolation }) 占位符审计** — v28 教训：key 必须真有占位符 (timeoutRetry 不需要 action 参数)。检查 Settings.vue 是否有此隐患
-- **LanguageModal 入口去留** — v30 撤回 v29 Settings 卡，但 DashboardLayout 全局挂载仍保留。未来 v31 加「高级设置」入口时可继续使用
+- **`<title>` i18n** — v27b 已决策留作 v28+，dashboard.blade.php line 9 仍是硬编码 "VP92极速加速器"。可用服务端 Laravel `__()` 渲染
+- **t(key, { interpolation }) 占位符审计** — v28 教训延伸：v30 Settings.vue 30+ 处 t()-化中是否有 timeoutRetry 类陷阱（key 无占位符却传了参数）
+- **LanguageModal 入口去留** — v30 撤回 v29 Settings 卡，但 DashboardLayout 全局挂载仍保留。未来 v31+ 加「高级设置」入口时可继续使用
 - **`/invite` 页面** — Settings.vue 引入 `router-link to="/invite"` 但用户没访问过，待 e2e 验证
+- **`theme/tutorial.blade.php` i18n wire-up** — 彻底解决 tutorial 页英文用户看中文。50+ 字符串加 data-i18n 属性 + JS 读 localStorage.fe_locale + locales JSON 动态渲染
+- **Dashboard.vue 主区 i18n** — Dashboard 主区仍是硬编码中文（e2e 显示）。当前最显眼的中英混杂
 
 ---
 
@@ -138,19 +125,19 @@ docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.
 
 | 项 | 状态 |
 |----|------|
-| **最新 commit** | ba5365f (v30) |
+| **最新 commit** | adfdfbe (v31) |
 | **远程** | my = `github.com:kangtaze/xboard-ze.git` ✅ |
 | **服务器** | root@154.3.38.212, Docker xboard 容器 ✅ |
-| **前端** | vite build 1.40s, 部署完成, CF cache 自然过期 |
-| **CLAUDE.md** | v25/v26/v27 铁律全部到位 (overlayfs docker cp + locales 不入库) |
-| **MEMORY** | vp92-v25 → vp92-v30 共 6 个快照, 全部 ✅ |
-| **下次唤醒** | 用户继续提供新需求（v31 候选或新方向） |
+| **前端** | vite build 1.41s, 部署完成, 0 console error |
+| **CLAUDE.md** | v25/v26/v27 铁律全部到位 + v31 新铁律待沉淀（locale 缺失先 grep、artisan chain 拆分、git push proxy 7890） |
+| **MEMORY** | vp92-v25 → vp92-v31 共 7 个快照, 全部 ✅ |
+| **下次唤醒** | 用户继续提供新需求（v32 候选或新方向） |
 
 ---
 
 ## 📚 关联文档
 
-- **MEMORY.md** — 6 个版本快照索引 (v25/v26/v27/v28/v29/v30)
+- **MEMORY.md** — 7 个版本快照索引 (v25/v26/v27/v28/v29/v30/v31)
 - `docs/deployment-guide.md` — 后端/前端/Bot/Worker 部署完整指南
 - `docs/project-paths.md` — 项目目录结构
 - `E:\jiedian\AGENTS.md` — jiedian 根级 AI 行为准则
@@ -158,10 +145,10 @@ docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.
 
 ---
 
-**Generated**: 2026-09-03 (v30 session)
+**Generated**: 2026-09-03 (v31 session)
 **Next session wakeup prompt**:
 ```
-读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件 (v30 完成)。
-v30 = header 语言下拉切换 + 撤回 v29 Settings 语言卡 + Settings/LanguageModal 硬编码清理。
-按 v31 候选决定下一步。
+读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件 (v31 完成)。
+v31 = tutorial.* 78 死 key 清理 + 3 locales 完美对齐 433×3。
+按 v32 候选决定下一步。
 ```
