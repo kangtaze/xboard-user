@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { fetchPlans, createOrder, getPaymentMethods, cancelOrder, fetchOrders, getOrderDetail } from '@/api/user'
 import { getToken } from '@/api/client'
 import CheckoutDialog from '@/components/common/CheckoutDialog.vue'
 import Toast from '@/components/common/Toast.vue'
 import type { Plan } from '@/api/types'
 import { clearInviteCode } from '@/utils/invite'
+
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -33,17 +36,35 @@ function formatPrice(cents: number): string {
   return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
 }
 
-// --- Period label ---
+// --- Period suffix (/月 /季 ...) ---
 function getPeriodLabel(period: string): string {
   switch (period) {
-    case 'month_price': return '/月'
-    case 'quarter_price': return '/季'
-    case 'half_year_price': return '/半年'
-    case 'year_price': return '/年'
-    case 'two_year_price': return '/2年'
-    case 'three_year_price': return '/3年'
-    default: return '/月'
+    case 'month_price': return t('plans.suffix.monthly')
+    case 'quarter_price': return t('plans.suffix.quarterly')
+    case 'half_year_price': return t('plans.suffix.halfYear')
+    case 'year_price': return t('plans.suffix.yearly')
+    case 'two_year_price': return t('plans.suffix.twoYear')
+    case 'three_year_price': return t('plans.suffix.threeYear')
+    default: return t('plans.suffix.monthly')
   }
+}
+
+// --- Period label (月付 / 季付 ...) ---
+const PERIOD_LABEL_KEYS: Record<string, string> = {
+  month_price: 'plans.periods.monthly',
+  quarter_price: 'plans.periods.quarterly',
+  half_year_price: 'plans.periods.halfYear',
+  year_price: 'plans.periods.yearly',
+  two_year_price: 'plans.periods.twoYear',
+  three_year_price: 'plans.periods.threeYear',
+  onetime: 'plans.periods.onetime',
+  reset_traffic: 'plans.periods.resetTraffic',
+  monthly: 'plans.periods.monthly',
+  quarterly: 'plans.periods.quarterly',
+  half_yearly: 'plans.periods.halfYear',
+  yearly: 'plans.periods.yearly',
+  two_yearly: 'plans.periods.twoYear',
+  three_yearly: 'plans.periods.threeYear',
 }
 
 const selectedPeriodFor = ref<Record<number, string>>({})
@@ -65,12 +86,12 @@ function resolvePeriod(alias: string | null | undefined): string {
 // --- Get all available periods for a plan ---
 function getPlanPeriods(plan: Plan): { period: string; amount: number; label: string }[] {
   const items: { period: string; amount: number; label: string }[] = []
-  if (plan.month_price && plan.month_price > 0) items.push({ period: 'month_price', amount: plan.month_price, label: '月付' })
-  if (plan.quarter_price && plan.quarter_price > 0) items.push({ period: 'quarter_price', amount: plan.quarter_price, label: '季付' })
-  if (plan.half_year_price && plan.half_year_price > 0) items.push({ period: 'half_year_price', amount: plan.half_year_price, label: '半年付' })
-  if (plan.year_price && plan.year_price > 0) items.push({ period: 'year_price', amount: plan.year_price, label: '年付' })
-  if (plan.two_year_price && plan.two_year_price > 0) items.push({ period: 'two_year_price', amount: plan.two_year_price, label: '2年付' })
-  if (plan.three_year_price && plan.three_year_price > 0) items.push({ period: 'three_year_price', amount: plan.three_year_price, label: '3年付' })
+  if (plan.month_price && plan.month_price > 0) items.push({ period: 'month_price', amount: plan.month_price, label: t(PERIOD_LABEL_KEYS.month_price) })
+  if (plan.quarter_price && plan.quarter_price > 0) items.push({ period: 'quarter_price', amount: plan.quarter_price, label: t(PERIOD_LABEL_KEYS.quarter_price) })
+  if (plan.half_year_price && plan.half_year_price > 0) items.push({ period: 'half_year_price', amount: plan.half_year_price, label: t(PERIOD_LABEL_KEYS.half_year_price) })
+  if (plan.year_price && plan.year_price > 0) items.push({ period: 'year_price', amount: plan.year_price, label: t(PERIOD_LABEL_KEYS.year_price) })
+  if (plan.two_year_price && plan.two_year_price > 0) items.push({ period: 'two_year_price', amount: plan.two_year_price, label: t(PERIOD_LABEL_KEYS.two_year_price) })
+  if (plan.three_year_price && plan.three_year_price > 0) items.push({ period: 'three_year_price', amount: plan.three_year_price, label: t(PERIOD_LABEL_KEYS.three_year_price) })
   return items
 }
 
@@ -96,7 +117,7 @@ function getPlanPrice(plan: Plan): { amount: number; period: string; label: stri
   if (plan.year_price && plan.year_price > 0) {
     return { amount: plan.year_price, period: 'year_price', label: getPeriodLabel('year_price') }
   }
-  return { amount: 0, period: 'month_price', label: '/月' }
+  return { amount: 0, period: 'month_price', label: getPeriodLabel('month_price') }
 }
 
 // --- Parse plan features from content ---
@@ -105,18 +126,18 @@ function parsePlanFeatures(plan: Plan): string[] {
     // Generate features from transfer_enable and other fields
     const features: string[] = []
     if (plan.transfer_enable) {
-      features.push(`${plan.transfer_enable}GB 每月流量`)
+      features.push(t('plans.feature.traffic', { gb: plan.transfer_enable }))
     }
-    features.push('100+ 国家线路')
-    features.push('AI 工具解锁')
-    features.push('8K 流媒体')
+    features.push(t('plans.feature.countries'))
+    features.push(t('plans.feature.ai'))
+    features.push(t('plans.feature.streaming'))
     if (plan.speed_limit) {
-      features.push(`${plan.speed_limit}Mbps 速度`)
+      features.push(t('plans.feature.speed', { mbps: plan.speed_limit }))
     }
     if (plan.device_limit) {
-      features.push(`${plan.device_limit} 台设备`)
+      features.push(t('plans.feature.devices', { count: plan.device_limit }))
     } else {
-      features.push('无限设备')
+      features.push(t('plans.feature.unlimitedDevices'))
     }
     return features
   }
@@ -138,7 +159,7 @@ function parsePlanFeatures(plan: Plan): string[] {
 // --- Determine plan badge ---
 function getPlanBadge(plan: Plan): string {
   // Sort order in grid: plan with highest transfer_enable goes to middle (recommended)
-  return plan.name || '基础版'
+  return plan.name || t('plans.badge.basic')
 }
 
 // --- Determine if recommended ---
@@ -220,7 +241,7 @@ async function handleSelectPlan(plan: Plan) {
       showCheckout.value = true
     } else {
       console.error('Create order failed:', e)
-      toastRef.value?.show(typeof e === 'string' ? e : (e?.message || '操作失败，请稍后重试'))
+      toastRef.value?.show(typeof e === 'string' ? e : (e?.message || t('common.actionFailed')))
     }
   }
 }
@@ -267,7 +288,7 @@ async function loadPlans(attempt: number = 1): Promise<void> {
       return loadPlans(attempt + 1)
     }
     // 重试耗尽,toast 提示用户手动重试
-    toastRef.value?.show('套餐加载失败,请点击重试')
+    toastRef.value?.show(t('plans.loadingFailed'))
   }
 }
 
@@ -309,7 +330,7 @@ onMounted(async () => {
     <!-- Loading -->
     <div v-if="loading" class="loading-state">
       <span class="vp-spinner vp-spinner-md"></span>
-      <span>加载套餐...</span>
+      <span>{{ t('plans.loading') }}</span>
     </div>
 
     <!-- Plans Grid -->
@@ -351,7 +372,7 @@ onMounted(async () => {
           :class="{ outline: !isRecommended(plan, plans) }"
           @click="handleSelectPlan(plan)"
         >
-          立即订阅
+          {{ t('plans.subscribe') }}
         </button>
       </div>
     </div>
@@ -359,8 +380,8 @@ onMounted(async () => {
     <!-- Empty State (含重试按钮,防止 loadPlans 全部失败后用户卡住) -->
     <div v-else class="empty-state">
       <span class="material-symbols-outlined" style="font-size: 48px; color: #c2c6d8;">shopping_cart</span>
-      <p>暂无可用套餐</p>
-      <button class="retry-btn" @click="retryLoadPlans">重新加载</button>
+      <p>{{ t('plans.empty') }}</p>
+      <button class="retry-btn" @click="retryLoadPlans">{{ t('plans.retry') }}</button>
     </div>
 
     <!-- Checkout Dialog -->

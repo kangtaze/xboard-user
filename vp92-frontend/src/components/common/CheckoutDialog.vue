@@ -170,7 +170,9 @@ function startPolling() {
     }
     const min = Math.floor(remaining / 60)
     const sec = remaining % 60
-    countdownText.value = min > 0 ? `${min}分${sec.toString().padStart(2, '0')}秒` : `${sec}秒`
+    countdownText.value = min > 0
+      ? t('payment.countdownMinSec', { min, sec: sec.toString().padStart(2, '0') })
+      : t('payment.countdownSec', { sec })
     try {
       const tradeNo = pendingTradeNo.value || props.tradeNo
       // 后端 ApiResponse::success 返回 {status, message, data}
@@ -246,9 +248,9 @@ async function doCheckout(tradeNo: string) {
       }, 1500)
       return
     }
-    errorMsg.value = '未知的支付类型'
+    errorMsg.value = t('checkout.unknownType')
   } catch (e: any) {
-    errorMsg.value = '支付连接超时，请点击「立即支付」重试'
+    errorMsg.value = t('checkout.timeoutRetry')
   } finally {
     processing.value = false
   }
@@ -282,7 +284,7 @@ async function handleCancelOldOrder() {
     actualOrderPeriod.value = null
     emit('cancelOld')
   } catch {
-    errorMsg.value = '取消失败，请重试'
+    errorMsg.value = t('payment.cancelFailed')
   } finally {
     cancellingOld.value = false
   }
@@ -309,24 +311,25 @@ function formatPrice(cents: number): string {
 }
 
 function getPeriodLabel(period: string): string {
-  const map: Record<string, string> = {
-    month_price: '月付',
-    quarter_price: '季付',
-    half_year_price: '半年付',
-    year_price: '年付',
-    two_year_price: '2年付',
-    three_year_price: '3年付',
-    onetime: '一次性',
+  const keyMap: Record<string, string> = {
+    month_price: 'plans.periods.monthly',
+    quarter_price: 'plans.periods.quarterly',
+    half_year_price: 'plans.periods.halfYear',
+    year_price: 'plans.periods.yearly',
+    two_year_price: 'plans.periods.twoYear',
+    three_year_price: 'plans.periods.threeYear',
+    onetime: 'plans.periods.onetime',
     // 新版格式
-    monthly: '月付',
-    quarterly: '季付',
-    half_yearly: '半年付',
-    yearly: '年付',
-    two_yearly: '2年付',
-    three_yearly: '3年付',
-    reset_traffic: '流量重置',
+    monthly: 'plans.periods.monthly',
+    quarterly: 'plans.periods.quarterly',
+    half_yearly: 'plans.periods.halfYear',
+    yearly: 'plans.periods.yearly',
+    two_yearly: 'plans.periods.twoYear',
+    three_yearly: 'plans.periods.threeYear',
+    reset_traffic: 'plans.periods.resetTraffic',
   }
-  return map[period] || period
+  const key = keyMap[period]
+  return key ? t(key) : period
 }
 
 const planPrice = computed(() => {
@@ -343,10 +346,10 @@ const planPrice = computed(() => {
   if (!props.selectedPlan) return null
   const p = props.selectedPlan
   const prices = [
-    { key: 'month_price', label: '月付' },
-    { key: 'quarter_price', label: '季付' },
-    { key: 'half_year_price', label: '半年付' },
-    { key: 'year_price', label: '年付' },
+    { key: 'month_price', label: t('plans.periods.monthly') },
+    { key: 'quarter_price', label: t('plans.periods.quarterly') },
+    { key: 'half_year_price', label: t('plans.periods.halfYear') },
+    { key: 'year_price', label: t('plans.periods.yearly') },
   ]
   for (const pr of prices) {
     if ((p as any)[pr.key] > 0) {
@@ -366,7 +369,7 @@ const planPrice = computed(() => {
         <template v-if="step === 'pay' && !loading && methods.length > 0">
           <!-- Header -->
           <div class="pay-header">
-            <h2 class="pay-title">收银台</h2>
+            <h2 class="pay-title">{{ t('payment.cashierTitle') }}</h2>
             <button class="pay-close" @click="close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
@@ -375,15 +378,15 @@ const planPrice = computed(() => {
           <!-- Order Summary -->
           <div v-if="selectedPlan" class="pay-order-summary">
             <div class="pay-order-row">
-              <span class="pay-order-label">商品</span>
+              <span class="pay-order-label">{{ t('payment.product') }}</span>
               <span class="pay-order-value">{{ selectedPlan.name }}</span>
             </div>
             <div v-if="planPrice" class="pay-order-row">
-              <span class="pay-order-label">套餐</span>
+              <span class="pay-order-label">{{ t('payment.planLabel') }}</span>
               <span class="pay-order-value">{{ planPrice.label }}</span>
             </div>
             <div v-if="planPrice" class="pay-order-row pay-order-total">
-              <span class="pay-order-label">应付金额</span>
+              <span class="pay-order-label">{{ t('payment.total') }}</span>
               <span class="pay-order-amount">¥{{ formatPrice(planPrice.amount) }}</span>
             </div>
           </div>
@@ -392,16 +395,16 @@ const planPrice = computed(() => {
           <div v-if="pendingTradeNo" class="pay-pending">
             <div class="pay-pending-left">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span>您有未支付的订单，可直接付款或取消后重新购买</span>
+              <span>{{ t('payment.unpaidHint') }}</span>
             </div>
             <button class="pay-pending-btn" :disabled="cancellingOld" @click="handleCancelOldOrder">
-              {{ cancellingOld ? '取消中...' : '取消旧订单' }}
+              {{ cancellingOld ? t('payment.cancelling') : t('payment.cancelOld') }}
             </button>
           </div>
 
           <!-- Payment Method (clean card) -->
           <div class="pay-method-section">
-            <div class="pay-section-label">支付方式</div>
+            <div class="pay-section-label">{{ t('payment.sectionLabel') }}</div>
             <div
               v-for="m in methods"
               :key="m.id"
@@ -431,17 +434,17 @@ const planPrice = computed(() => {
             @click="pendingTradeNo ? handlePayPending() : handlePay()"
           >
             <span v-if="processing" class="pay-btn-spinner"></span>
-            <span v-else>立即支付 ¥{{ planPrice ? formatPrice(planPrice.amount) : '...' }}</span>
+            <span v-else>{{ t('checkout.payNow') }} ¥{{ planPrice ? formatPrice(planPrice.amount) : '...' }}</span>
           </button>
           <p v-if="processing" class="pay-hint">
-            正在连接支付系统，网络较慢时可能需要10-20秒…
+            {{ t('payment.connecting') }}
           </p>
         </template>
 
         <!-- ===== STEP 2: QR CODE ===== -->
         <template v-if="step === 'qrcode'">
           <div class="pay-header">
-            <h2 class="pay-title">扫码支付</h2>
+            <h2 class="pay-title">{{ t('payment.qrTitle') }}</h2>
             <button class="pay-close" @click="close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
@@ -449,7 +452,7 @@ const planPrice = computed(() => {
 
           <!-- Order amount -->
           <div class="pay-qr-amount">
-            <span class="pay-qr-amount-label">支付金额</span>
+            <span class="pay-qr-amount-label">{{ t('payment.amount') }}</span>
             <span class="pay-qr-amount-value">¥{{ planPrice ? formatPrice(planPrice.amount) : '...' }}</span>
           </div>
 
@@ -459,10 +462,10 @@ const planPrice = computed(() => {
             <!-- Expired overlay -->
             <div v-if="qrExpired" class="pay-qr-overlay">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 8v4m0 4h.01"/></svg>
-              <p class="pay-qr-overlay-text">二维码已过期</p>
+              <p class="pay-qr-overlay-text">{{ t('payment.expired') }}</p>
               <button class="pay-qr-refresh" @click="handleRetry">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-                点击刷新
+                {{ t('payment.refresh') }}
               </button>
             </div>
           </div>
@@ -470,13 +473,13 @@ const planPrice = computed(() => {
           <!-- Scan hint -->
           <div class="pay-qr-hint">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="1.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-            <span>请打开 <strong>支付宝</strong> 扫描二维码完成支付</span>
+            <span v-html="t('payment.scanWithAlipay')"></span>
           </div>
 
           <!-- Waiting status -->
           <div v-if="polling && !qrExpired" class="pay-qr-status">
             <span class="pay-qr-status-dot"></span>
-            <span>等待支付确认中…</span>
+            <span>{{ t('payment.waitingConfirm') }}</span>
             <span v-if="countdownText" class="pay-qr-timer">{{ countdownText }}</span>
           </div>
         </template>
@@ -487,22 +490,22 @@ const planPrice = computed(() => {
             <div class="pay-success-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
             </div>
-            <h3 class="pay-success-title">支付成功</h3>
-            <p class="pay-success-desc">正在开通服务，请稍候…</p>
+            <h3 class="pay-success-title">{{ t('checkout.success') }}</h3>
+            <p class="pay-success-desc">{{ t('payment.activating') }}</p>
           </div>
         </template>
 
         <!-- ===== LOADING STATE ===== -->
         <div v-if="loading" class="pay-loading">
           <span class="pay-loading-spinner"></span>
-          <span>加载中…</span>
+          <span>{{ t('common.loading') }}</span>
         </div>
 
         <!-- ===== ERROR STATE ===== -->
         <div v-if="errorMsg && !selectedMethod && !loading" class="pay-error-state">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
           <p>{{ errorMsg }}</p>
-          <button class="pay-retry-btn" @click="loadMethods">重新加载</button>
+          <button class="pay-retry-btn" @click="loadMethods">{{ t('common.retry') }}</button>
         </div>
 
       </div>
