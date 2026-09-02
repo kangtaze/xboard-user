@@ -54,14 +54,61 @@ ls /www/public/theme/VP92/assets/  # 仍显示旧 hash, 不要被误导
 
 **历史教训**：v22/v23 memory 写「`md5 服务器 = md5 本地` 验证部署成功」是错的，那个 md5 是 host 视角，跟 web 服务实际读的不一致。v24 已发现并明确化。
 
+### ⚠️ `/www/theme/VP92/` 容器外 vs 容器内不同物理路径（v26 新发现！）
+
+Docker overlayfs 行为：**`/www/theme/VP92/`** 也有同样问题 — 容器内是 image layer + 容器可写 layer（**Octane 实际渲染从这里读**），host 上同名路径是 image 内置只读 inode（**ssh cp 写到这里 Octane 看不到**）。
+
+| 视角 | 路径 | 性质 |
+|------|------|------|
+| 容器内 | `/www/theme/VP92/dashboard.blade.php` | Octane 实际渲染层 |
+| host | `/www/theme/VP92/dashboard.blade.php` | image 内置只读 inode |
+
+**v26 实战踩坑**（浪费 ~10 分钟 + 网站挂 404）：
+
+1. `ssh cp` 改 host 视角的 `dashboard.blade.php` → host 文件已变（新 hash 写入）
+2. 但 `curl vp92vip.com/dashboard` 仍返回 **旧 hash**（容器内没改） → 网站挂 404
+3. `docker exec xboard grep` 才发现容器内 blade 还是旧版
+4. 必须 `docker cp` 进容器 + `docker exec cp` 才生效
+
+**正确部署 blade 文件**：
+
+```bash
+# ✅ 唯一正确流程：docker cp + docker exec cp
+scp blade root@server:/tmp/blade                                  # 第 1 步：scp 到 host /tmp
+docker cp /tmp/blade xboard:/tmp/blade                            # 第 2 步：docker cp 进容器（关键！）
+docker exec xboard sh -c 'cp /tmp/blade /www/theme/VP92/dashboard.blade.php'        # 第 3 步：覆盖 Octane 源
+docker exec xboard sh -c 'cp /tmp/blade /www/public/theme/VP92/dashboard.blade.php' # 第 4 步：同步 public 副本
+
+# 验证容器内 blade 已变
+docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.blade.php'
+
+# ❌ 错误：ssh cp / rsync / scp 直接到容器路径
+scp blade root@server:/www/theme/VP92/dashboard.blade.php         # 只改 host inode, Octane 看不到 → 网站挂
+```
+
+**铁律总结**：`vp92-frontend/theme/` 目录下任何 `.blade.php` 文件的部署**必须**用 `docker cp` + `docker exec cp`，**不要**用 ssh cp。
+
+**正确验证部署**（验证容器内版本而不是 host 版本）：
+
+```bash
+# ✅ 推荐：真实 HTTP 请求（最权威）
+curl -s https://vp92vip.com/dashboard | grep -E 'index-|vue-vendor'
+
+# ✅ 推荐：容器内 grep
+docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.blade.php'
+
+# ❌ 错误：host grep / md5（只反映 image 内置 inode）
+ssh root@server 'grep -E "index-" /www/theme/VP92/dashboard.blade.php'  # 可能仍是旧 hash, 不要被误导
+```
+
 ### 前端部署流程（VP92 Vue SPA）
 1. **本地构建**: `cd E:\jiedian\vp92-frontend && npx vite build`
 2. **打包 assets**: `tar czf vp92-assets.tar.gz -C dist/assets .`
 3. **上传到服务器**: `scp vp92-assets.tar.gz root@154.3.38.212:/tmp/`
 4. **解压到 public/assets**: `docker cp /tmp/vp92-assets.tar.gz xboard:/tmp/ && docker exec xboard sh -c 'cd /www/public/theme/VP92/assets && rm -rf * && tar xzf /tmp/vp92-assets.tar.gz'`
-5. **更新 blade hash（关键！）**: 改 `/www/theme/VP92/dashboard.blade.php` 中的 JS/CSS hash
-6. **同步 public 副本**: `cp /www/theme/VP92/dashboard.blade.php /www/public/theme/VP92/dashboard.blade.php`
-7. **清缓存 + reload**: `php artisan view:clear && php artisan cache:clear && php artisan octane:reload`
+5. **更新 blade hash（关键！）**: 改 `/www/theme/VP92/dashboard.blade.php` 中的 JS/CSS hash，**通过 docker cp + docker exec cp**（见上节）
+6. **同步 public 副本**: 同样通过 `docker exec cp` 复制到 `/www/public/theme/VP92/dashboard.blade.php`
+7. **清缓存 + reload**: `docker exec xboard sh -c 'php artisan view:clear && php artisan cache:clear && php artisan octane:reload'`
 
 ### vp92-frontend 边界（关键！）
 
