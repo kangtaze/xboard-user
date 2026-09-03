@@ -64,6 +64,23 @@ class DetectExpiredSubscriptions extends Command
             $vipUsersByPlan[$planName][] = $user->id;
         }
 
+        // 2.5 二次去重：排除 24h 内已收到同标题 notice 的用户
+        // （fix: 之前的 dedup 只按 expired_at >= windowStart 过滤，
+        //  每分钟 cron 重扫同一窗口会反复 push，导致 APP listenManual
+        //  每分钟触发一次 SnackBar + 自动断开，UX 灾难）
+        if (!empty($trialUsers)) {
+            $trialUsers = array_values(array_diff(
+                $trialUsers,
+                $this->alreadyNotifiedUserIds('您的 VP92 体验套餐已到期', $windowStart)
+            ));
+        }
+        foreach ($vipUsersByPlan as $planName => $userIds) {
+            $vipUsersByPlan[$planName] = array_values(array_diff(
+                $userIds,
+                $this->alreadyNotifiedUserIds("您的 {$planName} 套餐已到期", $windowStart)
+            ));
+        }
+
         // 3. 推送试用用户 notice
         if (!empty($trialUsers)) {
             $this->dispatchNotice(
@@ -77,6 +94,9 @@ class DetectExpiredSubscriptions extends Command
 
         // 4. 按 plan name 分组推送 VIP 用户 notice
         foreach ($vipUsersByPlan as $planName => $userIds) {
+            if (empty($userIds)) {
+                continue;
+            }
             $this->dispatchNotice(
                 $userIds,
                 "您的 {$planName} 套餐已到期",
@@ -86,7 +106,20 @@ class DetectExpiredSubscriptions extends Command
             $this->info("[detect:expired] {$planName} users notified: " . count($userIds));
         }
 
-        $this->info("[detect:expired] total pushed: {$users->count()}");
+        $this->info("[detect:expired] total pushed: " . (count($trialUsers) + array_sum(array_map('count', $vipUsersByPlan))));
+    }
+
+    /**
+     * 查询 $windowStart 之后已收到指定标题 notice 的 user_id 列表
+     * 用于二级 dedup — 防止 cron 每分钟反复 push 同一用户
+     */
+    private function alreadyNotifiedUserIds(string $title, int $windowStart): array
+    {
+        return UserMessage::where('type', UserMessage::TYPE_NOTICE)
+            ->where('title', $title)
+            ->where('created_at', '>=', $windowStart)
+            ->pluck('user_id')
+            ->toArray();
     }
 
     /**
