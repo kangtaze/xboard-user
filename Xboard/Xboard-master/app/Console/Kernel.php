@@ -75,6 +75,13 @@ class Kernel extends ConsoleKernel
         // edgetunnel KV user sync (global KV + per-worker KV)
         // 每 30 分钟同步一次，避免 CF KV 免费版写入配额（1000次/天）耗尽
         $schedule->command('sync:users-to-kv')->everyThirtyMinutes()->onOneServer()->withoutOverlapping();
+
+        // v1.2.7 订阅到期检测 — 每分钟扫刚到期用户，按试用/VIP 分流推 notice 触发 APP 自动断开
+        $schedule->command('detect:expired-subscriptions')
+            ->everyMinute()
+            ->onOneServer()
+            ->withoutOverlapping(2)
+            ->runInBackground();
         // backup Timing
         // if (env('ENABLE_AUTO_BACKUP_AND_UPDATE', false)) {
         //     $schedule->command('backup:database', ['true'])->daily()->onOneServer();
