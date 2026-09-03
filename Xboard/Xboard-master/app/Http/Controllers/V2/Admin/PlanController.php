@@ -53,6 +53,15 @@ class PlanController extends Controller
                         'device_limit' => $newDeviceLimit,
                     ]);
                 }
+                // v34: 当套餐 group_id 字段变化时，无条件同步所有该套餐下用户的 group_id
+                // 跟 device_limit 同步语义一致：权限组是用户访问 VIP 线路的核心依据
+                // （EdgetunnelService::filterByGroupId + Worker KV sync）
+                // admin 后台改套餐权限组必须立刻反映到所有现有用户，不能依赖 force_update 复选框
+                if (array_key_exists('group_id', $params) && $params['group_id'] !== null && (int) $plan->group_id !== (int) $params['group_id']) {
+                    User::where('plan_id', $plan->id)->update([
+                        'group_id' => (int) $params['group_id'],
+                    ]);
+                }
                 if ($request->input('force_update')) {
                     User::where('plan_id', $plan->id)->update([
                         'group_id' => $params['group_id'],
