@@ -229,11 +229,50 @@ git push my master
 
 ## 定时任务
 
+### ⚠️ Supervisor 必须包含 schedule program（v35b 重大生产事故）
+
+**背景**：2026-09-05 v35 部署后发现 **`/etc/supervisor/conf.d/supervisord.conf` 镜像层没有 `[program:schedule]` 段**。所有 Laravel 定时任务（send:renewal-marketing / send:remindMail / sync:users-to-kv / detect:expired-subscriptions 等）从容器启动（2026-08-25 v15 重建事故）以来**从未自动执行**。`crontab -l` 和 `supervisorctl status schedule` 是必查项。
+
+**修复方案**（已生效，md5 `ed99735b` → `08ce3bcd`）：
+
+```ini
+[program:schedule]
+process_name=%(program_name)s_%(process_num)02d
+command=php /www/artisan schedule:work
+autostart=true
+autorestart=true
+user=www
+redirect_stderr=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stdout_logfile_backups=0
+numprocs=1
+stopwaitsecs=10
+stopsignal=SIGINT
+stopasgroup=true
+killasgroup=true
+priority=700
+```
+
+**每次部署后必查**（避免回归）：
+```bash
+docker exec xboard supervisorctl status schedule
+# 必须显示 RUNNING，否则所有 Laravel schedule 任务永远不执行
+```
+
+**🚨 关键风险**：`/etc/supervisor/conf.d/supervisord.conf` 是 Docker 镜像层路径，**不在 xboard-repo git 仓库内**。如果容器重建（v15 事故重演），修复会丢失。v36 待办：把 `[program:schedule]` 段 bake 进 Dockerfile 或加 CLAUDE.md「重建检查清单」。
+
+**完整事故复盘**：MEMORY `vp92-v35-trial-marketing.md` 的 v35b 段。
+
+---
+
 | 任务 | 间隔 | 说明 |
 |------|------|------|
 | `sync:users-to-kv` | 每 30 分钟 | 活跃用户 UUID 同步到 KV（必须保留） |
 | ~~`sync:edgetunnel-nodes`~~ | ~~每 30 分钟~~ | **已关闭**，改为手动在 Edgetunnel 节点管理点击同步 |
 | KV-Sync-v5 (Windows) | 每 5 分钟 | 3 个 CF 账号 KV 用户同步（本地 Task Scheduler） |
+| `send:renewal-marketing` | dailyAt 10:00 | VIP 续费 + 试用体验升级营销（v35 含 plan_id=9） |
+| `send:remindMail` | hourly | 到期提醒邮件 |
 
 ## 网络环境（重要！）
 - **路由器透明代理**，没有本地代理软件（Clash/V2Ray 等）
