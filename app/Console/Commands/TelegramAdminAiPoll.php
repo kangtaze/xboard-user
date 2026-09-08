@@ -642,7 +642,9 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'today_orders',
-                    'description' => '查看今日订单统计。返回所有订单数量、待支付数量、已取消数量、已完成数量和已完成金额。completed_amount才是实际收入，回答时只报completed_amount。',
+                    // v37 修复：让 deepseek 看到"返回用户清单"才会主动列邮箱。
+                    // 之前只说"返回订单数量 + 金额" → deepseek 答"今天 N 笔 X 元"完事，不列用户。
+                    'description' => '查看今日（本地时间 00:00 至今）所有订单。返回 summary（订单数/待支付/已取消/已完成/已完成金额）+ orders 清单（每条含时间/邮箱/套餐/金额/状态）。completed_amount 才是实际收入。管理员问"今天谁买了 / 今日付费用户 / 今天哪些人买了套餐"时优先调此工具，把 orders 字段里的每条订单列给用户。',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
@@ -1216,17 +1218,33 @@ PROMPT;
     private function toolTodayOrders(): string
     {
         $todayStart = strtotime('today');
-        $totalCount = Order::where('created_at', '>=', $todayStart)->count();
-        $pending = Order::where('created_at', '>=', $todayStart)->where('status', 0)->count();
-        $cancelled = Order::where('created_at', '>=', $todayStart)->where('status', 2)->count();
-        $completed = Order::where('created_at', '>=', $todayStart)->where('status', 3)->count();
-        $completedAmount = Order::where('created_at', '>=', $todayStart)->where('status', 3)->sum('total_amount') / 100;
+        // v37 修复：join user + plan 表，拿到完整订单（含邮箱/套餐名），便于 deepseek 列出"今天哪些用户买了什么套餐"
+        $orders = Order::with('user', 'plan')
+            ->where('created_at', '>=', $todayStart)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $totalCount = $orders->count();
+        $pending = $orders->where('status', 0)->count();
+        $cancelled = $orders->where('status', 2)->count();
+        $completed = $orders->where('status', 3)->count();
+        $completedAmount = $orders->where('status', 3)->sum('total_amount') / 100;
+
+        // v37 新增：返回订单清单（每条 "时间 邮箱 - 套餐 金额 (状态）"），让 deepseek 能直接列给管理员
+        $orderLines = [];
+        foreach ($orders as $order) {
+            $orderLines[] = $this->formatOrderOneLine($order);
+        }
+
         return json_encode([
-            'total_count' => $totalCount,
-            'pending' => $pending,
-            'cancelled' => $cancelled,
-            'completed' => $completed,
-            'completed_amount' => "{$completedAmount}元",
+            'summary' => [
+                'total_count' => $totalCount,
+                'pending' => $pending,
+                'cancelled' => $cancelled,
+                'completed' => $completed,
+                'completed_amount' => "{$completedAmount}元",
+            ],
+            'orders' => $orderLines,  // v37 新增字段：今日订单用户清单（deepseek 会自动展开给管理员）
         ], JSON_UNESCAPED_UNICODE);
     }
 
