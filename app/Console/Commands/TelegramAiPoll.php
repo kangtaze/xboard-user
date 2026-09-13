@@ -584,13 +584,14 @@ class TelegramAiPoll extends Command
 根据公告内容自动判断分类：系统维护/版本更新选"系统通知"，优惠促销/限时活动选"活动公告"，紧急故障/安全提醒选"紧急通知"，其他选"系统通知"。
 回复简洁专业，用中文。
 
-【频道资料修改（v41.2 - 仅 vp92_High_Speed）】
-以下 4 个工具只能修改 vp92_High_Speed 频道（@vp92_High_Speed，chat_id=-1003824877754），禁止用于其他频道：
+【频道资料修改（v41.2/41.4 - 仅 vp92_High_Speed）】
+以下 6 个工具只能修改 vp92_High_Speed 频道（@vp92_High_Speed，chat_id=-1003824877754），禁止用于其他频道：
 - edit_channel_title: 修改频道标题
-- edit_channel_description: 修改频道描述/简介
+- edit_channel_description: 修改频道描述/简介（支持整体替换 + 删除子串模式）
 - edit_channel_photo: 修改频道头像（需公网可访问的图片 URL）
 - edit_channel_photo_by_file_id: 修改频道头像（用用户在 TG 发送的图片 file_id，无需公网 URL）
 - pin_channel_message: 置顶指定消息
+- delete_channel_message: 删除频道内指定消息
 
 调用规则：
 - 用户没说新内容（标题/描述/头像）→ 简短反问一次"请提供新的 XX"
@@ -782,6 +783,20 @@ PROMPT;
                     ],
                 ],
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'delete_channel_message',
+                    'description' => '删除 VP92_High_Speed 频道内指定消息（v41.4 新增）。当管理员说"删除频道里的某条消息"、"把帖子删了"、"删除那条公告"时使用。仅限 vp92_High_Speed 频道（chat_id=-1003824877754）。如果用户没给 message_id，先反问"请提供要删除的消息 ID（频道内的数字 ID）"；给了 ID 立即调用。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'message_id' => ['type' => 'integer', 'description' => '要删除的频道消息 ID（频道内的数字 ID，不是 chat_id）'],
+                        ],
+                        'required' => ['message_id'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -797,6 +812,7 @@ PROMPT;
             'edit_channel_photo' => $this->toolEditChannelPhoto($arguments),
             'edit_channel_photo_by_file_id' => $this->toolEditChannelPhotoByFileId($arguments),
             'pin_channel_message' => $this->toolPinChannelMessage($arguments),
+            'delete_channel_message' => $this->toolDeleteChannelMessage($arguments),
             default => "未知工具: {$name}",
         };
     }
@@ -1178,6 +1194,45 @@ PROMPT;
         } catch (\Throwable $e) {
             Log::error('客服Bot pinChatMessage 异常', ['error' => $e->getMessage()]);
             return '❌ 置顶失败：' . $e->getMessage();
+        }
+    }
+
+    /**
+     * 工具：删除频道消息（v41.4 新增）
+     */
+    private function toolDeleteChannelMessage(array $args): string
+    {
+        $messageId = $args['message_id'] ?? null;
+        if (empty($messageId) || !is_numeric($messageId)) {
+            return '错误：message_id 必须是整数。';
+        }
+        $messageId = (int) $messageId;
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        Log::warning('客服Bot 删除频道消息', [
+            'channel_id' => $chatId,
+            'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+            'message_id' => $messageId,
+        ]);
+
+        try {
+            $response = Http::timeout(30)->post($this->apiUrl . 'deleteMessage', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+            ]);
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot deleteMessage 失败', ['response' => $data]);
+                return '❌ 删除失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 频道消息已删除（message_id: {$messageId}）";
+        } catch (\Throwable $e) {
+            Log::error('客服Bot deleteMessage 异常', ['error' => $e->getMessage()]);
+            return '❌ 删除失败：' . $e->getMessage();
         }
     }
 
