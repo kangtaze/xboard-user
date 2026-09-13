@@ -156,7 +156,7 @@ Windows 电脑版界面布局类似，左侧是栏目菜单，功能位置基本
 - 无法回答的问题建议通过 Telegram 联系人工客服
 - 当用户要求联系人工客服时，回复以下内容（排版整洁）：
   "您可以通过以下方式联系我们：
-  1. Telegram 客服：[点击联系](https://t.me/vp92_01)
+  1. Telegram 客服：[点击联系](https://vp92vip.com/dashboard/tickets)
   2. Telegram 频道动态：[点击进入](https://t.me/vp92_High_Speed)
   客服会第一时间为您解答。"
 
@@ -176,7 +176,7 @@ Windows 电脑版界面布局类似，左侧是栏目菜单，功能位置基本
 
 **连不上问题**（v15.4 标准化）：
 依次排查：套餐过期？选节点？开启代理模式？网络是否正常？
-最终引导：Telegram [https://t.me/vp92_01](https://t.me/vp92_01)
+最终引导：Telegram [https://vp92vip.com/dashboard/tickets](https://vp92vip.com/dashboard/tickets)
 
 **下载问题**（v15.4 标准化）：
 - Windows PC：%DOWNLOAD_WIN_URL%
@@ -215,7 +215,7 @@ Windows 电脑版界面布局类似，左侧是栏目菜单，功能位置基本
 "管理员后台点击用户列表的 email 列打开详情，订阅信息卡片下方会自动出现 📍 VP92 增强信息面板，显示登录 IP、客户端、注册地、设备列表、订阅记录，辅助管理员识别异常登录和批量注册。"
 
 **联系方式（必记）**：
-- 客服：https://t.me/vp92_01
+- 客服：https://vp92vip.com/dashboard/tickets
 - 频道：https://t.me/vp92_High_Speed
 - 官网：https://vp92vip.com
 
@@ -263,8 +263,8 @@ PROMPT;
         if (empty($this->apiKey)) {
             Log::error('DeepSeek API key not configured');
             return [
-                'reply' => 'AI 服务暂时不可用，请联系人工客服：https://t.me/vp92_01',
-                'suggestions' => ['联系人工客服 https://t.me/vp92_01 →']
+                'reply' => 'AI 服务暂时不可用，请联系人工客服：https://vp92vip.com/dashboard/tickets',
+                'suggestions' => ['联系人工客服 https://vp92vip.com/dashboard/tickets →']
             ];
         }
 
@@ -272,8 +272,8 @@ PROMPT;
         if (!$this->checkRateLimit($userId)) {
             Log::warning('Rate limit exceeded for user', ['user_id' => $userId]);
             return [
-                'reply' => '您今天的对话次数已达上限，请联系人工客服：https://t.me/vp92_01',
-                'suggestions' => ['联系人工客服 https://t.me/vp92_01 →']
+                'reply' => '您今天的对话次数已达上限，请联系人工客服：https://vp92vip.com/dashboard/tickets',
+                'suggestions' => ['联系人工客服 https://vp92vip.com/dashboard/tickets →']
             ];
         }
 
@@ -299,8 +299,8 @@ PROMPT;
                     'error' => $error
                 ]);
                 return [
-                    'reply' => 'AI 服务暂时不可用，请联系人工客服：https://t.me/vp92_01',
-                    'suggestions' => ['联系人工客服 https://t.me/vp92_01 →']
+                    'reply' => 'AI 服务暂时不可用，请联系人工客服：https://vp92vip.com/dashboard/tickets',
+                    'suggestions' => ['联系人工客服 https://vp92vip.com/dashboard/tickets →']
                 ];
             }
 
@@ -323,8 +323,8 @@ PROMPT;
                 'message' => $e->getMessage()
             ]);
             return [
-                'reply' => '网络错误，请联系人工客服：https://t.me/vp92_01',
-                'suggestions' => ['联系人工客服 https://t.me/vp92_01 →']
+                'reply' => '网络错误，请联系人工客服：https://vp92vip.com/dashboard/tickets',
+                'suggestions' => ['联系人工客服 https://vp92vip.com/dashboard/tickets →']
             ];
         } catch (\Exception $e) {
             Log::error('DeepSeek chat error', [
@@ -332,8 +332,8 @@ PROMPT;
                 'trace' => $e->getTraceAsString()
             ]);
             return [
-                'reply' => 'AI 服务暂时不可用，请联系人工客服：https://t.me/vp92_01',
-                'suggestions' => ['联系人工客服 https://t.me/vp92_01 →']
+                'reply' => 'AI 服务暂时不可用，请联系人工客服：https://vp92vip.com/dashboard/tickets',
+                'suggestions' => ['联系人工客服 https://vp92vip.com/dashboard/tickets →']
             ];
         }
     }
