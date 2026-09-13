@@ -1364,7 +1364,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 </div>
 <div class="text-center mt-8">
 <p class="text-sm text-on-surface-variant mb-3" data-i18n="faq.contact_text">未找到答案？</p>
-<a href="https://t.me/vp92_01" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5" style="background: rgba(109,159,255,0.12); color: #6d9fff; border: 1px solid rgba(109,159,255,0.2);" onmouseover="this.style.background='rgba(109,159,255,0.2)';this.style.borderColor='rgba(109,159,255,0.4)'" onmouseout="this.style.background='rgba(109,159,255,0.12)';this.style.borderColor='rgba(109,159,255,0.2)'">
+<a href="https://t.me/vp92jisu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5" style="background: rgba(109,159,255,0.12); color: #6d9fff; border: 1px solid rgba(109,159,255,0.2);" onmouseover="this.style.background='rgba(109,159,255,0.2)';this.style.borderColor='rgba(109,159,255,0.4)'" onmouseout="this.style.background='rgba(109,159,255,0.12)';this.style.borderColor='rgba(109,159,255,0.2)'">
 <span class="material-symbols-outlined" style="font-size:20px;" data-icon="support_agent">support_agent</span>
 <span data-i18n="faq.contact_btn">联系客服</span>
 </a>
