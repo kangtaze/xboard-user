@@ -138,6 +138,19 @@ class TelegramAiPoll extends Command
         $isPrivate = ($chat['type'] ?? '') === 'private';
         $text = $text ?? '';
 
+        // v41.3: photo 消息提取最大尺寸 file_id 进 AI 上下文（支持用户直接发图改头像）
+        if (empty($text) && isset($message['photo']) && is_array($message['photo']) && !empty($message['photo'])) {
+            $sizes = $message['photo'];
+            $largest = end($sizes);
+            $fileId = $largest['file_id'] ?? '';
+            $caption = $message['caption'] ?? '';
+            if (!empty($fileId)) {
+                $text = "[用户发送了一张图片] TG file_id: \"{$fileId}\"（最大尺寸）"
+                    . (!empty($caption) ? "\n用户配文：{$caption}" : '')
+                    . "\n请根据用户意图选择工具：用户说「改头像/换 LOGO/设成频道头像」→ 调用 edit_channel_photo_by_file_id（参数 file_id）。其他情况简短回应。";
+            }
+        }
+
         // 群组消息 @提及 Bot 才回复
         if (!$isPrivate) {
             $entities = $message['entities'] ?? [];
@@ -574,11 +587,15 @@ class TelegramAiPoll extends Command
 【频道资料修改（v41.2 - 仅 vp92_High_Speed）】
 以下 4 个工具只能修改 vp92_High_Speed 频道（@vp92_High_Speed，chat_id=-1003824877754），禁止用于其他频道：
 - edit_channel_title: 修改频道标题
-- edit_channel_description: 修改频道描述
+- edit_channel_description: 修改频道描述/简介
 - edit_channel_photo: 修改频道头像（需公网可访问的图片 URL）
+- edit_channel_photo_by_file_id: 修改频道头像（用用户在 TG 发送的图片 file_id，无需公网 URL）
 - pin_channel_message: 置顶指定消息
 
-只有管理员明确要求"改频道标题/描述/头像/置顶"时才调用。每个操作前要确认要修改的具体内容（特别是描述和头像，避免误改）。
+调用规则：
+- 用户没说新内容（标题/描述/头像）→ 简短反问一次"请提供新的 XX"
+- 用户给了新内容（哪怕是简写"改成 X"）→ 立即调用工具，不要反问
+- 用户发了图片 + 提到"改头像/换 LOGO"→ 调用 edit_channel_photo_by_file_id（不是 edit_channel_photo）
 
 【v15.16 增强信息面板 - 2026-08-27 admin SPA 注入】
 当管理员问起 "📍 VP92 增强信息"、"v15.16 面板"、"用户详情面板" 时，按以下事实回答：
@@ -712,13 +729,13 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'edit_channel_description',
-                    'description' => '修改 VP92_High_Speed 频道的简介/描述。当管理员说"改频道简介"、"更新频道描述"、"修改频道说明"时使用。仅限 vp92_High_Speed 频道。',
+                    'description' => '修改 VP92_High_Speed 频道的简介/描述。支持两种模式：(1) description 模式：用户提供完整新简介 → 整体替换；(2) remove_substring 模式：用户提供要删除的子串 → 工具自动 getChat 当前简介 → 去掉该子串 → 整体替换。当管理员说"改频道简介"、"删除简介里的 X"、"把简介的某行去掉"、"简介加上 X 行"时使用。仅限 vp92_High_Speed 频道。',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
-                            'description' => ['type' => 'string', 'description' => '新频道描述，0-255 字符'],
+                            'description' => ['type' => 'string', 'description' => '完整新简介内容（0-255 字符）。与 remove_substring 二选一。'],
+                            'remove_substring' => ['type' => 'string', 'description' => '要从当前简介中删除的子串（精确匹配）。提供此参数时工具会自动调用 getChat 拿当前简介，删除该子串，然后整体替换。'],
                         ],
-                        'required' => ['description'],
                     ],
                 ],
             ],
@@ -726,13 +743,27 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'edit_channel_photo',
-                    'description' => '修改 VP92_High_Speed 频道的头像。当管理员说"改频道头像"、"更新频道 LOGO"、"换频道封面"时使用。仅限 vp92_High_Speed 频道。photo_url 必须是公网可访问的图片 URL（JPG/PNG）。',
+                    'description' => '修改 VP92_High_Speed 频道的头像（用公网 URL）。当管理员说"改频道头像"、"更新频道 LOGO"、"换频道封面"且提供 URL 时使用。仅限 vp92_High_Speed 频道。photo_url 必须是公网可访问的图片 URL（JPG/PNG）。如果用户是在 TG 私聊中直接发送的图片（系统会自动注入 file_id 到上下文），必须用 edit_channel_photo_by_file_id 工具而不是这个。',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'photo_url' => ['type' => 'string', 'description' => '新头像的公网 URL（JPG/PNG）'],
                         ],
                         'required' => ['photo_url'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'edit_channel_photo_by_file_id',
+                    'description' => '修改 VP92_High_Speed 频道的头像（用用户在 TG 发送的图片 file_id）。当管理员在 TG 私聊中直接发送图片并说"改头像/换 LOGO/把这张图设成频道头像"时使用。仅限 vp92_High_Speed 频道。流程：bot 自动从消息上下文取最大尺寸的 file_id → 调 getFile 拿 file_path → 下载 → setChatPhoto multipart。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'file_id' => ['type' => 'string', 'description' => 'TG 图片消息的 file_id（最大尺寸 photo.file_id，从消息上下文中取）'],
+                        ],
+                        'required' => ['file_id'],
                     ],
                 ],
             ],
@@ -764,6 +795,7 @@ PROMPT;
             'edit_channel_title' => $this->toolEditChannelTitle($arguments),
             'edit_channel_description' => $this->toolEditChannelDescription($arguments),
             'edit_channel_photo' => $this->toolEditChannelPhoto($arguments),
+            'edit_channel_photo_by_file_id' => $this->toolEditChannelPhotoByFileId($arguments),
             'pin_channel_message' => $this->toolPinChannelMessage($arguments),
             default => "未知工具: {$name}",
         };
@@ -909,9 +941,12 @@ PROMPT;
      */
     private function toolEditChannelDescription(array $args): string
     {
-        $description = $args['description'] ?? '';
-        if (mb_strlen($description) > 255) {
-            return '错误：描述超过 255 字符。';
+        $newDescription = $args['description'] ?? null;
+        $removeSubstring = $args['remove_substring'] ?? null;
+
+        // 校验至少传一个
+        if (empty($newDescription) && empty($removeSubstring)) {
+            return '错误：必须提供 description（完整新简介）或 remove_substring（要删除的子串）之一。';
         }
 
         $chatId = $this->getManagedChannelId();
@@ -919,23 +954,56 @@ PROMPT;
             return '错误：频道未配置或非 vp92_High_Speed。';
         }
 
+        // remove_substring 模式：先 getChat 拿当前简介 → 删子串 → 整体替换
+        if (!empty($removeSubstring) && empty($newDescription)) {
+            try {
+                $getResp = Http::timeout(30)->get($this->apiUrl . 'getChat', [
+                    'chat_id' => $chatId,
+                ]);
+                $getData = $getResp->json();
+                if (!($getData['ok'] ?? false)) {
+                    Log::error('客服Bot getChat 失败', ['response' => $getData]);
+                    return '❌ 获取当前简介失败：' . ($getData['description'] ?? '未知错误');
+                }
+                $currentDescription = $getData['result']['description'] ?? '';
+            } catch (\Throwable $e) {
+                Log::error('客服Bot getChat 异常', ['error' => $e->getMessage()]);
+                return '❌ 获取当前简介失败：' . $e->getMessage();
+            }
+
+            if (strpos($currentDescription, $removeSubstring) === false) {
+                return '⚠️ 当前简介中找不到子串：' . $removeSubstring . "\n\n当前简介：\n{$currentDescription}";
+            }
+
+            // 删除子串及其所在行（含前后换行）
+            $escaped = preg_quote($removeSubstring, '/');
+            $newDescription = preg_replace('/[\r\n]*' . $escaped . '[\r\n]?/', "\n", $currentDescription);
+            // 清理连续空行 + 首尾空白
+            $newDescription = trim(preg_replace("/\n{2,}/", "\n", $newDescription));
+        }
+
+        if (mb_strlen($newDescription) > 255) {
+            return '错误：描述超过 255 字符。';
+        }
+
         Log::warning('客服Bot 修改频道描述', [
             'channel_id' => $chatId,
             'channel_username' => self::MANAGED_CHANNEL_USERNAME,
-            'new_description' => $description,
+            'mode' => !empty($removeSubstring) && empty($args['description'] ?? null) ? 'remove_substring' : 'replace',
+            'new_description' => $newDescription,
         ]);
 
         try {
             $response = Http::timeout(30)->post($this->apiUrl . 'setChatDescription', [
                 'chat_id' => $chatId,
-                'description' => $description,
+                'description' => $newDescription,
             ]);
             $data = $response->json();
             if (!($data['ok'] ?? false)) {
                 Log::error('客服Bot setChatDescription 失败', ['response' => $data]);
                 return '❌ 修改失败：' . ($data['description'] ?? '未知错误');
             }
-            return "✅ 频道描述已更新。\n\n新描述：\n{$description}";
+            return "✅ 频道描述已更新。\n\n新描述：\n{$newDescription}";
         } catch (\Throwable $e) {
             Log::error('客服Bot setChatDescription 异常', ['error' => $e->getMessage()]);
             return '❌ 修改失败：' . $e->getMessage();
@@ -996,6 +1064,78 @@ PROMPT;
             return "✅ 频道头像已更新。\n来源：{$photoUrl}";
         } catch (\Throwable $e) {
             Log::error('客服Bot setChatPhoto 异常', ['error' => $e->getMessage()]);
+            return '❌ 修改失败：' . $e->getMessage();
+        }
+    }
+
+    /**
+     * 工具：通过 TG file_id 修改频道头像（用户私聊 bot 直接发图）
+     * 流程：getFile(file_id) → 拿 file_path → 下载到内存 → setChatPhoto multipart
+     */
+    private function toolEditChannelPhotoByFileId(array $args): string
+    {
+        $fileId = trim($args['file_id'] ?? '');
+        if (empty($fileId)) {
+            return '错误：file_id 不能为空。';
+        }
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        try {
+            // 1) getFile 拿 file_path
+            $fileResp = Http::timeout(30)->post($this->apiUrl . 'getFile', [
+                'file_id' => $fileId,
+            ]);
+            $fileData = $fileResp->json();
+            if (!($fileData['ok'] ?? false)) {
+                Log::error('客服Bot getFile 失败', ['file_id' => $fileId, 'response' => $fileData]);
+                return '❌ 获取文件信息失败：' . ($fileData['description'] ?? '未知错误');
+            }
+            $filePath = $fileData['result']['file_path'] ?? '';
+            if (empty($filePath)) {
+                return '❌ getFile 返回的 file_path 为空。';
+            }
+
+            // 2) 下载文件内容
+            $downloadUrl = "https://api.telegram.org/file/bot{$this->botToken}/{$filePath}";
+            $imgResp = Http::timeout(60)->get($downloadUrl);
+            if (!$imgResp->successful()) {
+                return "❌ 下载图片失败：HTTP {$imgResp->status()}";
+            }
+            $imageContents = $imgResp->body();
+
+            // 从 file_path 推断扩展名（Telegram 路径如 photos/file_12.jpg）
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $ext = 'jpg';
+            }
+
+            Log::warning('客服Bot 通过 file_id 修改频道头像', [
+                'channel_id' => $chatId,
+                'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+                'file_id' => $fileId,
+                'file_path' => $filePath,
+                'size_bytes' => strlen($imageContents),
+                'ext' => $ext,
+            ]);
+
+            // 3) multipart 上传 setChatPhoto
+            $response = Http::timeout(60)->attach(
+                'photo', $imageContents, "channel_photo.{$ext}"
+            )->post($this->apiUrl . 'setChatPhoto', [
+                'chat_id' => $chatId,
+            ]);
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot setChatPhoto(file_id) 失败', ['response' => $data]);
+                return '❌ 修改失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 频道头像已更新。\n来源：用户私聊发送的图片（file_id: {$fileId}）";
+        } catch (\Throwable $e) {
+            Log::error('客服Bot edit_channel_photo_by_file_id 异常', ['error' => $e->getMessage()]);
             return '❌ 修改失败：' . $e->getMessage();
         }
     }
