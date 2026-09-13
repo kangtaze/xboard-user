@@ -257,7 +257,35 @@
     function addBotMessage(text, suggestions) {
         const div = document.createElement('div');
         div.className = 'vp92-msg vp92-msg-bot';
-        div.textContent = text;
+
+        // v40 修复：把 [文字](URL) markdown 链接渲染成可点击 <a>
+        // 修复前 widget 用 div.textContent = text → markdown 链接显示为纯文本，用户点不动
+        // 安全：只解析 [text](url) 格式，不解析其他 HTML（避免 XSS）
+        if (text && /\[[^\]]+\]\([^)]+\)/.test(text)) {
+            const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+            parts.forEach(part => {
+                const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+                if (linkMatch) {
+                    const a = document.createElement('a');
+                    a.href = linkMatch[2];
+                    a.textContent = linkMatch[1];
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.style.color = '#0066ff';
+                    a.style.textDecoration = 'underline';
+                    a.style.wordBreak = 'break-all';
+                    div.appendChild(a);
+                } else if (part) {
+                    div.appendChild(document.createTextNode(part));
+                }
+            });
+        } else {
+            div.textContent = text;
+        }
+
+        // 保留换行（widget 容器宽度 360px，长 URL 自动换行）
+        div.style.whiteSpace = 'pre-wrap';
+
         messagesEl.appendChild(div);
         scrollMessagesToBottom(true);  /* 修复:用 scrollIntoView 滚到底 */
 
