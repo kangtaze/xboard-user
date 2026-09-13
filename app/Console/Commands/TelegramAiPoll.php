@@ -37,6 +37,8 @@ class TelegramAiPoll extends Command
     private const HISTORY_TTL = 3600;
     // 邮箱验证等待 TTL（秒）
     private const VERIFY_TTL = 600;
+    // 频道管理白名单：仅允许修改此频道
+    private const MANAGED_CHANNEL_USERNAME = 'vp92_High_Speed';
 
     public function handle(): int
     {
@@ -569,6 +571,15 @@ class TelegramAiPoll extends Command
 根据公告内容自动判断分类：系统维护/版本更新选"系统通知"，优惠促销/限时活动选"活动公告"，紧急故障/安全提醒选"紧急通知"，其他选"系统通知"。
 回复简洁专业，用中文。
 
+【频道资料修改（v41.2 - 仅 vp92_High_Speed）】
+以下 4 个工具只能修改 vp92_High_Speed 频道（@vp92_High_Speed，chat_id=-1003824877754），禁止用于其他频道：
+- edit_channel_title: 修改频道标题
+- edit_channel_description: 修改频道描述
+- edit_channel_photo: 修改频道头像（需公网可访问的图片 URL）
+- pin_channel_message: 置顶指定消息
+
+只有管理员明确要求"改频道标题/描述/头像/置顶"时才调用。每个操作前要确认要修改的具体内容（特别是描述和头像，避免误改）。
+
 【v15.16 增强信息面板 - 2026-08-27 admin SPA 注入】
 当管理员问起 "📍 VP92 增强信息"、"v15.16 面板"、"用户详情面板" 时，按以下事实回答：
 
@@ -683,6 +694,63 @@ PROMPT;
                     ],
                 ],
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'edit_channel_title',
+                    'description' => '修改 VP92_High_Speed 频道的标题。当管理员说"把频道标题改成 X"、"改频道名字"、"修改频道名"时使用。仅限 vp92_High_Speed 频道。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'title' => ['type' => 'string', 'description' => '新频道标题，1-255 字符'],
+                        ],
+                        'required' => ['title'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'edit_channel_description',
+                    'description' => '修改 VP92_High_Speed 频道的简介/描述。当管理员说"改频道简介"、"更新频道描述"、"修改频道说明"时使用。仅限 vp92_High_Speed 频道。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'description' => ['type' => 'string', 'description' => '新频道描述，0-255 字符'],
+                        ],
+                        'required' => ['description'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'edit_channel_photo',
+                    'description' => '修改 VP92_High_Speed 频道的头像。当管理员说"改频道头像"、"更新频道 LOGO"、"换频道封面"时使用。仅限 vp92_High_Speed 频道。photo_url 必须是公网可访问的图片 URL（JPG/PNG）。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'photo_url' => ['type' => 'string', 'description' => '新头像的公网 URL（JPG/PNG）'],
+                        ],
+                        'required' => ['photo_url'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'pin_channel_message',
+                    'description' => '在 VP92_High_Speed 频道中置顶指定消息。当管理员说"置顶消息"、"把消息置顶"时使用。仅限 vp92_High_Speed 频道。',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'message_id' => ['type' => 'integer', 'description' => '要置顶的消息 ID（频道内的消息 ID）'],
+                            'disable_notification' => ['type' => 'boolean', 'description' => '是否静默置顶（不发通知），默认 false'],
+                        ],
+                        'required' => ['message_id'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -693,6 +761,10 @@ PROMPT;
     {
         return match ($name) {
             'send_channel_announce' => $this->toolSendAnnounce($arguments),
+            'edit_channel_title' => $this->toolEditChannelTitle($arguments),
+            'edit_channel_description' => $this->toolEditChannelDescription($arguments),
+            'edit_channel_photo' => $this->toolEditChannelPhoto($arguments),
+            'pin_channel_message' => $this->toolPinChannelMessage($arguments),
             default => "未知工具: {$name}",
         };
     }
@@ -763,6 +835,210 @@ PROMPT;
         $line = $config['line'];
 
         return "{$banner}\n{$emoji} <b>VP92极速加速器 · {$category}</b>\n{$line}\n\n{$content}\n\n{$line}\n📅 {$date} ｜  🌐 https://vp92vip.com";
+    }
+
+    // ========================================================
+    // 频道资料管理工具（v41.2 - 仅 vp92_High_Speed）
+    // ========================================================
+    // 注意：Telegram Bot API 7.x+ 已重命名 editChatTitle/Description → setChatTitle/Description
+    //      editChat* 现在返回 404 Not Found
+    // ========================================================
+
+    /**
+     * 获取被管理频道的 chat_id（白名单常量 + 运行时配置校验）
+     */
+    private function getManagedChannelId(): ?int
+    {
+        if ($this->discussChatId === null) {
+            return null;
+        }
+        // 双重保险：确认 discussChatId 指向 vp92_High_Speed（chat_id=-1003824877754）
+        // 若 telegram_discuss_id 被改指向别的频道，禁止修改
+        if ($this->discussChatId !== -1003824877754) {
+            Log::error('客服Bot 拒绝修改频道：discussChatId 不是 vp92_High_Speed', [
+                'discuss_chat_id' => $this->discussChatId,
+            ]);
+            return null;
+        }
+        return $this->discussChatId;
+    }
+
+    /**
+     * 工具：修改频道标题
+     */
+    private function toolEditChannelTitle(array $args): string
+    {
+        $title = trim($args['title'] ?? '');
+        if (empty($title)) {
+            return '错误：标题不能为空。';
+        }
+        if (mb_strlen($title) > 255) {
+            return '错误：标题超过 255 字符。';
+        }
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        Log::warning('客服Bot 修改频道标题', [
+            'channel_id' => $chatId,
+            'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+            'new_title' => $title,
+        ]);
+
+        try {
+            $response = Http::timeout(30)->post($this->apiUrl . 'setChatTitle', [
+                'chat_id' => $chatId,
+                'title' => $title,
+            ]);
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot setChatTitle 失败', ['response' => $data]);
+                return '❌ 修改失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 频道标题已修改为：{$title}";
+        } catch (\Throwable $e) {
+            Log::error('客服Bot setChatTitle 异常', ['error' => $e->getMessage()]);
+            return '❌ 修改失败：' . $e->getMessage();
+        }
+    }
+
+    /**
+     * 工具：修改频道描述
+     */
+    private function toolEditChannelDescription(array $args): string
+    {
+        $description = $args['description'] ?? '';
+        if (mb_strlen($description) > 255) {
+            return '错误：描述超过 255 字符。';
+        }
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        Log::warning('客服Bot 修改频道描述', [
+            'channel_id' => $chatId,
+            'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+            'new_description' => $description,
+        ]);
+
+        try {
+            $response = Http::timeout(30)->post($this->apiUrl . 'setChatDescription', [
+                'chat_id' => $chatId,
+                'description' => $description,
+            ]);
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot setChatDescription 失败', ['response' => $data]);
+                return '❌ 修改失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 频道描述已更新。\n\n新描述：\n{$description}";
+        } catch (\Throwable $e) {
+            Log::error('客服Bot setChatDescription 异常', ['error' => $e->getMessage()]);
+            return '❌ 修改失败：' . $e->getMessage();
+        }
+    }
+
+    /**
+     * 工具：修改频道头像（需下载公网图片后 multipart 上传）
+     */
+    private function toolEditChannelPhoto(array $args): string
+    {
+        $photoUrl = trim($args['photo_url'] ?? '');
+        if (empty($photoUrl) || !filter_var($photoUrl, FILTER_VALIDATE_URL)) {
+            return '错误：请提供有效的公网图片 URL（http/https）。';
+        }
+        if (!preg_match('/^https?:\/\//i', $photoUrl)) {
+            return '错误：图片 URL 必须使用 http 或 https 协议。';
+        }
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        try {
+            // 下载图片
+            $imageResponse = Http::timeout(30)->get($photoUrl);
+            if (!$imageResponse->successful()) {
+                return "❌ 下载图片失败：HTTP {$imageResponse->status()}";
+            }
+            $imageContents = $imageResponse->body();
+            $contentType = $imageResponse->header('Content-Type');
+            $ext = match (true) {
+                str_contains($contentType, 'png') => 'png',
+                str_contains($contentType, 'gif') => 'gif',
+                default => 'jpg',
+            };
+
+            Log::warning('客服Bot 修改频道头像', [
+                'channel_id' => $chatId,
+                'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+                'photo_url' => $photoUrl,
+                'size_bytes' => strlen($imageContents),
+            ]);
+
+            // multipart 上传 setChatPhoto
+            $response = Http::timeout(60)->attach(
+                'photo', $imageContents, "channel_photo.{$ext}"
+            )->post($this->apiUrl . 'setChatPhoto', [
+                'chat_id' => $chatId,
+            ]);
+
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot setChatPhoto 失败', ['response' => $data]);
+                return '❌ 修改失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 频道头像已更新。\n来源：{$photoUrl}";
+        } catch (\Throwable $e) {
+            Log::error('客服Bot setChatPhoto 异常', ['error' => $e->getMessage()]);
+            return '❌ 修改失败：' . $e->getMessage();
+        }
+    }
+
+    /**
+     * 工具：置顶频道消息
+     */
+    private function toolPinChannelMessage(array $args): string
+    {
+        $messageId = (int)($args['message_id'] ?? 0);
+        if ($messageId <= 0) {
+            return '错误：消息 ID 必须是正整数。';
+        }
+        $disableNotification = (bool)($args['disable_notification'] ?? false);
+
+        $chatId = $this->getManagedChannelId();
+        if ($chatId === null) {
+            return '错误：频道未配置或非 vp92_High_Speed。';
+        }
+
+        Log::warning('客服Bot 置顶频道消息', [
+            'channel_id' => $chatId,
+            'channel_username' => self::MANAGED_CHANNEL_USERNAME,
+            'message_id' => $messageId,
+            'disable_notification' => $disableNotification,
+        ]);
+
+        try {
+            $response = Http::timeout(30)->post($this->apiUrl . 'pinChatMessage', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'disable_notification' => $disableNotification,
+            ]);
+            $data = $response->json();
+            if (!($data['ok'] ?? false)) {
+                Log::error('客服Bot pinChatMessage 失败', ['response' => $data]);
+                return '❌ 置顶失败：' . ($data['description'] ?? '未知错误');
+            }
+            return "✅ 消息 #{$messageId} 已置顶" . ($disableNotification ? '（静默）' : '）') . '。';
+        } catch (\Throwable $e) {
+            Log::error('客服Bot pinChatMessage 异常', ['error' => $e->getMessage()]);
+            return '❌ 置顶失败：' . $e->getMessage();
+        }
     }
 
     // ========================================================
