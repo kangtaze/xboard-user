@@ -1465,7 +1465,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
     50% { box-shadow: 0 0 24px rgba(38,165,228,0.6), 0 0 48px rgba(38,165,228,0.2); }
 }
 </style>
-<script src="/js/vp92-chat-widget.js?v=5"></script>
+<script src="/js/vp92-chat-widget.js?v=6"></script>
 <!-- Footer Shell -->
 <footer class="bg-surface border-t border-outline-variant">
 <div class="max-w-[1600px] mx-auto px-margin-mobile md:px-20 py-stack-xl">

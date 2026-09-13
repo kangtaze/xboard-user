@@ -32,7 +32,7 @@
     }
 
     const MAX_HISTORY = 10;
-    const TELEGRAM_URL = 'https://t.me/vp92VPN';
+    const TELEGRAM_URL = 'https://t.me/vp92jisu';
 
     // 状态
     let isOpen = false;
