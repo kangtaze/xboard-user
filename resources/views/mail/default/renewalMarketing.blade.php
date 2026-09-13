@@ -207,7 +207,7 @@
                                 <span style="color:#999;font-size:12px">遇到问题？</span>
                                 <a href="https://t.me/VP92jisu_bot" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:600">AI 智能客服</a>
                                 <span style="color:#ddd;margin:0 6px">|</span>
-                                <a href="https://t.me/vp92_01" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:600">人工客服 @vp92_01</a>
+                                <a href="https://t.me/vp92jisu" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:600">人工客服 @vp92jisu</a>
                             </td></tr>
                         </table>
                     </td>
@@ -226,7 +226,7 @@
                         <p style="margin:0 0 4px">
                             <a href="https://t.me/VP92jisu_bot" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:500">AI 智能客服</a>
                             <span style="color:#ddd;margin:0 8px">|</span>
-                            <a href="https://t.me/vp92_01" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:500">人工客服</a>
+                            <a href="https://t.me/vp92jisu" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:500">人工客服</a>
                             <span style="color:#ddd;margin:0 8px">|</span>
                             <a href="https://vp92vip.com" style="color:#0f3460;font-size:12px;text-decoration:none;font-weight:500">官方网站</a>
                         </p>
