@@ -20,6 +20,12 @@ use Illuminate\Support\Facades\Log;
  * 2. 首次联系验证：新用户必须通过邮箱验证会员身份
  * 3. 频道会员审核：用户申请加入频道时自动审核
  * 4. 管理员公告：/announce 命令转发消息到 discuss 频道
+ *
+ * **用途**: VP92 用户通过 Telegram @vp92jisu 私聊咨询, AI 自动回复 (DEEPSEEK_API_KEY)
+ * **调用方**: supervisord conf.d supervisord.conf [program:telegram-ai] → php artisan telegram:ai-poll
+ * **被调用方**: DeepSeek API + Telegram Bot API
+ * **配置**: DEEPSEEK_API_KEY env (此 bot 走 env, 不走 config, v44 同步)
+ * **关联记录**: v44 deepseek 模型名修复 (deepseek-v4-flash → deepseek-v4-pro, 2026-09-15)
  */
 class TelegramAiPoll extends Command
 {
@@ -573,6 +579,8 @@ class TelegramAiPoll extends Command
 
         $apiKey = env('DEEPSEEK_API_KEY', '');
         $apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+        // v44: 从 config 读 model, 默认 deepseek-v4-pro (实测 deepseek-flash 60s timeout)
+        $model = config('deepseek.model', 'deepseek-v4-pro');
 
         if (empty($apiKey)) {
             return '客服AI API Key 未配置。';
@@ -620,7 +628,7 @@ PROMPT;
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($apiUrl, [
-                'model' => 'deepseek-v4-flash',
+                'model' => $model,
                 'messages' => $messages,
                 'tools' => $this->getAdminTools(),
                 'temperature' => 0.3,
@@ -668,7 +676,7 @@ PROMPT;
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($apiUrl, [
-                'model' => 'deepseek-v4-flash',
+                'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.3,
                 'max_tokens' => 2000,

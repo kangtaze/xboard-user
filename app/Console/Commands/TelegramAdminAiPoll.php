@@ -24,6 +24,12 @@ use Illuminate\Support\Facades\Log;
  * 与用户 Bot (TelegramAiPoll) 完全独立。
  *
  * Bot Token 通过环境变量 TELEGRAM_ADMIN_BOT_TOKEN 配置
+ *
+ * **用途**: vp92jisu / suppor 等管理员通过 Telegram 跟 DeepSeek 对话, 调用 admin_tools/staff_tools
+ * **调用方**: supervisord conf.d supervisord.conf [program:admin-ai] → php artisan telegram:admin-ai-poll
+ * **被调用方**: DeepSeek API + Telegram Bot API
+ * **配置**: config/deepseek.php (admin_api_key 优先, api_key fallback); model 从 deepseek.model
+ * **关联记录**: v44 deepseek 模型名修复 (deepseek-v4-flash → deepseek-v4-pro, 2026-09-15)
  */
 class TelegramAdminAiPoll extends Command
 {
@@ -289,6 +295,8 @@ class TelegramAdminAiPoll extends Command
 
         $apiKey = config('deepseek.admin_api_key') ?: config('deepseek.api_key');
         $apiUrl = config('deepseek.api_url', 'https://api.deepseek.com/v1/chat/completions');
+        // v44: 从 config 读 model, 默认 deepseek-v4-pro (实测 deepseek-flash 60s timeout)
+        $model = config('deepseek.model', 'deepseek-v4-pro');
 
         if (empty($apiKey)) {
             return 'DeepSeek Admin API Key 未配置。';
@@ -362,7 +370,7 @@ PROMPT;
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ])->post($apiUrl, [
-                    'model' => 'deepseek-v4-flash',
+                    'model' => $model,
                     'messages' => $messages,
                     'tools' => $tools,
                     'temperature' => 0.3,
@@ -415,7 +423,7 @@ PROMPT;
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($apiUrl, [
-                'model' => 'deepseek-v4-flash',
+                'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.3,
                 'max_tokens' => 4000,

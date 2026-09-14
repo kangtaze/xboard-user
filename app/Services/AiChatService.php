@@ -11,6 +11,12 @@ use Illuminate\Http\Client\HttpClientException;
  * AI 客服服务 - DeepSeek API 集成
  *
  * 处理与 DeepSeek AI 的交互，提供智能客服功能
+ *
+ * **用途**: 落地页前端 AI 客服聊天 (POST /api/v1/{user,guest}/ai/chat)，使用 deepseek-v4-pro 模型
+ * **调用方**: AiChatController (app/Http/Controllers/V1/User/AiChatController.php, app/Http/Controllers/V1/Guest/AiChatController.php)
+ * **被调用方**: DeepSeek API (api.deepseek.com/v1/chat/completions) via Laravel Http facade
+ * **配置**: config/deepseek.php (frontend_api_key 优先, api_key fallback)
+ * **关联记录**: v44 deepseek 模型名修复 (deepseek-v4-flash → deepseek-v4-pro, 2026-09-15)
  */
 class AiChatService
 {
@@ -240,8 +246,9 @@ PROMPT;
     public function __construct()
     {
         $this->apiUrl = config('deepseek.api_url', 'https://api.deepseek.com/v1/chat/completions');
-        $this->apiKey = config('deepseek.api_key');
-        $this->model = config('deepseek.model', 'deepseek-v4-flash');
+        // P2: 前端 AI 客服 (落地页) 优先用 frontend_api_key 隔离 key 配额, 缺失则 fallback api_key
+        $this->apiKey = config('deepseek.frontend_api_key') ?: config('deepseek.api_key');
+        $this->model = config('deepseek.model', 'deepseek-v4-pro');
 
         if (empty($this->apiKey)) {
             Log::warning('DeepSeek API key not configured');

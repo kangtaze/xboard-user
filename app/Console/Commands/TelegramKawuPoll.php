@@ -23,6 +23,12 @@ use App\Services\TelegramChatAction;
  * 礼品卡管理、员工购买、兑换码查询。
  * Bot Token: TELEGRAM_KAWU_BOT_TOKEN (@VP92kawu_bot)
  * AI Key: DEEPSEEK_KAWU_API_KEY
+ *
+ * **用途**: 卡务管理员 (@VP92kawu_bot) 通过 Telegram 操作礼品卡, 员工购买
+ * **调用方**: supervisord conf.d supervisord.conf [program:kawu-ai] → php artisan telegram:kawu-poll
+ * **被调用方**: DeepSeek API + Telegram Bot API + GiftCard 服务
+ * **配置**: DEEPSEEK_KAWU_API_KEY env; model 从 config('deepseek.model')
+ * **关联记录**: v44 deepseek 模型名修复 (deepseek-v4-flash → deepseek-v4-pro, 2026-09-15)
  */
 class TelegramKawuPoll extends Command
 {
@@ -459,6 +465,8 @@ class TelegramKawuPoll extends Command
 
         $apiKey = env('DEEPSEEK_KAWU_API_KEY', '');
         $apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+        // v44: 从 config 读 model, 默认 deepseek-v4-pro (实测 deepseek-flash 60s timeout)
+        $model = config('deepseek.model', 'deepseek-v4-pro');
 
         if (empty($apiKey)) {
             return '卡务AI API Key 未配置。';
@@ -502,7 +510,7 @@ PROMPT;
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ])->post($apiUrl, [
-                    'model' => 'deepseek-v4-flash',
+                    'model' => $model,
                     'messages' => $messages,
                     'tools' => $tools,
                     'temperature' => 0.3,
@@ -550,7 +558,7 @@ PROMPT;
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($apiUrl, [
-                'model' => 'deepseek-v4-flash',
+                'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.3,
                 'max_tokens' => 4000,
