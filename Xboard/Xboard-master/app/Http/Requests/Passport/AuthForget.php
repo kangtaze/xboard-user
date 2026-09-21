@@ -15,7 +15,7 @@ class AuthForget extends FormRequest
     {
         return [
             'email' => 'required|email:strict',
-            'password' => 'required|min:8',
+            'new_password' => 'required|min:8',
             'email_code' => 'required|digits:6'
         ];
     }
@@ -25,8 +25,8 @@ class AuthForget extends FormRequest
         return [
             'email.required' => __('Email can not be empty'),
             'email.email' => __('Email format is incorrect'),
-            'password.required' => __('Password can not be empty'),
-            'password.min' => __('Password must be greater than 8 digits'),
+            'new_password.required' => __('Password can not be empty'),
+            'new_password.min' => __('Password must be greater than 8 digits'),
             'email_code.required' => __('Email verification code cannot be empty'),
             'email_code.digits' => __('Incorrect email verification code')
         ];
