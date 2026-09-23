@@ -284,3 +284,52 @@ docker exec xboard supervisorctl status schedule
 - 部署到服务器时避免使用 `sed`（会破坏反斜杠），用 Python 编辑
 - `EdgetunnelServiceProvider` 必须在 `OctaneServiceProvider` 之后注册
 - Hooks 必须在 `WorkerStarting` 事件中注册
+
+## 🆘 重建检查清单（v50 baked-in SOP）
+
+**⚠️ 关键事实**: xboard 容器有 3 个 baked-in 镜像层修复,**容器重建/服务器迁移后必丢**。遇到任一症状,**99% 是修复丢了,不是代码 bug**：
+
+- ❌ `/2d532679/edgetunnel` 或 `/2d532679/cf-worker` 404 → `start.sh` BOM stripper 丢了（v48.1）
+- ❌ `supervisorctl status schedule` FATAL + `crontab -l` 空 → `supervisord.conf` 缺 `[program:schedule]`（v35b）
+- ❌ Bot 静默死（`ps auxf | grep telegram` 在,supervisor 状态错）→ `supervisord.conf` 缺 startsecs=5/startretries=10/exitcodes=0/stopwaitsecs=15（v46）
+
+### 完整备份位置（异地 P0 闭环）
+
+| 位置 | 内容 | 怎么用 |
+|------|------|--------|
+| **GitHub release** | `xboard-v48.1-bom-fix.tar` 612MB + 3 文件 | `wget` 拉 tar → `docker load` |
+| **ghcr.io Private** | `ghcr.io/kangtaze/xboard:v48.1-bom-fix` | `docker pull` 需 PAT（read:packages） |
+| **Windows 本地** | `E:\jiedian\xboard-deploy\bom-fix-v48\` | 4 文件 + 612MB tar |
+| **完整 SOP** | `E:\jiedian\xboard-deploy\bom-fix-v48\README.md` | 3 场景灾难恢复 + md5 |
+
+- Release: https://github.com/kangtaze/xboard-ze/releases/tag/v48.1-bom-fix
+- ghcr.io digest 前 12 位 = `d8cbfe5692e0` = 本地 ID ✅
+
+### 容器重建 SOP（场景 B,最常用 — 有备份无镜像）
+
+```bash
+docker run -d --name xboard -p 80:80 -p 7001:7001 <原启动参数> ghcr.io/cedar2025/xboard:latest
+docker cp ./start.sh xboard:/www/.docker/caddy/start.sh
+docker exec xboard chmod +x /www/.docker/caddy/start.sh
+docker cp ./supervisord.conf xboard:/etc/supervisor/conf.d/supervisord.conf
+docker cp ./Caddyfile xboard:/etc/caddy/Caddyfile
+docker exec xboard kill -HUP 1 && docker exec xboard pkill caddy
+docker exec xboard supervisorctl restart caddy
+# 验证
+curl -sI https://vp92vip.com/2d532679/edgetunnel   # 期望 200
+docker exec xboard supervisorctl status schedule   # 期望 RUNNING
+```
+
+### 关键 md5（改前必校验,防覆盖错版本）
+
+- `start.sh`: `84890de073bea81b5544650e5f6961ee`（BOM stripper）
+- `supervisord.conf`: `f341623748ae994c180b85916c813cd7`（schedule + startsecs）
+- `xboard-v48.1-bom-fix.tar`: `355fb67c74999944688e4113f067d22e`（612MB 镜像导出）
+
+### 接手人必读 5 件事
+
+1. **404 优先查 baked-in** — 不要瞎改业务代码,先 `docker cp start.sh` 覆盖 + restart caddy
+2. **schedule FATAL 不是配置错** — supervisord.conf 镜像层缺段,`docker cp` 覆盖 + `kill -HUP 1`
+3. **bot 静默死补 startsecs** — 容器内 `ps auxf | grep telegram` 看进程在不在,在就是 supervisord 重启太紧
+4. **改 baked-in 前必查 mounts** — `docker inspect xboard --format '{{range .Mounts}}{{println .Source,.Destination,.Type}}{{end}}'`,overlayfs 改完必须 commit + 备份
+5. **每次修复后必更新 README + 同步本段** — `E:\jiedian\xboard-deploy\bom-fix-v48\README.md` 是给下一个接手人的唯一指南
