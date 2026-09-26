@@ -1,158 +1,139 @@
-# 📌 v32 Wakeup Snapshot — 2026-09-03 Dashboard.vue 主区 i18n
+# 📌 v51 Wakeup Snapshot — 2026-09-27 套餐礼品卡兑换同步创建 v2_order
 
-> **当前最新进度**（v32 完成 🎉）
-> **会话类型**：v31 wakeup 候选的 "Dashboard.vue 主区 i18n" → 全 t()-化 + 32 新 key
-> **状态**：✅ 3 locales 完美对齐 + vite build 1.42s + 部署 + e2e 3 语言 + commit + push
-> **完整 v32 细节**: MEMORY `vp92-v32-dashboard-i18n.md`
+> **v51 ✅ 已闭环** (代码 + 本地 commit + push my/master + 用户实测全部通过)
+> **会话类型**:修复后台「用户订单管理」看不到用户兑换套餐礼品卡的记录
+> **状态**:✅ 代码已改 + ✅ 已部署 + ✅ Octane reloaded（容器 md5 `29d873ed70fa5e3bbeefcc764b3e8977`）+ ✅ 本地 commit `5543e32` + ✅ push my/master `5543e32` + ✅ 用户实测通过
+> **完整 v51 细节(含 4 阶段事故链)**:MEMORY `vp92-v51-giftcard-order-creation.md`
 
 ---
 
 ## ⚡ 一句话状态总结
 
 ```
-v32 状态（2026-09-03）：
-✅ 摸底 Dashboard.vue (849 行): ~30 处硬编码中文 + script 4 处（formatDate/daysUntil/fallbacks/toast）
-✅ 3 locales 补 32 新 dashboard.* key (perfectly aligned, missing 0, extra 0)
-✅ Dashboard.vue 整页 Write 重写为 t()-化（useI18n + locale.value for toLocaleDateString）
-✅ vite build 1.42s ✅ + index-DyR1DIkZ.js + index-BM7iSI3y.css + Dashboard-ZjVV5q8Q.js (vue-vendor 不变)
-✅ docker cp + docker exec cp blade (overlayfs 铁律)
-✅ artisan 3 条分开跑（v31 chain hang 铁律沿用）
-✅ e2e zh-CN/en-US/zh-TW 全过 + 0 console error
-✅ commit bd0c3a9 (852 行) + push my master (0db2236..bd0c3a9)
-✅ vp92-frontend tracked 边界扩展：Dashboard.vue untracked → tracked (v32 现共 26 tracked)
-✅ memory vp92-v32-dashboard-i18n.md + MEMORY.md 索引入库
+v51 状态(2026-09-27):
+✅ 根因:GiftCardService::redeem() 写 v2_gift_card_usage 但不写 v2_order
+✅ 修复:GiftCardService.php redeem() 事务内 + Order::create(type=5, period=days 反推)
+   - 本地 md5: 6d6390b3... (原) → 29d873ed70fa5e3bbeefcc764b3e8977 (新)
+   - 容器内 md5: 29d873ed70fa5e3bbeefcc764b3e8977 ✅ 已部署
+   - +25 行:use Order + 11 行 Order::create + 6 行 period 反推 + 注释
+   - type=5 (Order::TYPE_GIFT_CARD 待加常量,本次用魔法值)
+   - period 从 plan_validity_days 推 (≥365→yearly/≥180→half_yearly/≥90→quarterly/≥30→monthly/<30→reset_traffic)
+   - trade_no: GC_<user_id>_<unix_ts> 跟历史 2 条 type=5 一致
+   - status=COMPLETED(3), total_amount=0, paid_at=now
+
+⚠️ 关键事故链:
+   阶段 1: 初次部署 26 行版本(095eeaa5)→ git restore 回退(用户嫌复杂)
+   阶段 2: 实查 user 75 v2_order=0 → 确认 root cause
+   阶段 3: 重新部署 11 行版本(4d78f134)→ 用户兑换"失败,请稍后重试"
+   阶段 4: 查 laravel log → NOT NULL constraint failed: v2_order.period
+           → 修复加 period 反推 6 行 → 重新部署 25 行(29d873ed)
+✅ 用户验证:用户 2290708666@qq.com (id=75) 实测兑换成功,后台订单管理看到 type=5 记录
+✅ git commit `5543e32` + push my/master `5543e32`(本会话核查时已就绪,无需再操作)
 ```
 
 ---
 
-## 📁 v32 文件改动
+## 🔥 4 阶段事故链(给下个会话必读)
+
+```
+阶段 1: 用户报告"看不到兑换记录"
+   ↓
+   我猜是 GiftCardService 不写 v2_order → 加 26 行 Order::create 块 → 部署 095eeaa5
+   ↓
+阶段 2: 用户反馈"为什么要搞这么复杂" → git restore 回退
+   ↓
+阶段 3: 我用 user 75 实查 v2_order=0 → 确认 root cause → 简化 11 行 → 部署 4d78f134
+   ↓
+阶段 4: 用户实测"兑换失败" → 查 laravel log → NOT NULL v2_order.period → 加 6 行 match → 部署 29d873ed
+   ↓
+用户再实测: 应该看到订单写入
+```
+
+**关键教训**: 写 v2_order 之前必须查 schema（v2_order.period 是 `varchar NOT NULL`，不是 nullable）
+
+---
+
+## 📁 v51 文件改动
 
 | 文件 | 类型 | 关键改动 |
-|------|------|---------|
-| `src/views/dashboard/Dashboard.vue` | untracked → **tracked** | 849 行整页 Write 重写（useI18n + 30+ 处 t() 化） |
-| `theme/dashboard.blade.php` | modified | line 17 CSS hash: `CrfcEOxX`→`BM7iSI3y`, line 37 JS hash: `B4DW_UGC`→`DyR1DIkZ` |
-| `src/locales/{zh-CN,zh-TW,en-US}.json` | untracked | 3 locales 各 +32 个 dashboard.* key（welcomeBack/planValidUntil/appDownloads.*/subBar.*/stats.*/chart.*/messages.*/fallbacks.*）|
+|------|------|----------|
+| `Xboard/Xboard-master/app/Services/GiftCardService.php` | 修改 | +use Order; +Order::create 块(含 period 反推),+25 行;容器内 md5 `29d873ed70fa5e3bbeefcc764b3e8977` |
+| `xboard-deploy/test_giftcard_order_e2e.php` | 修过 | 自动创建测试用户 + 动态找可用 code;**未部署**(SSH 不稳,e2e 没跑通) |
 
 ---
 
-## 🚨 v32 新增铁律 / 经验
+## 🚨 关键事实(给下个会话)
 
-### 1. Locale key 存在 ≠ 被 Vue 引用（zombie key）
-v25 时期 i18n 化埋下了 dashboard.quickBar/stats/traffic 等 key，但 Dashboard.vue 完全没引用这些 key — **key 占据 locale 文件但 dist bundle 没真正使用**。
-
-**v32 修复**：Vue 引用 + 激活现有 key + 32 新 key 覆盖原硬编码。
-
-### 2. brand 缩写 vs 本地化名称分离
-- button text "Clash"/"SingBox"/"SS"/"Trojan"/"V2Ray" 在所有 locale 保持原文（VPN 圈 brand 缩写）
-- toast 消息用完整本地化名 (`t('dashboard.subBar.fmtLabels.clash')` → "Clash 订阅"/"Clash subscription"/"Clash 訂閱")
-
-**避免 brand 名被错误翻译**，同时 toast 仍可读。
-
-### 3. vp92-frontend tracked 边界扩展
-v32 之前 25 个 tracked → v32 现 26 个（新增 Dashboard.vue）。
-
-**原则**：源码级 SPA 组件入 tracked（与 v25 「locales 4 文件不入库」原则不冲突）。
-
-### 4. e2e 中 pre-existing 数据问题 vs i18n 范围
-"Invalid Date" + "242933367天" 是 admin@demo.com 测试用户 expired_at=0/null 导致的。**v32 不处理**（server 数据问题，非 i18n 范围）。未来 v33+ 候选：dashboard 加 fallback「无到期日」。
+- **本地代码已 commit**: HEAD `5543e32 fix(v51): 套餐礼品卡兑换同步创建 v2_order 记录...` (+25 行,Xboard/Xboard-master/app/Services/GiftCardService.php)
+- **my/master 已 push**: `5543e32` 与本地 HEAD 一致 ✅
+- **容器已部署 + 用户实测验证通过**: md5 `29d873ed70fa5e3bbeefcc764b3e8977` ✅
+- **用户反馈核心**: "很简单的一个事情" + "明白了吗" = 用户希望极简直接,不要再复杂
+- **已查明 v2_order schema**: user_id/plan_id/type/period/trade_no/total_amount/status/created_at/updated_at 必传(NOT NULL);trade_no UNIQUE
 
 ---
 
-## 📊 v32 验证记录
+## 🎯 下次会话第一件事
 
-### Locales 对齐（关键指标）
+**v51 已闭环,等用户分配下个任务**(v52 需求 / 维护 / 其他)。
+
+如果用户后续要求,可选:
+- 更新 memory `vp92-v51-giftcard-order-creation.md` 状态(把"🟡 待确认"改"✅ 已闭环" + 实测成功备注)
+- bump jiedian 根 submodule gitlink(`ae27467241` → `5543e32`):
+  ```bash
+  cd /e/jiedian
+  git add xboard-repo
+  git commit -m "chore(submodule): bump xboard-repo to 5543e32 (v51 闭环)"
+  git config --global --get-all http.proxy  # 有 127.0.0.1 先 unset
+  git push my master
+  ```
+
+---
+
+## 📞 唤醒词(新窗口直接复制粘贴)
+
 ```
-counts (leaf keys): zh-CN 465 / zh-TW 465 / en-US 465 (v31: 433 + 32 新增)
-zh-TW vs zh-CN: missing 0, extra 0
-en-US vs zh-CN: missing 0, extra 0
-== 完美对齐 ==
-```
+读取 E:\jiedian\docs\session-progress-latest.md,这是 v51 进度文件。
 
-### HTTP 验证
-```
-新 hash 200 OK ✅:
-- /theme/VP92/assets/index-DyR1DIkZ.js → 200 (Content-Length: 53479)
-- /theme/VP92/assets/index-BM7iSI3y.css → 200 (Content-Length: 49192)
-- /theme/VP92/assets/vue-vendor-CohP-jTm.js → 200 (unchanged)
-- /theme/VP92/assets/Dashboard-ZjVV5q8Q.js → 200 (NEW Dashboard.vue chunk 11.40 kB)
+v51: 套餐礼品卡兑换同步创建 v2_order 记录
+✅ 已闭环 (代码 + 部署 + commit + push my/master + 用户实测全部通过)
+   容器 md5: 29d873ed70fa5e3bbeefcc764b3e8977
+   本地 commit: 5543e32 fix(v51): ...
+   my/master: 5543e32 (与本地 HEAD 一致)
+   用户实测: ✅ 2290708666@qq.com (id=75) 兑换成功,后台看到 type=5 记录
 
-/dashboard 渲染新 hash ✅:
-- vue-vendor-CohP-jTm (line 16) unchanged
-- index-BM7iSI3y.css (line 17) ✅ NEW
-- index-DyR1DIkZ.js (line 37) ✅ NEW
-```
+第一件事:
+- v51 已闭环,等用户分配下个任务 (v52 / 维护 / 其他)
+- 可选清理:memory MEMORY.md 中 v51 entry 状态从"🟡 待确认"改"✅ 已闭环"
+- 可选清理:bump jiedian 根 submodule gitlink (ae27467241 → 5543e32)
 
-### 容器内 blade 验证
-```bash
-docker exec xboard sh -c 'grep -E "index-|vue-vendor" /www/theme/VP92/dashboard.blade.php'
-# vue-vendor-CohP-jTm ✓
-# index-BM7iSI3y ✓
-# index-DyR1DIkZ ✓
-```
-
-### chrome-devtools e2e
-```
-zh-CN: 快速导入订阅/欢迎回来, admin@demo.com/您的 VIP1 订阅有效期至 Invalid Date/
-      续费订阅/应用下载/Windows 客户端/Android 客户端/iOS 客户端/立即下载×3/
-      已用流量/本月/剩余流量/总计 100.0 TB/到期时间/在线设备/无限 台/无限设备/
-      流量使用/已使用/已用 0.0 GB/剩余 100.0 TB/流量统计/暂无流量记录 ✓
-
-en-US: Quick Import Subscription/Welcome back, admin@demo.com/Your VIP1 subscription is valid until Invalid Date/
-      Renew Subscription/App Downloads/Windows Client/Android Client/iOS Client/Download Now×3/
-      Used Traffic/This month/Remaining Traffic/Total 100.0 TB/Expires In/Online Devices/Unlimited/Unlimited devices/
-      Traffic Usage/Used/Used 0.0 GB/Remaining 100.0 TB/Traffic Statistics/No traffic records yet ✓
-
-zh-TW: 快速匯入訂閱/歡迎回來, admin@demo.com/您的 VIP1 訂閱有效期至 Invalid Date/
-      續訂訂閱/應用下載/Windows 用戶端/Android 用戶端/iOS 用戶端/立即下載×3/
-      已用流量/本月/剩餘流量/總計 100.0 TB/到期時間/線上裝置/無限/無限裝置/
-      流量使用/已使用/已用 0.0 GB/剩餘 100.0 TB/流量統計/暫無流量記錄 ✓
-
-console.error: 0 ✓
+修复文件: Xboard/Xboard-master/app/Services/GiftCardService.php (+25 行)
+4 阶段事故链(用户嫌复杂 → git restore → 实查 → 简化 → period NOT NULL → 最终修复)
+完整文档: E:\jiedian\docs\session-progress-latest.md + memory/vp92-v51-giftcard-order-creation.md
 ```
 
 ---
 
-## 🚧 v33 候选（next session 待决定）
+## 历史快照索引
 
-- **`<title>` i18n** — v27b 已决策留作 v28+ → 现在 v33。dashboard.blade.php line 9 仍是硬编码 "VP92极速加速器"。可用服务端 Laravel `__()` 渲染
-- **`theme/tutorial.blade.php` i18n wire-up** — tutorial 页英文用户看中文，50+ 字符串加 data-i18n 属性 + JS 读 localStorage.fe_locale + locales JSON 动态渲染
-- **Dashboard "Invalid Date" / "242933367天" 数据 fallback** — dashboard.vue 对 expired_at=0/null 加友好显示「无到期日」/「永久」
-- **t(key, { interpolation }) 占位符审计** — v32 教训延伸：v30 Settings.vue 30+ 处 t()-化中是否有 timeoutRetry 类陷阱
-- **LanguageModal 入口去留** — v30 撤回 v29 Settings 卡，但 DashboardLayout 全局挂载仍保留。未来加「高级设置」入口时可继续使用
-- **`/invite` 页面** — Settings.vue 引入 `router-link to="/invite"` 但用户没访问过，待 e2e 验证
-- **vp92-frontend tracked 边界补漏** — `src/components/layout/PublicNavbar.vue` + `PublicFooter.vue` 等是否需要 tracked
-
----
-
-## 🎯 当前项目状态
-
-| 项 | 状态 |
-|----|------|
-| **最新 commit** | bd0c3a9 (v32) |
-| **远程** | my = `github.com:kangtaze/xboard-ze.git` ✅ |
-| **服务器** | root@154.3.38.212, Docker xboard 容器 ✅ |
-| **前端** | vite build 1.42s, 部署完成, 0 console error |
-| **CLAUDE.md** | v25/v26/v27/v31 铁律全部到位 |
-| **vp92-frontend tracked** | 26 个 (v32 新入库 Dashboard.vue) |
-| **MEMORY** | vp92-v25 → vp92-v32 共 8 个快照, 全部 ✅ |
-| **下次唤醒** | 用户继续提供新需求（v33 候选或新方向） |
-
----
-
-## 📚 关联文档
-
-- **MEMORY.md** — 8 个版本快照索引 (v25/v26/v27/v28/v29/v30/v31/v32)
-- `docs/deployment-guide.md` — 后端/前端/Bot/Worker 部署完整指南
-- `docs/project-paths.md` — 项目目录结构
-- `E:\jiedian\AGENTS.md` — jiedian 根级 AI 行为准则
-- `E:\jiedian\vp92-flclash\AGENTS.md` — 项目级 backup（不依赖向上查找）
-
----
-
-**Generated**: 2026-09-03 (v32 session)
-**Next session wakeup prompt**:
-```
-读取 E:\jiedian\docs\session-progress-latest.md，这是最新项目进度文件 (v32 完成)。
-v32 = Dashboard.vue 主区完整 i18n + 32 新 key + vp92-frontend tracked 边界扩展。
-按 v33 候选决定下一步。
-```
+- v51 (2026-09-26/27): 套餐礼品卡兑换同步创建 v2_order (4 阶段事故链) ← 当前
+- v50 (2026-09-24): ghcr.io Private 镜像推送 (kangtaze namespace) + P0 全闭环
+- v49 (2026-09-24): 612MB .tar 推 GitHub release + README 同步
+- v48.2 (2026-09-23): 5 地区营销邮件 — 教训"先 grep 现有邮件体系,不重复造"
+- v48.1 (2026-09-22): BOM 前缀让 /2d532679/edgetunnel 404 — 容器备份 + 镜像固化
+- v47 (2026-09-21): ForgotPassword new_password vs password 字段名 bug
+- v46 (2026-09-15): kawu-ai 静默死 + supervisord startsecs=5
+- v45 (2026-09-15): cURL 28 排查误杀容器
+- v44 (2026-09-15): deepseek-v4-pro + 双 supervisor
+- v43 (2026-09-15): deepseek API 到期 + 模型名 bug
+- v42 (2026-09-13): 续费 BOT 没通知排查
+- v40 (2026-09-13): vp92jisu 迁移 + id=1 接管 + widget URL
+- v39 (2026-09-13): vp92_01 客服挂→工单兜底
+- v38 (2026-09-09): invite pv 字段名 bug
+- v37 (2026-09-08): toolTodayOrders 返 {summary, orders}
+- v36 (2026-09-08): Telegram 429 限流修复
+- v35b (2026-09-05): Supervisor scheduler 重大事故
+- v35 (2026-09-05): trial 营销 plan_id=9
+- v34 (2026-09-03): PlanController group_id 自动同步
+- v33 (2026-09-03): Worker P0 过期立刻停用
+- v32 (2026-09-03): Dashboard.vue 主区 i18n
+- v31 及更早:见 MEMORY.md 历史段
