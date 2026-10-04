@@ -7,6 +7,7 @@ use App\Http\Resources\PlanResource;
 use App\Models\GiftCardCode;
 use App\Models\GiftCardTemplate;
 use App\Models\GiftCardUsage;
+use App\Models\Order;
 use App\Models\Plan;
 use App\Models\TrafficResetLog;
 use App\Models\User;
@@ -130,6 +131,30 @@ class GiftCardService
                     'multiplier' => $this->calculateMultiplier(),
                 ])
             );
+
+            // 套餐型礼品卡：同步写订单记录，后台「用户订单管理」可见
+            if (isset($actualRewards['plan_id'])) {
+                $days = (int)($actualRewards['plan_validity_days'] ?? 0);
+                $period = match (true) {
+                    $days >= 365 => 'yearly',
+                    $days >= 180 => 'half_yearly',
+                    $days >= 90 => 'quarterly',
+                    $days >= 30 => 'monthly',
+                    default => 'reset_traffic',
+                };
+                Order::create([
+                    'user_id' => $this->user->id,
+                    'plan_id' => $actualRewards['plan_id'],
+                    'period' => $period,
+                    'type' => 5,
+                    'trade_no' => 'GC_'.$this->user->id.'_'.time(),
+                    'total_amount' => 0,
+                    'status' => Order::STATUS_COMPLETED,
+                    'paid_at' => time(),
+                    'created_at' => time(),
+                    'updated_at' => time(),
+                ]);
+            }
 
             return [
                 'rewards' => $actualRewards,
