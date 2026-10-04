@@ -1,121 +1,172 @@
-# 📌 v51 Wakeup Snapshot — 2026-09-27 套餐礼品卡兑换同步创建 v2_order
+# 📌 v55 Wakeup Snapshot — 2026-10-05 全网节点更新通知邮件 ✅ 已完成
 
-> **v51 ✅ 已闭环** (代码 + 本地 commit + push my/master + 用户实测全部通过)
-> **会话类型**:修复后台「用户订单管理」看不到用户兑换套餐礼品卡的记录
-> **状态**:✅ 代码已改 + ✅ 已部署 + ✅ Octane reloaded（容器 md5 `29d873ed70fa5e3bbeefcc764b3e8977`）+ ✅ 本地 commit `5543e32` + ✅ push my/master `5543e32` + ✅ 用户实测通过
-> **完整 v51 细节(含 4 阶段事故链)**:MEMORY `vp92-v51-giftcard-order-creation.md`
+> **v55 ✅ 完成** — A 方案(临时改 blade+php,跑完恢复不 commit),572/572 100% 发送成功
+> **状态**: 文案 v3.0 整体营销版 ✅ + 邮件已发送 ✅ + 容器/本地已恢复原版 ✅
+> **强约束**: VIP4 不对外 (memory `vp92-vip4-admin-trial-only.md` 永久规则)
+> **历史对比**: 上次会话 v53 (工单 25 话术定稿,无代码改动)
 
 ---
 
 ## ⚡ 一句话状态总结
 
 ```
-v51 状态(2026-09-27):
-✅ 根因:GiftCardService::redeem() 写 v2_gift_card_usage 但不写 v2_order
-✅ 修复:GiftCardService.php redeem() 事务内 + Order::create(type=5, period=days 反推)
-   - 本地 md5: 6d6390b3... (原) → 29d873ed70fa5e3bbeefcc764b3e8977 (新)
-   - 容器内 md5: 29d873ed70fa5e3bbeefcc764b3e8977 ✅ 已部署
-   - +25 行:use Order + 11 行 Order::create + 6 行 period 反推 + 注释
-   - type=5 (Order::TYPE_GIFT_CARD 待加常量,本次用魔法值)
-   - period 从 plan_validity_days 推 (≥365→yearly/≥180→half_yearly/≥90→quarterly/≥30→monthly/<30→reset_traffic)
-   - trade_no: GC_<user_id>_<unix_ts> 跟历史 2 条 type=5 一致
-   - status=COMPLETED(3), total_amount=0, paid_at=now
+v55 状态(2026-10-05):
 
-⚠️ 关键事故链:
-   阶段 1: 初次部署 26 行版本(095eeaa5)→ git restore 回退(用户嫌复杂)
-   阶段 2: 实查 user 75 v2_order=0 → 确认 root cause
-   阶段 3: 重新部署 11 行版本(4d78f134)→ 用户兑换"失败,请稍后重试"
-   阶段 4: 查 laravel log → NOT NULL constraint failed: v2_order.period
-           → 修复加 period 反推 6 行 → 重新部署 25 行(29d873ed)
-✅ 用户验证:用户 2290708666@qq.com (id=75) 实测兑换成功,后台订单管理看到 type=5 记录
-✅ git commit `5543e32` + push my/master `5543e32`(本会话核查时已就绪,无需再操作)
+✅ 完成 — 整体营销邮件 v3.0 发送完毕,容器/本地全部恢复原版
+
+邮件数据:
+   - 主题: 【VP92】10月5日 全网升级完成 · 我们一直在升级
+   - 收件人: 572 户 (is_admin=false AND banned=false 含试用用户)
+   - 成功率: 572 / 572 = 100%,0 失败
+   - 总耗时: 487.31 秒
+   - 单封测试 ID: msg_a61715472658242c (netzege@163.com)
+   - 群发命令: php artisan send:update-notice --force --chunk-size=50 --delay=6
+
+文件恢复状态:
+   - PHP SendUpdateNotice.php: HEAD (逻辑一致,仅 CRLF/LF 行尾差异)
+   - blade updateNotice.blade.php: HEAD (md5 7abd5f93... 三视角一致)
+   - git status: clean (工作树干净)
+
+无 commit 欠账: 方案 A 是临时改跑完恢复,符合预期
 ```
 
 ---
 
-## 🔥 4 阶段事故链(给下个会话必读)
+## 🔔 唤醒提示词(新窗口复制粘贴)
 
 ```
-阶段 1: 用户报告"看不到兑换记录"
-   ↓
-   我猜是 GiftCardService 不写 v2_order → 加 26 行 Order::create 块 → 部署 095eeaa5
-   ↓
-阶段 2: 用户反馈"为什么要搞这么复杂" → git restore 回退
-   ↓
-阶段 3: 我用 user 75 实查 v2_order=0 → 确认 root cause → 简化 11 行 → 部署 4d78f134
-   ↓
-阶段 4: 用户实测"兑换失败" → 查 laravel log → NOT NULL v2_order.period → 加 6 行 match → 部署 29d873ed
-   ↓
-用户再实测: 应该看到订单写入
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v55-node-update-notice-email.md
+和 vp92-vip4-admin-trial-only.md。
+
+这是 v55 任务闭环(2026-10-05 完成): 整体营销邮件 v3.0 已发送完毕。
+   - 572/572 100% 发送成功,主题【VP92】10月5日 全网升级完成
+   - 单封测试 ID: msg_a61715472658242c
+   - 容器/本地已恢复原版,git status clean
+   - 无 commit 欠账(方案 A: 临时改跑完恢复)
+
+历史教训(下次会话避免踩):
+- blade/app 路径都是 overlayfs,必须 docker cp + docker exec cp,不 ssh cp
+- VIP4 永远不对外(vp92-vip4-admin-trial-only.md)
+- v48.2 / v55 同款"临时改 blade + 跑命令 + 改回"做法,不 commit
+- Brevo 群发 572 封 100% 成功,SSH exit 255 ≠ 失败
+- md5 比对时注意 CRLF vs LF 行结束符差异,逻辑内容一致即可
+
+下一步:等用户分配新任务。
 ```
 
-**关键教训**: 写 v2_order 之前必须查 schema（v2_order.period 是 `varchar NOT NULL`，不是 nullable）
-
 ---
 
-## 📁 v51 文件改动
-
-| 文件 | 类型 | 关键改动 |
-|------|------|----------|
-| `Xboard/Xboard-master/app/Services/GiftCardService.php` | 修改 | +use Order; +Order::create 块(含 period 反推),+25 行;容器内 md5 `29d873ed70fa5e3bbeefcc764b3e8977` |
-| `xboard-deploy/test_giftcard_order_e2e.php` | 修过 | 自动创建测试用户 + 动态找可用 code;**未部署**(SSH 不稳,e2e 没跑通) |
-
----
-
-## 🚨 关键事实(给下个会话)
-
-- **本地代码已 commit**: HEAD `5543e32 fix(v51): 套餐礼品卡兑换同步创建 v2_order 记录...` (+25 行,Xboard/Xboard-master/app/Services/GiftCardService.php)
-- **my/master 已 push**: `5543e32` 与本地 HEAD 一致 ✅
-- **容器已部署 + 用户实测验证通过**: md5 `29d873ed70fa5e3bbeefcc764b3e8977` ✅
-- **用户反馈核心**: "很简单的一个事情" + "明白了吗" = 用户希望极简直接,不要再复杂
-- **已查明 v2_order schema**: user_id/plan_id/type/period/trade_no/total_amount/status/created_at/updated_at 必传(NOT NULL);trade_no UNIQUE
-
----
-
-## 🎯 下次会话第一件事
-
-**v51 已闭环,等用户分配下个任务**(v52 需求 / 维护 / 其他)。
-
-如果用户后续要求,可选:
-- 更新 memory `vp92-v51-giftcard-order-creation.md` 状态(把"🟡 待确认"改"✅ 已闭环" + 实测成功备注)
-- bump jiedian 根 submodule gitlink(`ae27467241` → `5543e32`):
-  ```bash
-  cd /e/jiedian
-  git add xboard-repo
-  git commit -m "chore(submodule): bump xboard-repo to 5543e32 (v51 闭环)"
-  git config --global --get-all http.proxy  # 有 127.0.0.1 先 unset
-  git push my master
-  ```
-
----
-
-## 📞 唤醒词(新窗口直接复制粘贴)
+## ⚡ 一句话状态总结
 
 ```
-读取 E:\jiedian\docs\session-progress-latest.md,这是 v51 进度文件。
+v53 状态(2026-10-04):
 
-v51: 套餐礼品卡兑换同步创建 v2_order 记录
-✅ 已闭环 (代码 + 部署 + commit + push my/master + 用户实测全部通过)
-   容器 md5: 29d873ed70fa5e3bbeefcc764b3e8977
-   本地 commit: 5543e32 fix(v51): ...
-   my/master: 5543e32 (与本地 HEAD 一致)
-   用户实测: ✅ 2290708666@qq.com (id=75) 兑换成功,后台看到 type=5 记录
+① 工单 25 话术定稿（用户 576 提现咨询）—— 完整版见下方「v53 工单 25 定稿话术」段
+   - 措辞校正（用户多次挑战后定稿）:
+     ✅ 只讲"13 位用户没付费 → 您账户为 0"，不暗示规则不公
+     ✅ "对方按自己的意愿体验产品即可，您不用刻意引导"
+     ❌ 删掉"按目前的规则...他/她后续的付费订单就不会产生佣金"
+     ❌ 删掉"请让对方跳过免费试用"（剥夺用户试用权）
 
-第一件事:
-- v51 已闭环,等用户分配下个任务 (v52 / 维护 / 其他)
-- 可选清理:memory MEMORY.md 中 v51 entry 状态从"🟡 待确认"改"✅ 已闭环"
-- 可选清理:bump jiedian 根 submodule gitlink (ae27467241 → 5543e32)
+② 工单 25 误发消息清理
+   - id=97 (ticket_id=25, user_id=50, 2026-10-03 18:58:13 UTC = 02:58:13 北京时间)
+   - 内容："您的佣金是0，您邀请的用户 并没有人购买套餐阿"
+   - 操作：DELETE FROM v2_ticket_message WHERE id=97 → deleted_rows=1
+   - 验证：remaining_count=0 ✓，ticket 25 剩余 2 条 (id=96 用户原始 + id=98 管理员最终话术)
 
-修复文件: Xboard/Xboard-master/app/Services/GiftCardService.php (+25 行)
-4 阶段事故链(用户嫌复杂 → git restore → 实查 → 简化 → period NOT NULL → 最终修复)
-完整文档: E:\jiedian\docs\session-progress-latest.md + memory/vp92-v51-giftcard-order-creation.md
+③ 7 段代理推广话术包按 v52 定稿修订
+   - 10% → 20% / 删续费返利改"首单锁定" / 100 → 50 元 / 提现走工单
+   - 完整版见 v53 memory `vp92-v53-ticket-25.md` 关联的会话历史 / 本地回复
+
+④ 用户偏好已沉淀（feedback 类 memory）
+   - `vp92-agent-pitch-manual-send.md`: 营销/代理/工单话术默认用户手动发送,只交付文本
+```
+
+---
+
+## 🎯 v53 工单 25 定稿话术（id=98 管理员回复完整版 — 可直接复制粘贴）
+
+```
+【关于您当前的佣金余额】
+
+我们查了您的邀请记录:通过您的邀请码注册的 13 位用户,目前都是注册后领取了「免费试用套餐」后就没再付费购买。佣金是基于被邀请用户的实际付费订单结算的,所以您账户余额目前为 0。
+
+【新佣金规则 · 2026-10-04 起生效】
+
+- 返利比例: 首笔付费订单的 20%(老规则是 10%,本次升级到 20%)
+- 返利范围: 仅首单,续费不返(同一被邀请用户后续续费不再产生佣金)
+- 提现门槛: 满 50 元可提(老规则是 100 元,本次降到 50)
+- 提现方式: 提交工单 → 人工客服处理(目前暂不支持后台自助提现)
+
+【未来怎么才能拿到佣金】
+
+您的邀请码永久有效。把邀请码分享给还没注册过 VP92 的新朋友,对方完成首笔付费订单(升级到付费 VIP),您就能拿到 20% 佣金。对方按自己的意愿体验产品即可,您不用刻意引导。
+```
+
+**注**：576 用户已收到（id=98 时间戳 2026-10-03 18:58:13 UTC，措辞跟最终版一致），无需重发。
+
+---
+
+## 🔑 关键事实（避免下个会话重查）
+
+### 工单 25 清理后的数据库状态
+
+```sql
+-- v2_ticket
+SELECT id, user_id, subject, status, last_reply_user_id FROM v2_ticket WHERE id=25;
+-- id=25, user_id=576, subject="提现", status=0
+
+-- v2_ticket_message (清理后)
+SELECT id, ticket_id, user_id, message, created_at FROM v2_ticket_message WHERE ticket_id=25 ORDER BY id;
+-- id=96: user_id=576, "1", 2026-10-03 17:58:09 UTC (用户原问题)
+-- id=98: user_id=50 (admin), "【关于您当前的佣金余额】...", 2026-10-03 18:58:13 UTC (管理员最终话术)
+```
+
+### 7 段代理话术包修订要点（仅给记忆，完整版见 v53 memory / 会话历史）
+
+| 旧版 | 新版 |
+|------|------|
+| 10% 佣金 | **20% 佣金** |
+| 续费继续返 10% | **仅首单锁定**,续费不返 |
+| 满 100 元提现 | **满 50 元提现** |
+| 后台自助提现 | **人工客服(工单)** |
+
+3 条红线同步更新（"绝对不要承诺续费返利 / 月月都有 / 自动到账"）。
+
+### 用户偏好校正（feedback 类）
+
+- **代理话术/营销文案/工单回复** — 用户默认手动发送,只交付文本,不调发送接口,不主动落档 docs
+- **业务规则争议** — 用户拍板的事尊重用户决策,代码不动,历史不补发
+- **话术措辞** — 绝不暗示规则不公 / 不剥夺用户既有权益 / 不踩"试用剥夺"红线
+
+---
+
+## 📞 唤醒词（新窗口直接复制粘贴）
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,这是 v53 进度文件。
+
+v53 (2026-10-04): 工单 25 话术定稿 + 误发消息清理 + 7段代理话术包修订(无代码改动)
+- 工单 25 (用户 576 提现咨询) 已用修订版话术回复,id=97 误发消息已 DELETE
+- 业务定位: 礼品卡占首单 = 规则,代码不改,历史不补发
+- 7段代理话术包按 v52 定稿参数修订完成 (20%/仅首单/50元/工单提现)
+- 服务器 v2_settings 配置已就位: invite_commission=20 / commission_withdraw_limit=50 / commission_first_time_enable=1
+- 无代码改动,xboard-repo 无 commit/push 欠账
+
+第一件事: 等用户分配任务。
+若用户要做新功能/改代码,先读 vp92-v52-agent-commission.md + vp92-v53-ticket-25.md 恢复上下文。
 ```
 
 ---
 
 ## 历史快照索引
 
-- v51 (2026-09-26/27): 套餐礼品卡兑换同步创建 v2_order (4 阶段事故链) ← 当前
+- **v55 (2026-10-05)**: 全网节点更新通知邮件 v3.0 整体营销版 — 572/572 发送成功,跑完恢复 ✅ ← 当前
+- v54 (2026-10-04): flag=clash Clash.php 不支持 VLESS 修复,commit `a71c116`
+- v53 (2026-10-04): 工单 25 话术定稿 + 误发消息清理 + 7段代理话术包修订
+- v52 (2026-10-04): 代理佣金 20% 定稿 + tw01 节点诊断
+- v51 (2026-09-26/27): 套餐礼品卡兑换同步创建 v2_order (4 阶段事故链) — commit `5543e32`
 - v50 (2026-09-24): ghcr.io Private 镜像推送 (kangtaze namespace) + P0 全闭环
 - v49 (2026-09-24): 612MB .tar 推 GitHub release + README 同步
 - v48.2 (2026-09-23): 5 地区营销邮件 — 教训"先 grep 现有邮件体系,不重复造"
