@@ -40,6 +40,26 @@
                         {{-- 引导语 --}}
                         <p style="margin:0 0 32px;color:#333;font-size:14px;line-height:1.9">尊敬的用户您好！感谢您注册 VP92 极速加速器。请先按以下 <strong style="color:#0f3460">3 步</strong>完成首次连接，然后查阅<strong style="color:#0f3460">「常见问题速查」</strong>，覆盖了 90% 新用户遇到的问题。</p>
 
+                        {{-- 区块零：试用节点说明（v56 新增 — 永久模板改动，新用户注册时自动收到）--}}
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f5d9b8;margin-bottom:28px;border-radius:4px;overflow:hidden">
+                            <tr><td style="background:linear-gradient(135deg,#e94560 0%,#d63851 100%);padding:14px 24px">
+                                <span style="color:#ffffff;font-size:13px;font-weight:600;letter-spacing:1.5px">🎁 00 / 关于您当前的试用体验 · 重要说明</span>
+                            </td></tr>
+                            <tr><td style="background:#fff8f0;padding:20px 24px">
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr><td style="color:#333;font-size:14px;line-height:1.85;padding:0 0 12px">
+                                        您当前正在使用的是 <strong style="color:#e94560">【试用节点】</strong>（数量有限，仅供体验）。
+                                    </td></tr>
+                                    <tr><td style="color:#333;font-size:14px;line-height:1.85;padding:0 0 12px">
+                                        购买任一 VIP 套餐后，即可解锁 <strong style="color:#0f3460">全部 153 个高速节点</strong>（覆盖 9 个国家/地区），享受更快更稳的连接体验，加入正式用户行列。
+                                    </td></tr>
+                                    <tr><td style="padding:8px 0 0;border-top:1px dashed #f5d9b8">
+                                        <span style="color:#999;font-size:12px;line-height:1.7;font-style:italic">💡 节点扩充、线路优化、协议升级，我们一直在升级。</span>
+                                    </td></tr>
+                                </table>
+                            </td></tr>
+                        </table>
+
                         {{-- 区块一：快速入门 3 步 --}}
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;margin-bottom:28px">
                             <tr><td style="background:#fafbfc;padding:14px 24px;border-bottom:1px solid #eee">
