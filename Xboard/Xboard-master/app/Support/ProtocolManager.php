@@ -99,6 +99,13 @@ class ProtocolManager
      */
     public function matchProtocolClassName(string $flag): ?string
     {
+        // Clash Premium (Clash.php) 不支持 VLESS,所有现代 Clash 客户端
+        // (Clash Verge / FlClash / Stash / ClashforAndroid-meta) 都基于 mihomo 内核
+        // flag=clash 显式 rewrite 到 clashmeta,确保用户拿到完整 VLESS 节点
+        if ($flag === 'clash') {
+            $flag = 'clashmeta';
+        }
+
         // 按照相反顺序，使最新定义的协议有更高优先级
         foreach (array_reverse($this->getProtocolClasses()) as $protocolClassString) {
             try {
