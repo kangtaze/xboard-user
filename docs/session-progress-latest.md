@@ -1,9 +1,38 @@
-# 📌 v55 Wakeup Snapshot — 2026-10-05 全网节点更新通知邮件 ✅ 已完成
+# 📌 v56 Wakeup Snapshot — 2026-10-05 欢迎邮件加 00 区块(试用 vs 全节点) ✅ 已完成
 
-> **v55 ✅ 完成** — A 方案(临时改 blade+php,跑完恢复不 commit),572/572 100% 发送成功
-> **状态**: 文案 v3.0 整体营销版 ✅ + 邮件已发送 ✅ + 容器/本地已恢复原版 ✅
+> **v56 ✅ 完成** — 永久模板改动,新用户注册时自动收到带 00 区块的邮件
+> **commit**: `577947a feat(mail): v56 欢迎邮件加 00 区块说明试用节点 vs 全节点`
+> **状态**: 三视图 md5 一致 ✅ + Octane reload ✅ + 邮件测试 ✅ + commit + push ✅
 > **强约束**: VIP4 不对外 (memory `vp92-vip4-admin-trial-only.md` 永久规则)
-> **历史对比**: 上次会话 v53 (工单 25 话术定稿,无代码改动)
+> **历史对比**: 上次会话 v55 (一次性群发 572 户,跑完恢复不 commit);v56 是永久模板改动
+
+---
+
+## ⚡ 一句话状态总结
+
+```
+v56 状态(2026-10-05):
+
+✅ 完成 — 永久模板改动,新用户注册时自动收到新欢迎邮件
+
+触发流程:
+   - 文件: app/Services/Auth/RegisterService.php line 188-197
+   - 调用: MailService::sendEmail([template_name => 'welcome'])
+   - 渲染: resources/views/mail/default/welcome.blade.php (现在含 00 区块)
+
+新增内容(00 区块 — 位于 01 快速入门之前):
+   - 标题: 🎁 00 / 关于您当前的试用体验 · 重要说明(红渐变 #e94560→#d63851)
+   - 正文:
+     • 您当前正在使用的是【试用节点】(数量有限,仅供体验)
+     • 购买任一 VIP 套餐后,即可解锁全部 153 个高速节点(覆盖 9 个国家/地区)
+   - 提示: 💡 节点扩充、线路优化、协议升级,我们一直在升级
+
+文件状态:
+   - 容器内 md5: 5c975a2b2bf49f3ff5739e7484f2adf7 ✅
+   - 本地 md5:   5c975a2b2bf49f3ff5739e7484f2adf7 ✅ (=容器)
+   - HEAD md5:   577947a commit (=远程 my/master)
+   - 增量: +20 行,1 个区块
+```
 
 ---
 
@@ -36,23 +65,30 @@ v55 状态(2026-10-05):
 
 ```
 读取 E:\jiedian\docs\session-progress-latest.md,然后读取
-C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v55-node-update-notice-email.md
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v56-welcome-email-trial-node.md
 和 vp92-vip4-admin-trial-only.md。
 
-这是 v55 任务闭环(2026-10-05 完成): 整体营销邮件 v3.0 已发送完毕。
-   - 572/572 100% 发送成功,主题【VP92】10月5日 全网升级完成
-   - 单封测试 ID: msg_a61715472658242c
-   - 容器/本地已恢复原版,git status clean
-   - 无 commit 欠账(方案 A: 临时改跑完恢复)
+这是 v56 任务闭环(2026-10-05 完成): 欢迎邮件(welcome.blade.php)已加 00 区块说明
+试用节点 vs 全节点。新用户注册时自动收到新版本邮件。已 commit `577947a` push my master。
 
-历史教训(下次会话避免踩):
-- blade/app 路径都是 overlayfs,必须 docker cp + docker exec cp,不 ssh cp
-- VIP4 永远不对外(vp92-vip4-admin-trial-only.md)
-- v48.2 / v55 同款"临时改 blade + 跑命令 + 改回"做法,不 commit
-- Brevo 群发 572 封 100% 成功,SSH exit 255 ≠ 失败
-- md5 比对时注意 CRLF vs LF 行结束符差异,逻辑内容一致即可
+如果用户要继续做邮件体系相关(新增 Send* 命令 / 改其他 blade / 写新的营销模板):
+- 必读: vp92-v48-2-reuse-existing-email-template-not-rebuild.md(找现有 Send* + blade 复用)
+- 必读: vp92-v55-node-update-notice-email.md(临时改跑完恢复 vs 永久模板的决策)
+- 必读: vp92-v56-welcome-email-trial-node.md(本次 v56 任务细节 + 永久模板改动经验)
+- 强规则: VIP4 永远不对外,即使在内部模板也不写
 
 下一步:等用户分配新任务。
+```
+
+---
+
+## ⚡ v55 一句话状态总结(参考)
+
+```
+v55 (2026-10-05 已闭环): 一次性群发邮件 — 方案 A(临时改,跑完恢复不 commit)
+   - 主题: 【VP92】10月5日 全网升级完成 · 我们一直在升级
+   - 收件人: 572 户(100% 发送成功,总耗时 487 秒)
+   - 容器/本地已恢复原版,git status clean
 ```
 
 ---
@@ -162,7 +198,8 @@ v53 (2026-10-04): 工单 25 话术定稿 + 误发消息清理 + 7段代理话术
 
 ## 历史快照索引
 
-- **v55 (2026-10-05)**: 全网节点更新通知邮件 v3.0 整体营销版 — 572/572 发送成功,跑完恢复 ✅ ← 当前
+- **v56 (2026-10-05)**: 欢迎邮件 welcome.blade.php 加 00 区块(试用 vs 全节点) — commit `577947a` ← 当前
+- **v55 (2026-10-05)**: 全网节点更新通知邮件 v3.0 整体营销版 — 572/572 发送成功,跑完恢复 ✅
 - v54 (2026-10-04): flag=clash Clash.php 不支持 VLESS 修复,commit `a71c116`
 - v53 (2026-10-04): 工单 25 话术定稿 + 误发消息清理 + 7段代理话术包修订
 - v52 (2026-10-04): 代理佣金 20% 定稿 + tw01 节点诊断
