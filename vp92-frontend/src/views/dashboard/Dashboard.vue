@@ -186,7 +186,7 @@ onMounted(async () => {
         <div class="sub-quick-url">{{ subscribeUrl || t('dashboard.subBar.noLink') }}</div>
         <button class="copy-btn" @click="copyToClipboard(subscribeUrl, t('dashboard.subBar.linkLabel'))">{{ t('dashboard.quickBar.copyLink') }}</button>
         <div class="sub-quick-formats">
-          <button class="fmt-chip" @click="copyToClipboard(buildFormatUrl('clash'), t('dashboard.subBar.fmtLabels.clash'))">Clash</button>
+          <button class="fmt-chip" @click="copyToClipboard(buildFormatUrl('clashmeta'), t('dashboard.subBar.fmtLabels.clash'))">Clash</button>
           <button class="fmt-chip" @click="copyToClipboard(buildFormatUrl('singbox'), t('dashboard.subBar.fmtLabels.singbox'))">SingBox</button>
           <button class="fmt-chip" @click="copyToClipboard(buildFormatUrl('shadowsocks'), t('dashboard.subBar.fmtLabels.ss'))">SS</button>
           <button class="fmt-chip" @click="copyToClipboard(buildFormatUrl('trojan'), t('dashboard.subBar.fmtLabels.trojan'))">Trojan</button>
