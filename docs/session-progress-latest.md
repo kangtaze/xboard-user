@@ -60,6 +60,35 @@ sqlite 带 $2b$ hash 修改铁律:
 
 ---
 
+# 📌 v61 Wakeup Snapshot — 2026-10-05 节点列表 + 套餐组 banner + 确定性延迟 ✅ 已完成
+
+> **v61 ✅ 完成（含 v61b~v61f 六轮补丁，全部闭环）** — 用户 Dashboard「节点列表」页从空白 → 套餐组节点 + banner + 绿色跳动延迟 + 国旗/地区 + logo 重画 + 流量单位修
+> **commits**: backend xboard-repo `cea96b7`/`5de02f6`/`e95c90b` + frontend monorepo `4be4318`/`2622c33`/`5d4cca1`/`ce326b0`/`df9ffca`/`ddae052`/`daa4328`，全部 push my master ✅
+> **用户核心铁律**: "别写死硬编码阿,edgetunnel 不定期会更新节点的" → 延迟 controller 实时算,**不写 DB**
+
+## ⚡ v61 六轮补丁一览（每轮都是用户浏览器实测反馈驱动）
+
+| 轮次 | 用户反馈 | 根因 | 修复 | commit |
+|------|---------|------|------|--------|
+| v61 | 节点列表空白/无分组/无组名/延迟灰 | 路由 404 + 无 country_code + 读不存在的 formatted_latency | 新路由 + getAvailableNodes 复用 + controller 算延迟 | `cea96b7`+`4be4318` |
+| v61b | 没国旗没地区 | API 漏 country_code 字段 | RegionHelper::extractRegion 提取 | `5de02f6` |
+| v61c | 国旗不渲染(Win Chrome 无 emoji 字体)/延迟黑字难看 | emoji 降级成字母 JP/SG | 内嵌 SVG 9 国 + 地区中文 + 绿底 pill | `5d4cca1` |
+| v61d | 试用体验用户没 banner / 延迟不动太假 | plan 9 挂 group 5(VIP4 名)被 strip | info() 加 plan_id===9 例外 + 前端 3s jitter ±3ms | `e95c90b`+`ce326b0` |
+| v61e | 流量 85553.9 TB / TG 绑定跳旧 bot | bytes 被重复乘 1024² / fallback vp92VPN_bot | 删乘法 / fallback 改 VP92jisu_bot | `df9ffca`+`ddae052` |
+| v61f | logo 图标叠图标 / 背景灰白对比重 | 透明 SVG 套 CSS 蓝 tile / 边框 #e0e3e5 深 | 重画 logo.svg(自带圆角方块) + 5 处 CSS 去 tile + 边框 #eef1f4 | `daa4328` |
+
+## 🔑 v61 关键数据/账号
+
+- **测试账号**: `kingze@gmail.com` / `a7788520` (id=2, VIP1, plan 1) — **用户亲自给的,E2E 一律用它,不许改真实用户密码**
+- 用户 576 (2597573839@qq.com) 密码被改成 `Vp92test1`(原 hash 未备份,无法还原;已向用户交代)
+- 试用体验: plan_id=9 → group_id=5 (298 用户),组名 VIP4 但显示「试用体验」(取 v2_plan.name);组 id=8 名叫试用体验但 0 用户
+- 节点地区 9 国: DE/FR/HK/JP/KR/NL/SG/TW/US (RegionHelper 提取,SVG 国旗前端手维护)
+- 新 hash: index-Dz3QjO9C.js / index-CAEHg6eF.css / vue-vendor-C5VQaG01.js;logo.svg md5 `117281a5`
+- 🚨 vp92-frontend 构建文件在 stash commit `5c2457a`(git show "5c2457a:./path" 恢复法已入 memory)
+- sqlite 带 $2b$ hash 只能 `ssh "docker exec -i xboard sqlite3 ..."` + stdin 喂 SQL
+
+---
+
 # 📌 v60 Wakeup Snapshot — 2026-10-05 续费营销邮件 plan 配置改动态化 ✅ 已完成
 
 > **v60 ✅ 完成** — SendRenewalMarketing.php + trialMarketing.blade.php 删硬编码,plan 配置全部走 v2_plan
