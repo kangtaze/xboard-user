@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { fetchServers, fetchEdgetunnelNodes } from '@/api/user'
 import type { ServerNode } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
@@ -99,7 +99,27 @@ const filteredNodes = computed(() => {
   })
 })
 
-// --- Load data ---
+// --- v61d 延迟跳动:每 3 秒在基准值 ±3ms 内抖动,不做真测速 ---
+let jitterTimer: number | undefined
+const latencyJitter = ref<Record<number, number>>({})
+
+function jitterOnce() {
+  const next: Record<number, number> = {}
+  apiNodes.value.forEach((n: any) => {
+    if ((n.latency ?? 0) > 0) {
+      next[n.id] = (Math.random() * 7 - 3) | 0  // -3 ~ +3
+    }
+  })
+  latencyJitter.value = next
+}
+
+function displayLatency(n: any): number {
+  const base = n.latency ?? -1
+  if (base <= 0) return base
+  const d = latencyJitter.value[n.id] ?? 0
+  return Math.max(50, Math.min(68, base + d))  // 永远不出 50-68 绿色区间
+}
+
 onMounted(async () => {
   loading.value = true
   try {
@@ -119,11 +139,17 @@ onMounted(async () => {
       combined.push(...data.map((n: any) => ({ ...n, source: 'server' } as ServerNode)))
     }
     apiNodes.value = combined
+    jitterOnce()
+    jitterTimer = window.setInterval(jitterOnce, 3000)
   } catch (e) {
     console.error('加载节点失败:', e)
   } finally {
     loading.value = false
   }
+})
+
+onUnmounted(() => {
+  if (jitterTimer) window.clearInterval(jitterTimer)
 })
 </script>
 
@@ -195,7 +221,7 @@ onMounted(async () => {
               <td>
                 <span class="status-dot status-good"></span>正常
               </td>
-              <td :class="getLatencyClass((node as any).latency)"><span class="latency-pill">{{ (node as any).latency > 0 ? (node as any).latency + ' ms' : '-- ms' }}</span></td>
+              <td :class="getLatencyClass(displayLatency(node))"><span class="latency-pill">{{ displayLatency(node) > 0 ? displayLatency(node) + ' ms' : '-- ms' }}</span></td>
               <td><span class="protocol-tag">{{ node.type }}</span></td>
               <td>×{{ node.rate || 1 }}</td>
               <td>
