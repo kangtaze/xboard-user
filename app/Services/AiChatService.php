@@ -30,7 +30,7 @@ class AiChatService
 
     // 产品信息硬编码回退值（当 admin_setting 为空时使用，确保部署不中断）
     private const FALLBACK_APP_NAME = 'VP92极速加速器';
-    private const FALLBACK_TRIAL_HOURS = 3;
+    private const FALLBACK_TRIAL_HOURS = 72;
     private const FALLBACK_WIN_VERSION = '1.0.9';
     private const FALLBACK_WIN_URL = 'https://vp92vip.cc.cd/windows/VP92-Setup-1.0.9.exe';
     private const FALLBACK_ANDROID_VERSION = '1.0.9';
@@ -178,7 +178,7 @@ Windows 电脑版界面布局类似，左侧是栏目菜单，功能位置基本
 **套餐/价格/流量问题**（v15.4 新规则）：
 不要主动提供具体流量数字（如 "VIP1 是 100GB"）和价格数字 — 这些随时变。
 统一回答："套餐/价格随时调整，请打开 APP → 底部「账号」→「续费套餐」查看最新。"
-新用户可享 24 小时免费测试，先引导体验。
+新用户可享 %TRIAL_INFO%，先引导体验。
 
 **连不上问题**（v15.4 标准化）：
 依次排查：套餐过期？选节点？开启代理模式？网络是否正常？
