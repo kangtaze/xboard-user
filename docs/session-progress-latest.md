@@ -1,3 +1,173 @@
+# 📌 v58 Wakeup Snapshot — 2026-10-05 黄金用户召回(过滤后 3 人)+ trialMarketing "立省 1/3" 永久 fix ✅ 已完成
+
+> **v58 ✅ 完成** — 8 个 d>10GB 黄金召回用户,过滤 5 个 gmail 脚本号,剩 3 个真实用户(414/592/364)邮件已发;trialMarketing blade 4 处 + command 1 处 "立享 50%" → "立省 1/3" 永久 fix
+> **commit**: `ef7155e fix(mail): trialMarketing '立享 50%' → '立省 1/3' 修正夸大折扣(v58)`
+> **push**: `my master bb9d669..ef7155e` ✅
+> **状态**: 服务器 blade md5 `a161d92a...` → `2915598d...` + command md5 `faf1e741...` + Brevo 3 封 100% 发送 + v2_mail_log 验证 ✅
+
+---
+
+## ⚡ v58 一句话状态总结
+
+```
+v58 状态(2026-10-05):
+
+✅ 完成 — 召回 8 黄金用户 → 过滤 5 gmail 脚本号 → 3 真实用户(QQ/163)邮件已发
+✅ 完成 — trialMarketing "立享 50% off" 永久 fix 为 "立省 1/3" (实际折扣,非夸大)
+
+决策路径:
+   - 用户问"为什么升级立享 50%?" → 发现 trialMarketing 自 v35(c0a39e0)起就硬编码 50% off
+   - 真实折扣: VIP1 ¥29.99 → ¥19.99 = 立省 1/3 (33.33%),不是 50%
+   - 用户拍板"只改文案,不再加额外折扣"
+   - 召回 8 人过程中,用户识别 5 个 gmail `name.alphanumeric.alphanumeric` 模式 = 脚本白嫖,过滤掉
+
+代码改动 (2 files, +6/-6):
+   - resources/views/mail/default/trialMarketing.blade.php (永久 fix,4 处文案)
+     - line 43 banner: "升级付费套餐 · 立享 50% 优惠" → "立省 1/3"
+     - line 54 引导: "专属 50% 升级优惠" → "限时立省 1/3"
+     - line 66 状态: "优惠保留:50%" → "立省 1/3"
+     - line 106 banner: "首单立减 50%" → "首单立减 1/3"
+     - line 180 CTA: "立即升级 · 享 50% 优惠" → "立省 1/3"
+   - app/Console/Commands/SendRenewalMarketing.php (永久 fix,1 处)
+     - line 115 subject: "...享 50% 优惠" → "立省 1/3"
+
+部署:
+   - 服务器原 blade md5: a161d92a6fa603fb992d082d5e75792f
+   - 服务器新 blade md5: 2915598d1e3e0202e83d7112353780c8 (= 本地) ✅
+   - 服务器新 command md5: faf1e741ec3f16e0946aafc6899c2a0b
+   - view:clear + octane:reload ✅
+   - v2_mail_log 3 条新记录 subject 全部 "立省 1/3" ✅
+
+3 个真实召回用户(414/592/364)+ Brevo 100% 成功,msgId 写入 v2_mail_log
+```
+
+---
+
+## 🎯 待办(自动模式优先做,做完报告)
+
+- [ ] **15 个转化用户复盘**(自动下一个) — 注册→付费时间线,触发动作归因
+- [ ] 批量清 281 个僵尸用户的 plan_id=9 — 一次性脚本 + 加 cron `detect:trial-expired-cleanup`
+- [ ] 加 `send:trial-expiring-reminder` — 试用到期前 3 天 + 当天提醒(防流失)
+- [ ] vp92-frontend 试用倒计时 banner — 临期红条引导升级
+- [ ] 老价推算表(已完成,见 v58 memory) — VIP1-VIP3 月/季/半年/年推算老价
+
+---
+
+# 📌 v57 Wakeup Snapshot — 2026-10-05 试用改 3 天 + 30GB + AI prompt 动态化 ✅ 已完成
+
+> **v57 ✅ 完成** — 试用配置改动态化,后台 setting 自动同步 AI prompt
+> **commit**: `bb9d669 feat(ai): v57 试用配置改动态占位符,后台设置 try_out_hour 自动同步 AI prompt`
+> **状态**: 本地+容器 md5 一致 ✅ + Octane reload ✅ + push my master ✅
+> **强约束**: 试用参数不要硬编码,一律走 admin setting (本次教训)
+
+---
+
+## ⚡ v57 一句话状态总结
+
+```
+v57 状态(2026-10-05):
+
+✅ 完成 — 试用时长 24h → 72h (3 天),流量 100GB → 30GB,AI prompt 同步动态化
+
+决策路径:
+   - 用户反馈: "用户体验完不来了" → 数据诊断真因: 不是"试用后流失",
+     是"24h 太短用户来不及建立使用习惯,95% 在 1h 内就走了"
+   - 转化模型: 95% 付费是"营销触达 → 立刻买",不靠试用驱动
+   - 真实试用转化率: 1.7% (去掉立刻买 + 老板本人)
+
+后台配置 (用户手工改):
+   - v2_settings.try_out_hour    = 72 (3 天)
+   - v2_plan.transfer_enable(9) = 30 (30 GB)
+
+代码改动 (1 file, +2/-2):
+   - app/Services/AiChatService.php:33  FALLBACK_TRIAL_HOURS 3 → 72
+   - app/Services/AiChatService.php:181 '新用户可享 24 小时免费测试...' →
+                                         '新用户可享 %TRIAL_INFO%...'
+     (与 line 376 str_replace 配对,setting 改 5/7 天自动同步)
+     (意外收获: line 51 也用 %TRIAL_INFO%,自动跟着改)
+
+部署:
+   - 服务器原 md5: 3578a9595e9b5b69792d51455e3ff245
+   - 服务器新 md5: 765ce514ff56d5f164a9105e2da01e3f (= 本地) ✅
+   - octane:reload ✅
+   - git push my master: e43d465..bb9d669 ✅
+
+老数据: 281 个过期僵尸试用用户**不 update** (用户决策)
+```
+
+## 🎯 待办 (用户拍板才能做)
+
+- [ ] 召回 8 个黄金用户 (d>10GB 且未付费) — 一封手工邮件,见 memory v57 段
+- [ ] 批量清 281 个僵尸用户的 plan_id=9 — 一次性脚本
+- [ ] 加 cron `detect:trial-expired-cleanup` — 自动清理过期试用
+- [ ] 加 `send:trial-expiring-reminder` — 试用到期前 3 天 + 当天提醒
+- [ ] vp92-frontend 试用倒计时 banner (临期红条引导升级)
+- [ ] 15 个转化用户的"action 路径"复盘 — 找出触发动作变成 dashboard 引导
+
+## 🔑 关键数据 (避免下个会话重查)
+
+```sql
+-- 漏斗 (近实时)
+试用用户 plan_id=9 当前: 298 (52% 用户都在试用!)
+试用后付费:              15 (5%, 但其中 8 人是立刻买,真实试用转化 1.7%)
+试用后从未付费:         283 (95%)
+281 个已过期但 plan_id 没清 ⚠️ 僵尸状态
+
+-- 流量消耗 (298 试用)
+d=0:    52 (17%) 注册完没碰过
+d<100MB: 166 (56%) 象征性用
+d>1GB:   65 (22%) 真用过
+d>10GB:  10 (3%)  黄金召回名单 (8 个未付费,见 memory v57)
+
+-- 8 个黄金召回用户名单 (d>10GB 且未付费)
+608 timothy15edward.s1.2.14@gmail.com (52GB)
+414 3278670016@qq.com (38GB)
+418 cuanquynhghi.us.e.n.h.4.76@gmail.com (25GB)
+406 albertowoods40.8.38@gmail.com (21GB)
+592 k18142567281@163.com (17GB)
+459 blaialvarad.o2369@gmail.com (15GB)
+364 1849500847@qq.com (14GB)
+525 bigphishcn@gmail.com (14GB)
+```
+
+## 🔔 唤醒提示词 (新窗口复制粘贴)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v57-trial-3d-30g-dynamic-prompt.md
+
+这是 v57 任务闭环 (2026-10-05 完成):
+- 试用时长 24h → 72h,流量 100GB → 30GB
+- AiChatService.php 两处硬编码改动态占位符
+- commit bb9d669 push my master,本地+容器 md5 一致
+
+如果用户要做召回 / 清理 / 倒计时 banner 等待办:
+- 必读: vp92-v57-trial-3d-30g-dynamic-prompt.md (含完整数据诊断 + 待办清单)
+- 必读: vp92-v56-welcome-email-trial-node.md (前一个版本上下文)
+- 强规则: 试用参数不要硬编码,一律走 admin setting
+- 待办 6 项见上方"待办"段
+
+下一步: 等用户分配新任务 (召回 / 清理 / banner / 转化路径复盘)。
+```
+
+## 📞 唤醒词 (新窗口直接复制粘贴)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,这是 v57 进度文件。
+
+v57 (2026-10-05): 试用改 3 天 + 30GB + AI prompt 动态化 ✅
+- 后台 v2_settings.try_out_hour=72 + v2_plan.transfer_enable(9)=30 (用户手工改)
+- 代码改 AiChatService.php 两处 (FALLBACK 72 + 181 行 %TRIAL_INFO% 占位符)
+- commit bb9d669 push my master,三视图 md5 一致
+- 老数据 281 个过期用户未 update (用户决策)
+
+第一件事: 等用户分配任务。
+若用户要做 v57 待办 (8 个黄金用户召回 / 281 僵尸清理 / cron 调度 / banner / 转化复盘),
+先读 vp92-v57-trial-3d-30g-dynamic-prompt.md 恢复完整上下文 + 数据。
+```
+
+---
+
 # 📌 v56 Wakeup Snapshot — 2026-10-05 欢迎邮件加 00 区块(试用 vs 全节点) ✅ 已完成
 
 > **v56 ✅ 完成** — 永久模板改动,新用户注册时自动收到带 00 区块的邮件
