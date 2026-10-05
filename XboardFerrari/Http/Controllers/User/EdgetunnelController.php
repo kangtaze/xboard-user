@@ -60,6 +60,9 @@ class EdgetunnelController
 
         // 手构 dashboard 期望的轻量元数据(不暴露 uuid/path/sni/host_header 等敏感配置)
         $data = $nodes->map(function (EdgetunnelNode $n) {
+            // v61b: 从节点名提取地区代码 + 补 country_code(前端国旗/地区列依赖)
+            // RegionHelper 是全系统地区逻辑唯一来源,新国家自动生效
+            $region = app(\App\Support\RegionHelper::class)->extractRegion($n->name);
             return [
                 'id' => (int) $n->id,
                 'name' => $n->name,
@@ -69,6 +72,7 @@ class EdgetunnelController
                 'online' => (bool) $n->online,
                 'last_check_at' => $n->last_check_at,
                 'host' => $n->host,
+                'country_code' => strtoupper($region),
                 'subscription_id' => (int) $n->subscription_id,
                 'tags' => ['edgetunnel'],
             ];
