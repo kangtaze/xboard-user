@@ -1,3 +1,45 @@
+# 📌 v59 Wakeup Snapshot — 2026-10-05 plan_id=9 撤回 ⛔ 已撤回(v59 教训已沉淀)
+
+> **v59 ⛔ 已撤回** — detect:trial-expired-cleanup 自动 cron + UPDATE plan_id=NULL 全部撤回
+> **用户原话**: "我后台设置了一个试用体验套餐,用户购买 VIP1-VIP3 **自然就升级了阿**"
+> **commit**: `6a4a128 revert(v59): 撤回 detect:trial-expired-cleanup,plan_id=9 是试用身份标识不该清`
+> **push**: `my master d4748d0..6a4a128` ✅
+> **核心教训**: `plan_id=9` = **用户试用身份标识**,不是"当前在用套餐";"僵尸堆积"是预期状态不是 bug;升级靠 `OrderService::buyByPeriod` 把 plan_id 改 1/2/3,不该清成 NULL
+
+---
+
+## ⚡ v59 一句话状态总结
+
+```
+v59 状态(2026-10-05):
+
+⛔ 已撤回 — v59 cron 假设"plan_id=9=过期=清 NULL"违反业务模型
+✅ 数据已还原 — 17 用户 plan_id=9 全部恢复
+✅ 自动 cron 已禁用 — Kernel.php:46 注释
+✅ 命令 UPDATE 路径已禁用 — 不带 --dry 直接 exit=1
+✅ Memory + session-progress 同步更新
+
+决策路径:
+   - 用户部署 v59 后看到我自己反复描述,质疑"为什么清理用户"
+   - 我解释"plan_id=NULL 是数据准确表达",但用户反问"如果用户购买 VIP 自然就升级了阿"
+   - 用户点破业务模型:plan_id=9 = 试用身份标识,过期不清
+   - 用户拍板立即撤回
+
+撤回动作(5 件事全完成):
+   - 1. SQL 还原: UPDATE v2_user SET plan_id=9 WHERE plan_id IS NULL AND 24h 内新过期
+     验证 total plan_id=9 = 298 (17 active + 264 老 + 17 新过期)
+   - 2. Kernel.php:46 schedule 注释 + 头部说明 v59 教训
+   - 3. CleanupExpiredTrials.php UPDATE 路径禁用 (`if (!option('dry')) { error; return 1; }`)
+   - 4. octane:reload ✅
+   - 5. git commit + push `d4748d0..6a4a128`
+
+服务器 md5:
+   - CleanupExpiredTrials.php: 70f2535c1bf5753f850edda4e199f4c6
+   - Kernel.php: e555dff56deba3522edff071395525c6
+```
+
+---
+
 # 📌 v58 Wakeup Snapshot — 2026-10-05 黄金用户召回(过滤后 3 人)+ trialMarketing "立省 1/3" 永久 fix ✅ 已完成
 
 > **v58 ✅ 完成** — 8 个 d>10GB 黄金召回用户,过滤 5 个 gmail 脚本号,剩 3 个真实用户(414/592/364)邮件已发;trialMarketing blade 4 处 + command 1 处 "立享 50%" → "立省 1/3" 永久 fix
@@ -46,7 +88,7 @@ v58 状态(2026-10-05):
 ## 🎯 待办(自动模式优先做,做完报告)
 
 - [ ] **15 个转化用户复盘**(自动下一个) — 注册→付费时间线,触发动作归因
-- [ ] 批量清 281 个僵尸用户的 plan_id=9 — 一次性脚本 + 加 cron `detect:trial-expired-cleanup`
+- [ ] ~~批量清 281 个僵尸用户的 plan_id=9~~ — **⛔ 已撤回**(v59 教训:plan_id=9 是身份标识,不该清)
 - [ ] 加 `send:trial-expiring-reminder` — 试用到期前 3 天 + 当天提醒(防流失)
 - [ ] vp92-frontend 试用倒计时 banner — 临期红条引导升级
 - [ ] 老价推算表(已完成,见 v58 memory) — VIP1-VIP3 月/季/半年/年推算老价
