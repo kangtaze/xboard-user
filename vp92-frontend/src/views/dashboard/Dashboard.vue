@@ -337,8 +337,9 @@ onMounted(async () => {
           <div class="conn-list">
             <div v-for="(log, i) in trafficLogs" :key="i" class="conn-item">
               <div class="conn-time">{{ formatDate(log.record_at) }}</div>
-              <div class="conn-node">↓ {{ formatBytes(log.d * 1024 * 1024) }}</div>
-              <div class="conn-traffic">↑ {{ formatBytes(log.u * 1024 * 1024) }}</div>
+              <!-- v61e 修复: API 的 d/u 已经是 bytes (TrafficLogResource 直传 v2_stat_user),不再乘 1024*1024 -->
+              <div class="conn-node">↓ {{ formatBytes(log.d) }}</div>
+              <div class="conn-traffic">↑ {{ formatBytes(log.u) }}</div>
             </div>
             <div v-if="trafficLogs.length === 0" class="conn-empty">{{ t('dashboard.chart.empty') }}</div>
           </div>
