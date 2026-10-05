@@ -147,14 +147,14 @@ onUnmounted(() => {
 .globe-canvas { width: 100%; height: 100%; }
 .globe-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: linear-gradient(to top, #0a1628, transparent); pointer-events: none; }
 .globe-brand { position: absolute; top: 32px; left: 40px; display: flex; align-items: center; gap: 12px; z-index: 10; }
-.globe-brand-logo { width: 42px; height: 42px; background: linear-gradient(135deg, #0066ff, #6600ff); border-radius: 12px; display: flex; align-items: center; justify-content: center; object-fit: contain; }
+.globe-brand-logo { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; object-fit: contain; }
 .globe-brand-logo span { color: #fff; font-weight: 800; font-size: 16px; }
 .globe-brand-name { font-size: 22px; font-weight: 800; color: #fff; }
 .globe-brand-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 
 .form-side { flex: 1; display: flex; align-items: center; justify-content: center; background: #f7f9fb; position: relative; }
 .login-card { width: 380px; padding: 48px 40px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.6); border-radius: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.06); }
-.login-card .logo { width: 56px; height: 56px; background: linear-gradient(135deg, #0066ff, #6600ff); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 4px 20px rgba(0,102,255,0.3); object-fit: contain; }
+.login-card .logo { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; object-fit: contain; }
 .login-card .logo span { color: #fff; font-weight: 800; font-size: 20px; }
 .login-card h1 { text-align: center; font-size: 24px; font-weight: 800; color: #191c1e; margin-bottom: 4px; }
 .login-card .subtitle { text-align: center; font-size: 14px; color: #424656; margin-bottom: 32px; }

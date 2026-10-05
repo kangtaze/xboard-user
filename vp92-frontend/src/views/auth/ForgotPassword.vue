@@ -134,7 +134,7 @@ async function handleReset() {
 <style scoped>
 .forgot-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f7f9fb; padding: 24px; }
 .forgot-card { width: 400px; padding: 48px 40px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.6); border-radius: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.06); }
-.forgot-card .logo { width: 56px; height: 56px; background: linear-gradient(135deg, #0066ff, #6600ff); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 4px 20px rgba(0,102,255,0.3); object-fit: contain; }
+.forgot-card .logo { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; object-fit: contain; }
 .forgot-card .logo span { color: #fff; font-weight: 800; font-size: 20px; }
 .forgot-card h1 { text-align: center; font-size: 24px; font-weight: 800; color: #191c1e; margin-bottom: 4px; }
 .forgot-card .subtitle { text-align: center; font-size: 14px; color: #424656; margin-bottom: 32px; }
