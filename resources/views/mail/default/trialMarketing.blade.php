@@ -1,16 +1,16 @@
 {{-- 试用体验到期营销邮件 — 官方企业化风格（基于 renewalMarketing 标杆样式，引导升级 VIP1/2/3 付费套餐，**不提 VIP4**）--}}
+{{-- v60 改动态化：删硬编码 $paidPlans 数组 + (5GB/500Mbps),改用 controller 传入的 $currentPlanTraffic / $currentPlanSpeed / $upgradePlans（来自 v2_plan 实时读）--}}
 @php
     // 默认值兜底（防止模板变量未传）
     $planName = $plan['name'] ?? '试用体验';
     $expiredDate = $expired_date ?? date('Y年m月d日');
     $daysExpired = $days_expired ?? 0;
+    // v60 — 当前过期套餐真实数据（来自 v2_plan）,NULL speed → 显示"不限速"
+    $currentPlanTraffic = $currentPlanTraffic ?? ($plan['traffic'] ?? '—');
+    $currentPlanSpeed   = $currentPlanSpeed   ?? ($plan['speed']   ?? '不限速');
 
-    // 付费套餐对比档（仅展示 VIP1/2/3，引导用户选择付费方案；试用体验不续费）
-    $paidPlans = [
-        ['level' => 'VIP1', 'tag' => '入门首选', 'monthly' => '19.90', 'quarterly' => '56', 'traffic' => '600GB', 'speed' => '1000Mbps', 'recommended' => false],
-        ['level' => 'VIP2', 'tag' => '热销推荐', 'monthly' => '29.90', 'quarterly' => '85', 'traffic' => '1000GB', 'speed' => '2000Mbps', 'recommended' => true],
-        ['level' => 'VIP3', 'tag' => '重度用户', 'monthly' => '49.90', 'quarterly' => '142', 'traffic' => '2000GB', 'speed' => '3000Mbps', 'recommended' => false],
-    ];
+    // v60 — 升级档 VIP1/2/3 数据从 controller 传入（$upgradePlans），删 blade 内硬编码
+    $paidPlans = $upgradePlans ?? [];
 @endphp
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -60,7 +60,7 @@
                             </td></tr>
                             <tr><td style="padding:24px 24px 8px">
                                 <table width="100%" cellpadding="0" cellspacing="0">
-                                    <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 当前套餐：<strong style="color:#1a1a2e">{{ $planName }}</strong>（5GB 流量 / 500Mbps 带宽）</td></tr>
+                                    <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 当前套餐：<strong style="color:#1a1a2e">{{ $planName }}</strong>（{{ $currentPlanTraffic }} 流量 / {{ $currentPlanSpeed }} 带宽）</td></tr>
                                     <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 到期日期：<strong style="color:#e94560">{{ $expiredDate }}</strong>（已过期 {{ $daysExpired }} 天）</td></tr>
                                     <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 账号状态：试用服务已停止，恢复需升级付费套餐</td></tr>
                                     <tr><td style="padding:8px 0 16px;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 优惠保留：<strong style="color:#e94560">立省 1/3 升级券</strong> 已绑定到您的账户，<strong style="color:#0f3460">30 天</strong> 内升级自动生效</td></tr>
