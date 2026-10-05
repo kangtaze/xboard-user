@@ -40,7 +40,7 @@
                 <tr>
                     <td style="background:#0f3460;padding:56px 40px 48px;text-align:center">
                         <p style="margin:0 0 18px;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:500">TRIAL EXPIRED · 试用体验到期</p>
-                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:300;letter-spacing:0.5px;line-height:1.4">您的 <span style="font-weight:700">试用体验</span> 已到期<br><span style="font-weight:700;font-size:24px">升级付费套餐 · 立享 50% 优惠</span></h1>
+                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:300;letter-spacing:0.5px;line-height:1.4">您的 <span style="font-weight:700">试用体验</span> 已到期<br><span style="font-weight:700;font-size:24px">升级付费套餐 · 立省 1/3</span></h1>
                         <p style="margin:18px 0 0;color:rgba(255,255,255,0.5);font-size:13px;letter-spacing:0.3px">已到期 {{ $daysExpired }} 天 · 立即升级，全球网络加速不间断</p>
                     </td>
                 </tr>
@@ -51,7 +51,7 @@
                     <td style="padding:48px 40px 32px">
 
                         {{-- 引导语 --}}
-                        <p style="margin:0 0 36px;color:#333;font-size:14px;line-height:1.95">尊敬的用户：<br>感谢您体验 <strong style="color:#0f3460">VP92 极速加速器</strong>。您的 <strong style="color:#0f3460">试用体验</strong> 服务已于 <strong style="color:#e94560">{{ $expiredDate }}</strong> 到期。<br>为了让您继续畅享全球网络加速，我们为试用体验用户准备了<strong style="color:#e94560">专属 50% 升级优惠</strong>，仅限本邮件，请尽快选择套餐。</p>
+                        <p style="margin:0 0 36px;color:#333;font-size:14px;line-height:1.95">尊敬的用户：<br>感谢您体验 <strong style="color:#0f3460">VP92 极速加速器</strong>。您的 <strong style="color:#0f3460">试用体验</strong> 服务已于 <strong style="color:#e94560">{{ $expiredDate }}</strong> 到期。<br>为了让您继续畅享全球网络加速，我们为试用体验用户准备了<strong style="color:#e94560">限时立省 1/3 升级优惠</strong>，仅限本邮件，请尽快选择套餐。</p>
 
                         {{-- 区块 01：当前账号状态 --}}
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;margin-bottom:28px">
@@ -63,7 +63,7 @@
                                     <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 当前套餐：<strong style="color:#1a1a2e">{{ $planName }}</strong>（5GB 流量 / 500Mbps 带宽）</td></tr>
                                     <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 到期日期：<strong style="color:#e94560">{{ $expiredDate }}</strong>（已过期 {{ $daysExpired }} 天）</td></tr>
                                     <tr><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 账号状态：试用服务已停止，恢复需升级付费套餐</td></tr>
-                                    <tr><td style="padding:8px 0 16px;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 优惠保留：<strong style="color:#e94560">50% 升级券</strong> 已绑定到您的账户，<strong style="color:#0f3460">30 天</strong> 内升级自动生效</td></tr>
+                                    <tr><td style="padding:8px 0 16px;color:#333;font-size:14px;line-height:1.7"><span style="color:#0f3460;margin-right:10px;font-weight:700">●</span> 优惠保留：<strong style="color:#e94560">立省 1/3 升级券</strong> 已绑定到您的账户，<strong style="color:#0f3460">30 天</strong> 内升级自动生效</td></tr>
                                 </table>
                             </td></tr>
                         </table>
@@ -103,7 +103,7 @@
                                 <td style="padding:0 24px 20px;background:#fafbfc">
                                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf3f4;border-left:3px solid #e94560">
                                         <tr><td style="padding:12px 16px">
-                                            <span style="color:#a33;font-size:12px;line-height:1.7">🎁 <strong style="color:#e94560">试用体验专属福利</strong>：本邮件专属升级，<strong style="color:#e94560">首单立减 50%</strong>（自动从套餐价格扣减，结算时生效）</span>
+                                            <span style="color:#a33;font-size:12px;line-height:1.7">🎁 <strong style="color:#e94560">试用体验专属福利</strong>：本邮件专属升级，<strong style="color:#e94560">首单立减 1/3</strong>（自动从套餐价格扣减，结算时生效）</span>
                                         </td></tr>
                                     </table>
                                 </td>
@@ -177,7 +177,7 @@
                         {{-- CTA 主按钮 --}}
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px">
                             <tr><td align="center" style="padding:8px 0 12px">
-                                <a href="https://vp92vip.com/#/renew" style="display:inline-block;background:#e94560;color:#ffffff;text-decoration:none;padding:16px 64px;font-size:15px;font-weight:700;letter-spacing:3px">立即升级 · 享 50% 优惠</a>
+                                <a href="https://vp92vip.com/#/renew" style="display:inline-block;background:#e94560;color:#ffffff;text-decoration:none;padding:16px 64px;font-size:15px;font-weight:700;letter-spacing:3px">立即升级 · 立省 1/3</a>
                             </td></tr>
                             <tr><td style="text-align:center;padding:6px 0 0">
                                 <span style="color:#999;font-size:12px">升级后原订阅配置自动继承，</span><span style="color:#999;font-size:12px">无需重新下载客户端</span>

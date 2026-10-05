@@ -112,7 +112,7 @@ class SendRenewalMarketing extends Command
             $isTrial = ($user->plan_id == 9);
             $template = $isTrial ? self::TEMPLATE_TRIAL : self::TEMPLATE_VIP;
             $subject = $isTrial
-                ? '【VP92】您的试用体验已到期 — 升级付费套餐享 50% 优惠'
+                ? '【VP92】您的试用体验已到期 — 升级付费套餐立省 1/3'
                 : "【VP92】您的{$plan['name']}服务到期通知 — 续费方案";
 
             $html = $this->buildEmail($plan, $expiredDate, $daysExpired, $isTrial);
