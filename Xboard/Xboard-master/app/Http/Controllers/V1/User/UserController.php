@@ -131,12 +131,19 @@ class UserController extends Controller
         }
         $user['avatar_url'] = 'https://cdn.v2ex.com/gravatar/' . md5($user->email) . '?s=64&d=identicon';
 
-        // v61: 套餐组 banner 数据 — VIP4 (group_id=5) 不对外,直接 strip 字段
-        // 配合 memory vp92-vip4-admin-trial-only 永久规则 + 前端 v-if 自动隐藏
+        // v61: 套餐组 banner 数据
+        // - VIP4 付费分组(group_id=5 且非试用)不对外,直接 strip 字段
+        // - 试用体验用户(plan_id=9 恰好也挂 group_id=5)例外:显示「试用体验」
+        //   (用户 v61b 拍板;组名取 plan 名,不读 v2_server_group 里那个 VIP4)
         if ($user->group_id && $user->group_id != 5) {
             $group = ServerGroup::find($user->group_id);
             if ($group) {
                 $user['group'] = ['id' => (int) $group->id, 'name' => $group->name];
+            }
+        } elseif ((int) $user->plan_id === 9) {
+            $trialPlan = Plan::find(9);
+            if ($trialPlan) {
+                $user['group'] = ['id' => 5, 'name' => $trialPlan->name];
             }
         }
 
