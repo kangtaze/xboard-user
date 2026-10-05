@@ -256,7 +256,8 @@ async function handleTelegramBind() {
     }
   } else {
     // Bind — redirect to Telegram bot
-    const botName = telegramBotUsername.value || 'vp92VPN_bot'
+    // v61e: fallback 硬编码 VP92jisu_bot(现役 bot),getBotInfo 失败时不再跳已废弃的 vp92VPN_bot
+    const botName = telegramBotUsername.value || 'VP92jisu_bot'
     window.open(`https://t.me/${botName}?start=bind`, '_blank')
     showToast(t('settings.bindings.bindHint'))
   }
