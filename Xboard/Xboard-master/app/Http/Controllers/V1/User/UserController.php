@@ -8,6 +8,7 @@ use App\Http\Requests\User\UserTransfer;
 use App\Http\Requests\User\UserUpdate;
 use App\Models\Order;
 use App\Models\Plan;
+use App\Models\ServerGroup;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Auth\LoginService;
@@ -118,6 +119,7 @@ class UserController extends Controller
                 'balance',
                 'commission_balance',
                 'plan_id',
+                'group_id',
                 'discount',
                 'commission_rate',
                 'telegram_id',
@@ -128,6 +130,16 @@ class UserController extends Controller
             return $this->fail([400, __('The user does not exist')]);
         }
         $user['avatar_url'] = 'https://cdn.v2ex.com/gravatar/' . md5($user->email) . '?s=64&d=identicon';
+
+        // v61: 套餐组 banner 数据 — VIP4 (group_id=5) 不对外,直接 strip 字段
+        // 配合 memory vp92-vip4-admin-trial-only 永久规则 + 前端 v-if 自动隐藏
+        if ($user->group_id && $user->group_id != 5) {
+            $group = ServerGroup::find($user->group_id);
+            if ($group) {
+                $user['group'] = ['id' => (int) $group->id, 'name' => $group->name];
+            }
+        }
+
         return $this->success($user);
     }
 

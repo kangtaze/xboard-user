@@ -7,6 +7,7 @@ use App\Http\Controllers\V1\User\GiftCardController;
 use App\Http\Controllers\V1\User\InviteController;
 use App\Http\Controllers\V1\User\AiController;
 use App\Http\Controllers\V1\User\KnowledgeController;
+use App\Http\Controllers\V1\User\MessageController;
 use App\Http\Controllers\V1\User\NoticeController;
 use App\Http\Controllers\V1\User\OrderController;
 use App\Http\Controllers\V1\User\PlanController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\V1\User\TelegramController;
 use App\Http\Controllers\V1\User\TicketController;
 use App\Http\Controllers\V1\User\UserController;
 use Illuminate\Contracts\Routing\Registrar;
+use XboardFerrari\Http\Controllers\User\EdgetunnelController;
 
 class UserRoute
 {
@@ -54,6 +56,9 @@ class UserRoute
             $router->get('/invite/details', [InviteController::class, 'details']);
             // Notice
             $router->get('/notice/fetch', [NoticeController::class, 'fetch']);
+            // Message（Task #17 PR-B1，统一消息中心）
+            $router->get('/message/fetch', [MessageController::class, 'fetch']);
+            $router->post('/message/markRead', [MessageController::class, 'markRead']);
             // Ticket
             $router->post('/ticket/reply', [TicketController::class, 'reply']);
             $router->post('/ticket/close', [TicketController::class, 'close']);
@@ -62,6 +67,8 @@ class UserRoute
             $router->post('/ticket/withdraw', [TicketController::class, 'withdraw']);
             // Server
             $router->get('/server/fetch', [ServerController::class, 'fetch']);
+            // Edgetunnel (v61 - 节点列表独立路由,套餐组过滤)
+            $router->get('/server/edgetunnel', [EdgetunnelController::class, 'fetch']);
             // Coupon
             $router->post('/coupon/check', [CouponController::class, 'check']);
             // Gift Card
