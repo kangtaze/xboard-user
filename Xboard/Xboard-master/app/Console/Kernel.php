@@ -43,8 +43,9 @@ class Kernel extends ConsoleKernel
         // 续费营销邮件 — 每天上午10点自动发送给到期用户（7天内不重复）
         $schedule->command('send:renewal-marketing', ['--force'])->dailyAt('10:00')->onOneServer();
 
-        // v59: 自动清理 24h 内新过期试用用户 plan_id (避免僵尸堆积,不碰老数据)
-        $schedule->command('detect:trial-expired-cleanup', ['--force'])->dailyAt('03:00')->onOneServer();
+        // v59 已撤回 — plan_id=9 是用户试用身份标识(不是"当前在用"),升级靠 plan_id 改 1/2/3,不该清成 NULL
+        // detect:trial-expired-cleanup 命令保留,仅供人工 dry-run 输出过期清单,不自动执行
+        // $schedule->command('detect:trial-expired-cleanup', ['--force'])->dailyAt('03:00')->onOneServer();
 
         // Intent campaign: daily refresh + optional auto send (v19 2026-08-27)
         $schedule->command('intent:refresh')->dailyAt('00:30')->onOneServer();
