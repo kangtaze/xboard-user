@@ -1,3 +1,850 @@
+# 📌 v75 Wakeup Snapshot — 2026-10-09 yaml 借鉴铁律 + v75.b AI 话术场景区分铁律 ✅ v74 方向对, 措辞待优化
+
+> **v75 ✅ 教训沉淀 + v75.b 铁律 #16 修正** — v65 借鉴别人 yaml 埋 v66-v70 整条事故链 = 铁律 #15;v74 AI 话术方向**对的**(用户已澄清 + 进一步解释"重启清上游 ISP DNS 缓存,域名解析干净"机制),铁律 #16 必须场景区分(用户侧 ISP 劫持 ✅ 允许引导重启光猫+路由+换 DNS;VP92 服务侧 ❌ 禁止推给用户)
+> **新铁律**:
+> - **#15** 改 yaml 必先查 server DB content(以 server 为 single source of truth),禁止借鉴别人 yaml
+> - **#16 v75.b 修正** AI 话术必须场景区分 — 用户侧 ISP 劫持 ✅ 允许引导重启光猫+路由+换 DNS;VP92 服务侧 ❌ 禁止推给用户
+> **memory**: `vp92-v75-yaml-borrowing-and-ai-prompt-lessons.md` (完整事故链 + 用户原话 + 强制动作 + v75.b 修正)
+> **v74 状态** (2026-10-09 部署完成):
+> - ✅ **已部署** — commit `323b25c` push my master 成功,本地 + server md5=`e646c04ad7f60a5f66c3477c008d1d49`
+> - ✅ SPA AI 客服 E2E 2 场景全通过 ("网络卡" + "落地IP")
+> - ⏳ TG @vp92jisu bot E2E **待用户实测** (我没 TG client, getUpdates 跟 bot long polling 冲突 409)
+> - 🐛 顺手发现 BUG: 2026-10-09 10:00 `send:renewal-marketing` 报 `Undefined variable $purchase_url in renewalCampaign.blade.php:112` — 今日续费营销邮件**全失败**, 等用户拍板
+> - 🐛 旧 BUG 回归: `supervisorctl status` 显示 `unix:///run/supervisord.sock no such file` — supervisord.conf 缺 `[unix_http_server]` 段, v35b 修复回归, 但 `schedule:work` 进程在跑 (pid 2529), 不影响实际执行
+> - **memory**: `vp92-v74-ai-network-troubleshoot-prompt-deployed.md` (完整 v2 草稿 + E2E 实跑 + 2 个 BUG 详情)
+
+## ⚡ v75/v75.b 一句话状态总结
+
+```
+v75 状态(2026-10-09):
+
+✅ 教训沉淀 — v65 借鉴事故链 = 铁律 #15 (改 yaml 必先查 server content)
+✅ v75.b 铁律 #16 修正 — 我之前误读用户意图, 过度延伸"禁止让用户操作设备"
+✅ v74 方向对 — 用户原话"VPN 开着 + 域名被劫持/被干扰 → 重启光猫+路由 → 上游 DNS 缓存清空 → 干净"
+                 这是 ISP 透明代理劫持正确运维知识, 不是甩锅
+🚧 v74 措辞待优化 — 去掉"90%"/"80%"无依据数字, 加"上游 DNS 缓存"机制说明, "落地 IP 不对"分场景
+
+v65 借鉴事故链 (v65→v66→v67→v68→v69→v70 6 个 commit):
+   - v65 借鉴别人"防泄露" yaml 加 sniffer + proxy-server-nameserver + socks-port + 音乐 fake-ip-filter
+   - 后果: OpenClash 测延迟全 Timeout + vp92-flclash 首次测延迟全 Timeout
+   - 用户 2026-10-08 21:12-21:20 admin 后台改回正确版本(md5 ca54592802590a3ae116ff3b550ef52d)
+   - 用户版本特征: 无 sniffer, 无 dns.listen, 无 proxy-server-nameserver, 无 socks-port,
+                  用 nameserver-policy + fallback 三段式, 完整 rules 段
+   - 本地 default.clash.yaml (md5 ab804d8f) 跟 server 不一致 — xboard 上游 fork 遗留
+
+v74 话术方向 (✅ 对, 措辞 🚧 待优化):
+   - 原设计 (本地已改, 未部署): "90% 是用户自家设备问题 → 重启光猫+路由(拔电源等 30s)
+                                    → 能解决 80% → 重启后仍卡 → 换 DNS 223.5.5.5 / 119.29.29.29
+                                    → 不行才联系人工客服"
+   - 用户原话 (2 句, 关键):
+     ① "我是想告诉客户,其实有时候在开VPN的时候 域名被劫持了 被干扰了 其实
+        只要本地 光猫+路由重启一下就好了"
+     ② "重启以后上游DNS缓存不就清空了吗 这样不就干净了吗"
+   - 机制: VPN 开着 → ISP 透明代理劫持 → 上游 ISP DNS 缓存污染
+                          → 重启光猫+路由 → 上游 DNS 缓存清空 → 域名解析干净
+   - 我之前误读: 把"网络卡顿"全归为"VP92 服务侧问题", 把"重启光猫+路由"当"甩锅用户" — 错的
+   - 措辞优化方向: 保留"重启光猫+路由 + 换 DNS"骨架,
+                    改"90%"/"80%" → "通常/很多时候",
+                    加"上游 DNS 缓存清空"机制说明,
+                    "落地 IP 不对" 引导反馈节点名 (服务侧)
+
+强制动作 (等用户拍板措辞后部署):
+   1. v74 话术措辞优化 → 草稿见下方"v74 措辞优化草稿"段
+   2. v74 部署 SOP → 见下方"v74 部署 SOP"段
+   3. 本地 default.clash.yaml 不要改(让用户后台改 server DB)
+   4. v75/v75.b 教训已写入 C:\Users\Administrator\.claude\CLAUDE.md 末尾铁律段 + memory 文件
+```
+
+## 📝 v74 措辞优化草稿(基于"上游 DNS 缓存清空"机制, 等你拍板)
+
+**原版措辞**(本地 L107, 已写但未部署):
+```
+→ 90% 是用户自家设备问题, 先让用户重启家里的光猫和路由器
+→ (拔电源等 30 秒再插回去, 顺序: 先光猫后路由器)
+→ 能解决 80% 的卡顿和 DNS 异常
+→ 重启后仍卡 → 换节点测试 / 换 DNS (223.5.5.5 / 119.29.29.29) / 检查运营商节点
+→ 仍不行才联系人工客服
+```
+
+**优化版草稿 v2**(按你"上游 DNS 缓存清空"机制 + "不提 DNS 建议"原则):
+```
+【开 VPN 时域名被劫持 / 被干扰】
+开 VPN 时如果遇到域名打不开 / 被劫持 / 被干扰, 通常是 ISP 透明
+代理劫持了上游 DNS 缓存。重启家里的光猫 + 路由器(拔电源等 30s
+再插回去, 顺序: 先光猫后路由器), 可以清空上游 DNS 缓存, 让域名
+解析恢复干净。
+
+重启后仍异常, 换节点测试 (同地区不同 IP 段, 或换国家),
+仍不行再联系客服, 反馈: 客户端名 + 节点名 + 测速结果 + 截图
+
+【落地 IP 不对】
+直接反馈节点名 + ip.sb / ipleak.net 截图给我们,
+由我们排查节点出口 (跟用户设备无关)。
+```
+
+**v2 优化点 vs v1**:
+- ❌ **删** "换 DNS: 路由器 / 客户端里改成 223.5.5.5 或 119.29.29.29" — 你说"不提建议",用户自己改
+- ❌ **删** v1 草稿里所有具体 DNS 数字 (223.5.5.5 / 119.29.29.29) — 你说"客户都随意"
+- ✅ 保留"重启光猫+路由 → 上游 DNS 缓存清空 → 干净" 主轴 (你说的机制)
+- ✅ 保留"换节点测试"作为重启无效后的次步
+- ✅ 保留"落地 IP 不对 → 反馈节点名" (服务侧场景, 跟用户设备无关)
+
+## 📜 v74 部署 SOP (新版, 等话术定稿后)
+
+```bash
+# Step 1: 改前 md5 对比 (铁律 #2)
+ssh xboard "docker exec xboard md5sum /www/app/Services/AiChatService.php"
+# 期望: 仍是 765ce514ff56d5f164a9105e2da01e3f (v57 部署后, 跟 v74 旧话术一致)
+
+# Step 2: scp + docker cp (铁律 #6)
+scp AiChatService.php root@154.3.38.212:/tmp/AiChatService_v74b.php
+ssh root@154.3.38.212 "docker cp /tmp/AiChatService_v74b.php xboard:/www/app/Services/AiChatService.php"
+
+# Step 3: 容器内 md5 + grep 验证
+ssh xboard "docker exec xboard md5sum /www/app/Services/AiChatService.php && \
+            docker exec xboard grep -E '光猫|路由器|223.5.5.5' /www/app/Services/AiChatService.php"
+# 期望: md5 跟本地一致, **不**出现 "光猫" "路由器" "223.5.5.5" "119.29.29.29" 关键词 (铁律 #16)
+
+# Step 4: Octane reload (PHP Swoole 常驻进程, 必须 reload)
+ssh xboard "docker exec xboard php artisan view:clear && \
+            docker exec xboard php artisan cache:clear && \
+            docker exec xboard php artisan octane:reload"
+
+# Step 5: E2E 实跑 (铁律 #8)
+# 5a. SPA AI 客服入口:
+curl -X POST https://vp92vip.com/api/v1/guest/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"我家网络最近很卡, 是不是被劫持了?"}'
+# 期望: 返回的 reply **不**包含 "光猫" "路由器" "重启" "223.5.5.5" 关键词
+#       包含 "重新拉" "订阅" "节点" 关键词 (铁律 #16)
+
+# 5b. TG bot 入口: 给 @VP92jisu_bot 发同样问题
+#     → Bot 回答必须引导"重新拉订阅 + 反馈节点名"
+
+# 5c. 容器内 tinker 渲染验证 (铁律 #8):
+ssh xboard "docker exec xboard php artisan tinker --execute='echo \\App\\Services\\AiChatService::SYSTEM_PROMPT;' | grep -E '网络|订阅|节点'"
+# 期望: 看到新话术相关关键词, 不看到 "光猫" "路由器" "223.5.5.5"
+
+# Step 6: 验证 schedule + bot 仍 RUNNING (v35b 教训, 部署不会动它)
+docker exec xboard supervisorctl status schedule  # RUNNING
+docker exec xboard supervisorctl status telegram-ai  # RUNNING
+
+# Step 7: git commit + push (铁律 #12, 只动 xboard-repo 独立仓库)
+cd E:\jiedian\xboard-repo
+git config --global --unset http.proxy  # 透明代理环境必做
+git add app/Services/AiChatService.php
+git commit -m "feat(ai): v74b 重做网络故障排查话术 — 引导重新拉订阅 + 反馈节点名 (按 v75 铁律 #16)"
+git push my master
+```
+
+## 🔔 唤醒提示词(新窗口)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v75-yaml-borrowing-and-ai-prompt-lessons.md
+和 C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v74-ai-network-troubleshoot-prompt.md
+
+v75 教训(2026-10-09 沉淀) + v75.b 修正 — 2 条新铁律:
+- #15 改 yaml 必先查 server DB content, 禁止借鉴
+- #16 v75.b 修正: AI 话术必须场景区分 — 用户侧 ISP 劫持 ✅ 允许引导重启光猫+路由+换 DNS
+                       VP92 服务侧 ❌ 禁止推给用户重启设备/换 DNS
+
+v74 ✅ 方向对 (用户澄清 "VPN 开着 + 域名被劫持/被干扰 → 重启光猫+路由 → 上游 DNS 缓存清空 → 干净"
+              是正确 ISP 劫持运维知识, 不是甩锅)
+   🚧 措辞待优化 — 草稿见 v75 段上方"v74 措辞优化草稿"段
+   部署 SOP 见 v75 段上方 (md5 + scp + docker cp + octane:reload + E2E)
+
+强规则 (v75/v75.b 新加):
+- 改 yaml 必先 ssh 拉 server content 跟本地对比, 以 server 为准
+- 改 AI prompt 必 E2E 实跑, 不靠"我以为"
+- 改 AI prompt 必场景区分 (用户侧/客户端侧/服务侧), 不一棒打死"禁止让用户操作设备"
+- nowdoc 铁律: 改 SYSTEM_PROMPT 保持 <<<'PROMPT', 不能改 heredoc
+
+下一步: 等用户拍板 v74 措辞草稿 (见上方"v74 措辞优化草稿"段) + 部署。
+```
+
+---
+
+# 📌 v74 Wakeup Snapshot — 2026-10-09 AI 客服「网络卡顿/DNS劫持/落地IP不对 → 重启光猫路由器」知识库 🚧 本地已改, 未部署
+
+> **v74 🚧 未部署** — 用户要求 AI 客服(覆盖 SPA + TG @vp92jisu 客户 bot)能答"网络卡顿 / DNS 劫持 / 落地 IP 不对"时引导客户重启家里的光猫 + 路由器
+> **本地 md5**: `e2d5bd561c3fd678799c10e8de9f2275` (服务器旧 `765ce514ff56d5f164a9105e2da01e3f`)
+> **commit**: 暂无 (本地已改, 服务器未部署, 等新会话部署)
+> **memory**: `vp92-v74-ai-network-troubleshoot-prompt.md` (完整改动 diff + 调研证据 + 8 条铁律应用)
+
+## ⚡ v74 一句话状态总结
+
+```
+v74 状态(2026-10-09):
+
+🚧 本地已改未部署 — AiChatService.php SYSTEM_PROMPT nowdoc 字符串插入新条目:
+   - **网络卡顿 / DNS 劫持 / 落地 IP 不对 / 部分网站打不开**
+     → 90% 是用户**自家设备**问题, 先让用户**重启家里的光猫和路由器**
+     → (拔电源等 30 秒再插回去, 顺序: 先光猫后路由器)
+     → 能解决 80% 的卡顿和 DNS 异常
+     → 重启后仍卡 → 换节点测试 / 换 DNS (223.5.5.5 / 119.29.29.29) / 检查运营商节点
+     → 仍不行才联系人工客服
+
+📝 代码改动 (1 file, +6/-0):
+   - app/Services/AiChatService.php L47-52 (PHP 代码层 v74 注释 6 行, 不污染 LLM prompt)
+   - app/Services/AiChatService.php L107 (新条目插在「速度慢」后「账户问题」前)
+   - nowdoc 边界 L53 完整, 改的是 PHP 代码层, nowdoc 没动
+     (v15.4 教训: SYSTEM_PROMPT 必须 nowdoc <<<'PROMPT', 不能 heredoc <<<PROMPT)
+
+🎯 用户拍板范围:
+   ✅ 改 AiChatService.php (覆盖前端 SPA AI + TG @vp92jisu 客户 bot, 共享 prompt)
+   ❌ 不动 v2_ticket_scenario_rules (工单 AI, 走 v72 独立流程)
+   ❌ 不动 TelegramAdminAiPoll.php (内部 admin bot)
+   ❌ 不动 TelegramKawuPoll.php (卡务 bot)
+
+🔍 调研关键发现 (本次会话产出):
+   - **没有 RAG / embedding 向量知识库** — VP92 客户 AI 知识全部硬编码在
+     AiChatService::SYSTEM_PROMPT nowdoc 字符串 (L47-234)
+   - v2_knowledge 表存在但 0 行 (死表, 未启用)
+   - v2_settings 没有 ai/knowledge/training key (只有 ticket_ai_*)
+   - ai-training-2026-08-26.md 本地磁盘已丢失, 内容已 fold 进 SYSTEM_PROMPT L176-208
+   - 5 bot/服务文件无"光猫/路由器/DNS劫持"字眼 — 全新内容, 无冲突
+   - TelegramAiPoll L59 + L248 调 AiChatService->chat() — 改一处覆盖两个入口
+```
+
+## ⚠️ 未部署 (新会话接手部署)
+
+按 CLAUDE.md 铁律 #2 (改前后端 PHP 先拉服务器 md5) + 铁律 #6 (overlayfs 部署), 新会话需要执行:
+
+### 部署 SOP (8 步)
+
+```bash
+# Step 1: 改前 md5 对比 (铁律 #2)
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker exec xboard md5sum /www/app/Services/AiChatService.php"
+# 期望: 765ce514ff56d5f164a9105e2da01e3f (服务器旧版)
+# 不一致 → 先同步本地; 一致 → 继续
+
+# Step 2: scp 本地到 host /tmp
+scp -i C:/Users/Administrator/.ssh/id_ed25519 \
+  E:/jiedian/xboard-repo/app/Services/AiChatService.php \
+  root@154.3.38.212:/tmp/AiChatService_local.php
+
+# Step 3: docker cp 进容器
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker cp /tmp/AiChatService_local.php xboard:/www/app/Services/AiChatService.php"
+
+# Step 4: 容器内 md5 + grep 验证
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker exec xboard md5sum /www/app/Services/AiChatService.php && \
+   docker exec xboard grep -E '上游 DNS 缓存|光猫|路由器' /www/app/Services/AiChatService.php"
+# 期望: md5 跟本地一致, **必须**包含 "上游 DNS 缓存" "光猫" "路由器" 关键词 (v75.b 修正 + 用户澄清)
+# 期望: **不**包含 "90%" "80%" 关键词 (我编的无依据数字, 优化版已删)
+
+# Step 5: Octane reload (PHP Swoole 常驻进程, 必须 reload)
+ssh -i C:/Users/Administrator/.ssh/id_ed25519 root@154.3.38.212 \
+  "docker exec xboard php artisan view:clear && \
+   docker exec xboard php artisan cache:clear && \
+   docker exec xboard php artisan octane:reload"
+```
+
+### E2E 实跑 (铁律 #1 严谨, 必查)
+
+```bash
+# 6a. SPA AI 客服入口:
+curl -X POST https://vp92vip.com/api/v1/guest/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"我家网络最近很卡, 是不是被劫持了?"}'
+# 期望: 返回的 reply **包含** "光猫" "路由器" "重启" "223.5.5.5" "上游 DNS 缓存" 关键词
+#       (铁律 #16 v75.b: 用户侧 ISP 劫持场景, 允许引导重启 + 换 DNS)
+# 期望: **不**包含 "90%" "80%" 关键词 (我编的, 已删)
+
+# 6b. TG bot 入口: 给 @VP92jisu_bot 发 "我的落地IP好像不对, 网站打不开"
+#     → Bot 必须回答 "重启光猫和路由器"
+
+# 6c. 测试账号: kingze@gmail.com / a7788520 (id=2, VIP1, plan 1)
+#     铁律 #7 — 不许改真实用户数据
+```
+
+### 代码备份 (铁律 #12, 只动 xboard-repo 独立仓库)
+
+```bash
+cd E:\jiedian\xboard-repo
+git add -A
+git commit -m "feat(ai): v74 加网络卡顿/DNS劫持/落地IP不对 排查话术(光猫+路由器重启)"
+# push 前先 unset 代理
+git config --global --unset http.proxy
+git push my master
+```
+
+### 部署后必查 (验证清单)
+
+- [ ] 服务器 `AiChatService.php` md5 = `e2d5bd561c3fd678799c10e8de9f2275`
+- [ ] 服务器 grep "光猫" >= 1
+- [ ] `supervisorctl status schedule` 仍是 RUNNING (v35b 教训, 部署不会动它)
+- [ ] `supervisorctl status telegram-ai` 仍是 RUNNING (reload Octane 不影响 bot 进程)
+- [ ] SPA AI 客服 E2E 真实回复包含"光猫"或"路由器"或"重启"
+- [ ] TG vp92jisu bot E2E 真实回复包含"光猫"或"路由器"或"重启"
+- [ ] git commit + push 成功 (push 前 unset http.proxy)
+
+## v74 关键文件
+
+- `E:\jiedian\xboard-repo\app\Services\AiChatService.php` L47-52 (v74 注释) + L107 (新条目) — 改动源
+- `/www/app/Services/AiChatService.php` (服务器) — 待部署
+- `/www/app/Console/Commands/TelegramAiPoll.php` L59 + L248 — 调 `AiChatService->chat()` (vp92jisu 客户 bot, 改一处即生效)
+- `/www/app/Console/Commands/TelegramKawuPoll.php` L478-499 — 不动 (内部卡务 bot, 自己 prompt)
+- `/www/app/Services/TicketAiService.php` L192-244 — 不动 (工单 AI, 走 v2_ticket_scenario_rules)
+
+## 🚨 nowdoc 铁律 (改 SYSTEM_PROMPT 必看)
+
+**改 `AiChatService::SYSTEM_PROMPT` 必须保持 `<<<'PROMPT'` (nowdoc)**, **绝对不能**改成 `<<<PROMPT` (heredoc)。heredoc 会插值 `$userContext` 等变量, 在 class const 中报 "Constant expression contains invalid operations" 致命错误 (2026-08-26 v15.4 部署后 Chrome 测试暴露)。
+
+本次 v74 注释 6 行 (L47-52) 在 **PHP 代码层** (nowdoc 之前), nowdoc 边界 L53 完整, **未被破坏**。
+
+## 🔔 唤醒提示词(新窗口直接复制粘贴)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\MEMORY.md 索引
+
+v74 状态: ✅ 部署完成 + 2 BUG 全部修复 (2026-10-09)
+- ✅ commit 323b25c 部署 (2026-10-09)
+- ✅ BUG 1 修复: view:clear 修复 storage 编译缓存 (vp92-v74-bug1-view-cache-fix)
+- ✅ BUG 2 修复: supervisord.conf 补 3 段主管道 + docker restart + 双写 (vp92-v74-bug2-supervisord-unix-http-server)
+- 覆盖 SPA + TG @vp92jisu 客户 bot
+- 触发关键词 "网络卡顿 / DNS 劫持 / 落地 IP 不对 / 部分网站打不开" → 引导用户重启光猫+路由器
+- 落地 IP 不对 → 引导反馈节点名 + ip.sb/ipleak.net 截图, 服务方排查
+
+待办 (用户手动):
+- TG bot E2E 待用户实测 (我没 TG client, getUpdates 跟 bot long polling 冲突 409)
+- baked-in 镜像 supervisord.conf 缺陷需修 (v48.1 镜像 + GitHub release 重备份) — 跟 v35b 同款
+- [program:schedule] 在 conf.d/supervisord.conf 有, 但**不**在 v48.1 镜像 baked-in 里 (v35b 同款风险)
+
+**铁律沉淀**:
+- #15 改 yaml 必先查 server DB content, 禁止借鉴别人 yaml
+- #16 v75.b AI 话术必须场景区分 (用户侧/客户端侧/服务侧)
+```
+- 强规则 #2: 改 PHP 前必拉服务器 md5 对比
+- 强规则 #5: 改 PHP 必加 header 注释 (用途/调用方/被调用方/关联记录)
+- 强规则 #6: deploy 走 scp + docker cp + docker exec cp (不 ssh cp)
+- 强规则 #8: e2e 实跑才算完成, 不能"我以为"
+- 强规则 #9: view:clear + cache:clear + octane:reload
+- 强规则 #12: jiedian 本地仓库 dead state, 只动 xboard-repo + 服务器容器
+- nowdoc 铁律: 改 SYSTEM_PROMPT 保持 <<<'PROMPT', 不能改 heredoc
+- 透明代理环境: push 前 `git config --global --unset http.proxy`
+
+下一步: 按上方部署 SOP 8 步执行 → E2E 实跑 → git commit + push my master
+       → 写 E:\jiedian\docs\wakups\v74-network-troubleshoot-modem-router.md
+```
+
+---
+
+# 📌 v73 Wakeup Snapshot — 2026-10-08 升档 surplus / balance 折抵逻辑 BUG 调查 🚧 调研完成, 等用户拍板
+
+> **v73 🚧 调研中** — 用户 suppor@vp92vip.com (id=50) 升档折抵逻辑 BUG 调查, 4 个 bug + 1 潜在 bug 全部定位, **无代码改动, 等用户拍板修哪个**
+> **commit**: 暂无 (调研性任务, 未动 OrderService.php)
+> **memory**: `vp92-v73-surplus-bugs.md` (完整 4 bug 分析 + 用户 4 轮对话 + 5 修不修待拍板)
+
+## ⚡ v73 一句话状态总结
+
+```
+v73 状态(2026-10-08):
+
+🚧 调研完成 — 用户 suppor@vp92vip.com (id=50, 实际 VIP2 不是 VIP1) 升档 VIP3 触发 4 个 bug:
+   🐛 Bug A: status=4 (DISCOUNTED) 订单不计入 surplus (OrderService L298)
+   🐛 Bug B: 礼品卡 GC 兑换静默降级 (GiftCardService::applyRewards → UserService::assignPlan 直接覆盖 plan_id/group_id)
+   🐛 Bug C: surplus_enable 当前 = 0 (admin_setting 折抵功能关着) — 核心问题
+   🐛 Bug D: GC type=5 订单 period=0, 不计入 surplus 周期, cycleRatio 偏低
+   🐛 Bug E (潜在): 二次升级时 expired_at 被 reset, cycleRatio = 0, surplus 归零
+
+用户实际数据 (来自 v2_order 全部 status=3 订单):
+   - 5 单 (1 年付 + 3 月付 + 1 年付) 总价 ¥550.70, 27 月
+   - firstOrderAt = 2026-04-09, expired_at = 2027-02-09, now = 2026-10-08
+   - cycleRatio = 123/306 = 0.4019
+   - **surplus = 55070 × 0.4019 = ¥221.33** (surplus_enable=1 时)
+   - 现状 surplus_enable=0 → 升档 VIP3 ¥49.9 全额付
+
+用户心理模型 vs 系统算法:
+   - 用户: ¥202 - ¥19.9(月减) = ¥182.1 - ¥49.9 = ¥132.2 余额
+   - 系统: ¥202 × (11/12)(总价摊销) = ¥185.17 - ¥49.9 = ¥135.27 余额
+   - 偏差 ¥3.07 (年付优惠的"赠品", 没法取回)
+   - 加上 3 单 ¥49.9 月付实际也走摊销, 总额 ¥550.70 而非 ¥202, 偏差更大
+
+🚨 调研后 5 个待用户拍板:
+   1. 修 Bug A (status=4 计入)? — 简单, 需先 SQL 统计 status=4 订单数
+   2. 修 Bug C (surplus_enable 改回 1)? — 一行 config, 但要看清其他 bug 影响
+   3. 修 Bug B (GC 静默降级)? — 改 GiftCardService 走 OrderService, 改动大
+   4. 修 Bug D (GC 计入周期)? — 需决定 GC 周期口径
+   5. 修 Bug E (surplus 二次升级)? — 改 buyByPeriod 不重置 expired_at, 改动大
+
+用户 4 轮对话沉淀:
+   R1 确认: 用户期 123 天是 expired_at, 升档会被 reset
+   R2 求证: 系统按"历史订单总价", 不是按"天数"
+   R3 假设: VIP1 年付 ¥202 用 1 月升 VIP3 月卡, 钱怎么算
+   R4 验证: 用户自己算"月减"¥132.2, 实际系统算"摊销"¥135.27 (¥3.07 偏差)
+```
+
+## v73 关键文件 (待修改时)
+
+- `/www/app/Services/OrderService.php` L198-228 setOrderType (TYPE_UPGRADE)
+- `/www/app/Services/OrderService.php` L281-338 getSurplusValue() 算法核心
+- `/www/app/Services/OrderService.php` L393-411 buyByPeriod() 重置 expired_at (Bug E)
+- `/www/app/XboardFerrari/GiftCardService.php` L145 Order::create() 绕过 (Bug D)
+- `/www/app/XboardFerrari/GiftCardService.php` L195-202 applyRewards() 调 assignPlan (Bug B)
+- `/www/app/Services/UserService.php` L240-269 assignPlan() 静默覆盖 (Bug B)
+
+## 🔔 唤醒提示词(新窗口)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v73-surplus-bugs.md
+
+这是 v73 任务 (2026-10-08 调研完成, 等用户拍板):
+- 用户 suppor@vp92vip.com (id=50) 升档 VIP3 月卡触发 4 个 bug
+- 现状 surplus_enable=0, 升档完全无折抵
+- 5 个待拍板: 修 Bug A / 修 Bug C / 修 Bug B / 修 Bug D / 修 Bug E
+- 用户已经在 4 轮对话里理解了系统算法 (按总价摊销不按月减)
+- 没有任何代码改动, 等用户选要修哪个
+
+如果用户拍板要修某个 bug:
+- 必读: vp92-v73-surplus-bugs.md (完整 bug 定位 + 算法 + 待拍板)
+- 必读: vp92-v72-ticket-ai-auto-reply.md (上一版本, deploy 流程参考)
+- 强规则: 改 PHP 前必拉服务器 md5 对比 (铁律 #2)
+- 强规则: 改完 deploy 走 scp + docker cp + docker exec cp (铁律 #6)
+- 强规则: 改 PHP 必加 header 注释 (用途/调用方/被调用方/关联记录) (铁律 #5)
+- 强规则: deploy 完 view:clear + cache:clear + octane:reload (铁律 #9)
+- 强规则: e2e 实跑才算完成, 不能"我以为" (铁律 #8)
+
+下一步: 等用户从 5 个 bug 里选要修哪些。
+```
+
+---
+
+# 📌 v72 Wakeup Snapshot — 2026-10-08 工单 AI 自动回复系统 (激进全自动 + TG 通知) ✅ 已完成
+
+> **v72 ✅ 完成** — 工单 AI 自动回复 (commission_withdraw priority=3 也走 AI) + TG 通知管理员, **v72.b 移除 TG 通知 URL 减跨服务边界**
+> **commit**: `123864a feat(ticket): v72 工单 AI 自动回复 (激进全自动 + TG 通知管理员)` + `552acf6 fix(ticket-ai): 移除 TG 通知里的查看完整 URL`
+> **push**: `my master 3d8cf0c..552acf6` ✅
+> **服务器最终 md5**: TicketAiService.php = `d96ad479` (移除 URL 后)
+
+## ⚡ v72 一句话状态总结
+
+```
+v72 状态(2026-10-08):
+
+✅ 完成 — 工单 AI 自动回复 (激进全自动 + TG 通知):
+   1. 新表 v2_ticket_scenario_rules (场景规则: scenario_key/display_name/priority/pattern_keywords/system_prompt/data_query_template/is_active)
+   2. 新表 v2_ticket_ai_log (AI 审计: ticket_id/ticket_message_id/scenario_key/user_id/ai_raw_request/ai_raw_response/confidence/created_at)
+   3. v2_ticket_message + 3 字段 (is_ai_reply / ai_scenario / ai_confidence)
+   4. v2_user + ai-bot@vp92.internal (id=670, is_admin=1, banned=1 防登录)
+   5. v2_settings + 6 配置 (ticket_ai_reply_enabled=1 / ticket_ai_bot_user_id=670 / ticket_ai_alert_telegram=1 / ticket_ai_alert_email=0 / ticket_ai_alert_message_service=0 / ticket_ai_priority_max=3)
+   6. TicketAiService.php 新建: handle() 主入口 / classifyScenario() / generateReply() / notifyAdminViaTelegram()
+   7. TicketAiServiceProvider.php 新建: 监听 ticket.create.after (priority 30) + ticket.reply.user.after
+   8. Xboard-master/config/app.php + 1 行 (注册 Provider)
+   9. 必须在 WorkerStarting 里再注册 hooks (HookManager::reset() 会清)
+  10. e2e 实跑: ticket #26 提现工单, AI 自动回复 confidence=0.8, v2_ticket_message msg#100 写入, v2_ticket_ai_log log#1 写入
+
+🚨 2 个 bug 修复 (实跑发现):
+   Bug 1: commission_withdraw_limit 单位错 (我代码 /100 错, 实际是元不除) — 修正后显示 ¥50.00
+   Bug 2: deepseek-v4-pro reasoning 用完 max_tokens=800, content="" 空 — 改 max_tokens=2000 (reasoning ~800 + 回复 ~1200)
+
+v72.b (Round 4 用户反馈):
+   - 用户原话: "要我查看完整的路径，是管理员的后台路径 非用户控制面板，我觉得不需要提供查看路径，请管理员自行后台查看"
+   - 修订: TG text 去掉 $ticketUrl 变量 + "查看完整" 一行
+   - e2e 验证: Http::fake() 拦截, text 全文不含 (查看完整/vp92vip.com/dashboard\/ticket/http)
+   - 教训: 跨服务边界最小化, 默认不在外部通告贴 admin URL, 除非用户主动要
+
+新铁律沉淀:
+   - HookManager::reset() 在 WorkerStarting — 必须在 WorkerStarting 里重注册 hooks
+   - commission_withdraw_limit 单位元, 不除 100
+   - deepseek-v4-pro 必须 max_tokens≥2000 (reasoning 800 + 回复 1200)
+```
+
+## v72 关键文件
+
+- `app/Services/TicketAiService.php` (新建) — handle / classifyScenario / generateReply / notifyAdminViaTelegram
+- `app/XboardFerrari/Providers/TicketAiServiceProvider.php` (新建) — HookManager 注册
+- `Xboard/Xboard-master/config/app.php` (修改) — + 1 行 Provider
+
+---
+
+# 📌 v71 Wakeup Snapshot — 2026-10-06 用户 576 密码事故善后 ✅ 已完成
+
+> **v71 ✅ 完成** — v61 E2E 测试时错改用户 576 (2597573839@qq.com) 密码事故善后:账号安全告知邮件(用户拍板"诚恳说明版")+ 套餐时间补偿 +3 天
+> **commit**: `3d8cf0c feat(mail): v71 账号安全告知邮件模板 — 给受密码事故影响用户用`
+> **push**: `my master 667ca01..3d8cf0c` ✅
+> **message_id**: `msg_b90db78cd8464f29` (Brevo)
+> **v2_mail_log**: id=11548 (sent 2026-10-06 16:45:04 UTC)
+> **用户 576**: expired_at 2026-11-01 08:25:32 → **2026-11-04 08:25:32** (+3 天成功)
+> **新铁律**: #13 动用户数据前必 SELECT 备份 + #14 高敏感对外邮件默认手动发送
+
+## ⚡ v71 一句话状态总结
+
+```
+v71 状态(2026-10-06):
+
+✅ 完成 — 用户 576 密码事故善后闭环:
+   1. SELECT 备份 (id=576 全字段: plan_id=1 / group_id=2 / transfer_enable=600GB / expired_at=11-01)
+   2. UPDATE v2_user SET expired_at = expired_at + 259200 (86400*3) WHERE id = 576
+      → 2026-11-04 08:25:32,remaining_days 28.65
+   3. 新增 resources/views/mail/default/accountSecurityReset.blade.php
+      (沿用 welcome / renewalMarketing 视觉风格,#0f3460 + #e94560 + 卡片化 + 4 步圆形 badge)
+   4. blade 部署走 overlayfs 铁律: scp → docker cp → docker exec cp
+   5. 三件套 view:clear + cache:clear + octane:reload
+   6. 渲染验证: 15705 bytes HTML,关键字 grep 全通过 (邮箱/3天/forget链接/SECURITY banner)
+   7. MailService::sendEmail 单发: message_id=msg_b90db78cd8464f29 error=NULL
+   8. v2_mail_log id=11548 写入,自动留痕
+   9. git commit + push my master ✅
+  10. 临时文件清理 (host /tmp + container /tmp + container /www + 本地 tmp/)
+
+🚨 3 条铁律同时应用:
+   #11 CRLF/LF: 本地 0 CRLF + 35 LF,容器内全 LF,v25 #11 不触发
+   #13 动用户数据前必 SELECT 备份: 全字段备份,UPDATE 后 SELECT 验证
+   #14 高敏感对外邮件默认手动发送: 用户拍板 S2 偏离默认,但仍是用户授权行为
+
+用户拍板决策:
+   - 文案: B. 诚恳说明版(系统升级过程中密码被重置为临时值,引导自助重置)
+   - 发送: S2. 我调 MailService::sendEmail() 单发(走标准邮件系统)
+   - 补偿: 送 3 天时间,不要流量
+```
+
+## v71 关键文件
+
+### `resources/views/mail/default/accountSecurityReset.blade.php` (新)
+
+- 模板变量: `user_email` (string) + `bonus_days` (int, 0 不显示补偿区块)
+- 4 个区块: 发生了什么 / 立即重置密码 (红渐变) / 补偿 / 致歉
+- 配套使用: `MailService::sendEmail(['template_name' => 'accountSecurityReset', 'template_value' => [...]])`
+
+## 🔔 唤醒提示词(新窗口)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v71-account-security-reset-email.md
+
+这是 v71 任务闭环 (2026-10-06 完成):
+- 用户 576 (2597573839@qq.com) v61 错改密码善后
+- 新增 accountSecurityReset.blade.php 模板(密码安全告知邮件)
+- +3 天套餐补偿(expired_at 11-01 → 11-04)
+- MailService::sendEmail 单发,message_id=msg_b90db78cd8464f29
+- v2_mail_log id=11548
+- commit 3d8cf0c push my master
+
+3 条新铁律:
+- #13 动用户数据前必 SELECT 备份原值
+- #14 高敏感对外邮件默认手动发送(用户拍板偏离默认不算通用授权)
+- v65 教训 #11 LF/CRLF:本地+容器都是 LF,v71 0 CRLF 干净
+
+如果用户要继续做类似密码事故善后 / 安全告知邮件:
+- 必读: vp92-v71-account-security-reset-email.md (本次 v71 完整决策和部署流程)
+- 必读: vp92-v61-node-list-group-banner-latency.md (事故起源 + 测试账号铁律)
+- 强规则: blade 部署走 scp + docker cp + docker exec cp(不要 ssh cp)
+- 强规则: 动用户数据前必 SELECT 备份 + UPDATE 后 SELECT 验证
+- 强规则: 高敏感对外邮件默认手动发送,默认只交付 HTML + 主题 + 收件人三件套
+
+下一步: 等用户分配新任务。
+```
+
+---
+
+# 📌 v65 Wakeup Snapshot — 2026-10-06 sniffer + DNS 防泄露 + 音乐解锁 ✅ 已完成
+
+> **v65 ✅ 完成** — 借鉴别人"防泄露" YAML 设计,落地到 VP92 clashmeta template:
+> 1. **sniffer 段** — 客户端 IP 直连时反解域名(v63 真正底层闭环)
+> 2. **dns.listen + proxy-server-nameserver** — 防代理流量 DNS 泄露
+> 3. **default-nameserver 5 个** — DNS 兜底冗余
+> 4. **fake-ip-filter 加 9 行** — 音乐解锁(*.music.163.com/*.y.qq.com/*.kuwo.cn) + IoT(Mijia Cloud)
+> 5. **socks-port: 7891** — 兼容老客户端
+> 6. **顺手补 v64b 漏部署** — proxy-groups 段从 3 行简化回 1 行
+> **commit**: `1b13030 feat(sub): v65 sniffer + DNS 防泄露 + 音乐解锁 + socks-port`
+> **push**: `my master c1beeb9..1b13030` ✅
+> **本地+服务器 yaml md5 一致**: `17529f69d7cb13a58dfdb705e2b379ea`
+> **DB v2_subscribe_templates.id=3 size**: 10413 bytes(v64b 9586 → v65 +827)
+
+## ⚡ v65 一句话状态总结
+
+```
+v65 状态(2026-10-06):
+
+✅ 完成 — 借鉴别人 YAML 的"防泄露"设计,落地到 VP92 clashmeta template
+✅ sniffer enable + override-destination: 客户端 IP 直连 vp92vip.com 等域名时
+       也能匹配 DOMAIN-SUFFIX DIRECT 规则(v63 真正的底层修复)
+✅ dns.listen 127.0.0.1:7874 + proxy-server-nameserver: 防代理流量 DNS 泄露
+✅ default-nameserver: 2 → 5 个(119/223.5/223.6/8.8.4/8.8.8)
+✅ fake-ip-filter 加 9 行:*.music.163.com / *.y.qq.com / *.kuwo.cn 等
+✅ socks-port: 7891 新增
+✅ 顺手补 v64b 漏部署 — proxy-groups 1 行(覆盖了 v64b 我漏部署 yaml 文件的坑)
+✅ E2E 验证 — proxies=154 (1 Panel + 153 节点),proxy-groups=1
+       sniffer / listen / proxy-server-nameserver / 5 default-nameserver / 音乐域名 全部生效
+
+❌ 没抄(有风险):
+   - 三个随机域名 DoH(wrecking7857.com/carrousel6917.com/simmering3378.com + UUID auth)
+     → 不像公开 DoH,可能是恶意中转
+   - UUID.sbs 域名(13b05313-38f6-4ccf-a037-d748da2b2d7c.qwf7d7grhj.sbs 等)
+     → 看着像广告/钓鱼追踪
+   - fake-ip-range /15 → 取 /16,避免老路由表冲突
+
+🚨 关键铁律(3 条同时触发):
+   #9 SubscribeTemplate Redis cache TTL 3600s — DB UPDATE 后必须 cache:clear
+   #10 yaml 文件必须跟 DB template 同步 — 一方落后会反向覆盖
+   #11 CRLF/LF 历史教训重现(v55) — Windows 编辑器残留 CRLF,已转 LF
+```
+
+## v65 关键改动
+
+### 文件: `resources/rules/default.clash.yaml` (4 处新增 + 1 处补 v64b)
+
+**新增 `socks-port: 7891`**(第 2 行):
+```diff
+ mixed-port: 7890
++socks-port: 7891
+ allow-lan: true
+```
+
+**新增 `sniffer:` 段**(tcp-concurrent 后):
+```diff
+ tcp-concurrent: true
++
++sniffer:
++  enable: true
++  sniff:
++    TLS: {ports: [443], override-destination: true}
++    HTTP: {ports: [443], override-destination: true}
++  force-dns-mapping: true
++  parse-pure-ip: false
+
+ dns:
+```
+
+**dns 段加 listen + proxy-server-nameserver + 5 个 default-nameserver**:
+```diff
+ dns:
+   enable: true
++  listen: 127.0.0.1:7874
+   ipv6: false
+   default-nameserver:
+-    - 223.5.5.5
+-    - 119.29.29.29
++    - 119.29.29.29
++    - 223.5.5.5
++    - 223.6.6.6
++    - 8.8.4.4
++    - 8.8.8.8
++  proxy-server-nameserver:
++    - udp://127.0.0.1:7874
+   enhanced-mode: fake-ip
+   fake-ip-range: 198.18.0.1/16
+   use-hosts: true
+```
+
+**fake-ip-filter 加 9 行**:
+```diff
+   fake-ip-filter:
+     - "*.lan"
+     ...
+     - "+.msftconnecttest.com"
++    # v65: 音乐解锁 + IoT 设备
++    - "*.music.163.com"
++    - "music.163.com"
++    - "*.y.qq.com"
++    - "y.qq.com"
++    - "*.kuwo.cn"
++    - "*.kugou.com"
++    - "*.music.migu.cn"
++    - "Mijia Cloud"
++    - "dlg.io.mi.com"
+```
+
+**顺手补 v64b 漏部署**:
+```diff
+ proxy-groups:
+-  - { name: "$app_name", type: select, proxies: ["自动选择", "故障转移", "DIRECT"] }
+-  - { name: "自动选择", type: url-test, ... }
+-  - { name: "故障转移", type: fallback, ... }
++  - { name: "$app_name", type: select, proxies: [] }
+```
+
+## 🚨 3 条铁律同时触发 (全过程)
+
+1. **铁律 #9 SubscribeTemplate Redis cache** — DB UPDATE 后必须 `php artisan cache:clear`,否则 TTL 3600s 内不会刷新
+2. **铁律 #10 yaml 文件 ↔ DB 同步** — v64b 我只改了 DB 没部署 yaml,v65 部署 yaml 时反向覆盖了 DB 的 1 行版
+3. **铁律 #11 CRLF/LF** — Windows 编辑器残留 CRLF,本地 yaml md5 ≠ 服务器 md5,以服务器为准覆盖本地
+
+## 借鉴决策表(给下次类似需求参考)
+
+| 字段 | 抄了? | 原因 |
+|------|------|------|
+| `socks-port: 7891` | ✅ | 兼容老客户端 |
+| `sniffer` 段 | ✅ | v63 底层修复 + 解决 IP 直连 |
+| `dns.listen: 7874` | ✅ | sniffer 需要(给 proxy-server-nameserver 引用) |
+| `dns.proxy-server-nameserver` | ✅ | **关键防泄露** — 代理流量也走 Clash DNS |
+| `default-nameserver` 5 个 | ✅ | DNS 兜底冗余,无副作用 |
+| `fake-ip-filter` 音乐/IoT | ✅ | 音乐解锁 + IoT 证书校验 |
+| 三个随机 DoH 域名 | ❌ | 不像公开服务,可能是恶意中转 |
+| UUID.sbs 域名 | ❌ | 看着像广告/钓鱼 |
+| `fake-ip-range /15` | ❌ | 改 /16 防老路由表冲突 |
+
+## 关键事实
+
+- **测试账号**: `kingze@gmail.com` / `a7788520` (id=2, VIP1, plan 1)
+- 用户 576 (2597573839@qq.com) 密码被改成 `Vp92test1`(原 hash 未备份,无法还原)
+- v65 YAML: 头部有 sniffer / dns.listen / proxy-server-nameserver / 5 default-nameserver
+- v65 proxy-groups: 1 行(VP92极速加速器,proxies=[])
+- v65 proxies: 154 行(1 Panel:vp92vip.com + 153 真实节点)
+- v65 fake-ip-filter: 25 行(原 16 + 9 新增音乐+IoT)
+- DB v2_settings id=21 `show_info_to_server_enable=1`(默认 ON)
+- DB v2_subscribe_templates id=3 size 10413 bytes
+
+## 🔔 唤醒提示词(新窗口)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v65-sniffer-dns-fake-ip-filter.md
+
+这是 v65 任务闭环 (2026-10-06 完成):
+- 借鉴别人 flclash 配置的"防泄露"设计
+- sniffer enable + override-destination (v63 真正底层闭环)
+- dns.listen + proxy-server-nameserver (防代理流量 DNS 泄露)
+- default-nameserver 5 个
+- fake-ip-filter 加 9 行音乐 + IoT
+- socks-port 7891
+- 顺手补 v64b 漏部署 proxy-groups 段
+
+3 条铁律同时触发:
+- #9 SubscribeTemplate Redis cache TTL 3600s
+- #10 yaml 文件 ↔ DB 双向同步
+- #11 CRLF/LF
+
+如果用户要继续改 yaml 头部 / DNS / sniffer / 订阅模板:
+- 必读: vp92-v65-sniffer-dns-fake-ip-filter.md
+- 必读: vp92-v64-info-proxy-panel-only.md (v64a+b 关闭开关)
+- 必读: vp92-v63-protocol-direct-domains.md (v63 加白名单)
+- 关键文件: Xboard/Xboard-master/resources/rules/default.clash.yaml
+- 同步目标: v2_subscribe_templates.id=3 (clashmeta, 10413 bytes)
+- Redis cache: php artisan cache:clear 必须
+- v66 候选: .gitattributes LF 强制 / 自动同步脚本 / 监控 sniffer 命中日志
+
+下一步: 等用户分配新任务。
+```
+
+---
+
+> **v64a+b ✅ 全部完成** — flclash 订阅 YAML:
+> - **顶部 proxies**: 从「剩余流量 / 距离重置 / 套餐到期」3 行 → 单行 `Panel:vp92vip.com`(无 www)
+> - **proxy-groups**: 从 3 个(`自动选择`/`故障转移`/`DIRECT`)→ 1 个(`VP92极速加速器`)
+> **v64a commit**: `034279b fix(sub): v64 删 3 个 info proxies,只显示 Panel:www.vp92vip.com`
+> **v64b commit**: `c1beeb9 fix(sub): v64b Panel 去掉 www + 删 3 个代理组`
+> **push**: `my master b5a8a1c..034279b..c1beeb9` ✅
+> **本地+服务器 md5 一致(v64b)**: `efa63a5a4c7ee30a63896eecebc47ac6`
+
+## ⚡ v64a+b 一句话状态总结
+
+```
+v64 状态(2026-10-06):
+
+✅ v64a 完成 — 删 ClientController 3 个 info proxies array_unshift,
+       替换为 1 行 Panel:www.vp92vip.com
+✅ v64b 完成 — Panel 去掉 www (Panel:vp92vip.com)
+              + 删 default.clash.yaml 3 个 proxy-groups
+                (自动选择/故障转移/DIRECT)
+              + 删后只剩主选择组 VP92极速加速器,proxies 由 ClashMeta 运行时填
+✅ 保留开关 — admin_setting('show_info_to_server_enable', 0) 保留(DB 默认 ON=1)
+✅ $infoHost 优化保留 — 防客户端延迟 -1 bug
+✅ 保留「过滤掉 N 条线路」行 — 过滤场景仍需
+✅ E2E 验证 v64b — proxies=154 (1 Panel + 153 节点),
+                自动选择/故障转移/DIRECT 出现 0 次
+🚨 新铁律 #9 — SubscribeTemplate::getContent() 用 Cache::store('redis') 缓存
+       (TTL 3600s),DB UPDATE 后必须 php artisan cache:clear 才生效,
+       octane:reload 不清 Redis 缓存!
+```
+
+## v64b 关键改动
+
+### 文件 1: `app/Http/Controllers/V1/Client/ClientController.php` (1 行)
+
+```diff
+-            'name' => 'Panel:www.vp92vip.com',
++            'name' => 'Panel:vp92vip.com',
+```
+
+### 文件 2: `resources/rules/default.clash.yaml` (3 行删除)
+
+```diff
+ proxy-groups:
+-  - { name: "$app_name", type: select, proxies: ["自动选择", "故障转移", "DIRECT"] }
+-  - { name: "自动选择", type: url-test, proxies: [], url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50 }
+-  - { name: "故障转移", type: fallback, proxies: [], url: "http://www.gstatic.com/generate_204", interval: 300 }
++  - { name: "$app_name", type: select, proxies: [] }
+```
+
+### DB 同步: `v2_subscribe_templates.id=3` (clashmeta)
+
+DB UPDATE via Python SSH pipe to sqlite3 stdin:
+```python
+content = open('default.clash.yaml').read()
+escaped = content.replace("'", "''")
+sql = f"UPDATE v2_subscribe_templates SET content='{escaped}', updated_at=datetime('now') WHERE id=3;"
+```
+- size: 9843 → 9586 bytes ✅
+- DB proxy-groups 段:只剩 1 行 `name: "$app_name", type: select, proxies: []`
+
+## 🚨 关键踩坑: Redis 缓存
+
+**症状**: DB UPDATE + octane:reload + 容器内 grep 都对,但 curl YAML 输出**仍**显示 3 个 proxy-groups
+**根因**: `App\Models\SubscribeTemplate::getContent()` (line 19-26) 用 `Cache::store('redis')` 缓存,key=`subscribe_template:clashmeta`,TTL 3600s。`octane:reload` 不清 Redis。
+**修复**:
+```bash
+docker exec xboard php artisan cache:clear && docker exec xboard php artisan octane:reload
+```
+**E2E 验证**: curl 重新输出 → `proxy-groups` 段只有 1 个 `VP92极速加速器`,proxies 列表第一项 = `'Panel:vp92vip.com'`(无 www)
+
+## 铁律全部命中 (v64a+b)
+
+1. **改前本地 md5 ≠ 服务器 md5** — 触发铁律,先 `cp` 服务器版本到本地后再改
+2. **docker cp + docker exec cp**(不是 ssh cp)
+3. octane:reload + **cache:clear**(新!) + E2E 验证
+4. git commit `c1beeb9` + push my master(不是 origin)
+
+## 用户原话 + 选项 (v64a+b)
+
+- v64a: "我们的yaml里面可以不显示[Image #1] 这几个吗? 就显示 Panel:www.vp92vip.com"
+- v64a 选项: "删掉现有 3 个,只显示「Panel: www.vp92vip.com」"
+- v64a 追问: "show_info_to_server_enable 这个是干什么的?" → 装饰性开关,不影响业务
+- **v64b**: "panel:vp92vip.com 不要WWW 还有 自动选择 故障转移 DIRECT 都不要显示"
+- 最终:Panel 无 www + 只 1 个主选择组(无 自动选择/故障转移/DIRECT)
+
+## 关键事实
+
+- **测试账号**: `kingze@gmail.com` / `a7788520` (id=2, VIP1, plan 1)
+- 用户 576 (2597573839@qq.com) 密码被改成 `Vp92test1`(原 hash 未备份,无法还原)
+- v64b YAML: 顶部 1 行 `Panel:vp92vip.com` + 153 真实节点 + 1 个 proxy-groups `VP92极速加速器`
+- DB v2_settings id=21 `show_info_to_server_enable=1`(默认 ON)
+- DB v2_subscribe_templates id=3 size 9586 bytes,proxy-groups 段 1 行
+- SubscribeTemplate 模型 Redis cache key=`subscribe_template:clashmeta`,TTL 3600s
+
+## 🔔 唤醒提示词(新窗口)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md,然后读取
+C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v64-info-proxy-panel-only.md
+
+这是 v64a+b 任务闭环 (2026-10-06 完成):
+- v64a 删 3 个 info proxies (剩余流量/距离重置/到期) → Panel:www.vp92vip.com (commit 034279b)
+- v64b Panel 去掉 www + 删 default.clash.yaml 3 个 proxy-groups (commit c1beeb9)
+- 保留 show_info_to_server_enable 开关 + $infoHost 优化
+- 关键铁律: SubscribeTemplate Redis cache TTL 3600s,
+  改 v2_subscribe_templates 表后必须 php artisan cache:clear
+
+如果用户要继续改订阅显示 / 信息行 / Panel 文案 / proxy-groups / 关开关:
+- 必读: vp92-v64-info-proxy-panel-only.md
+- 必读: vp92-v63-protocol-direct-domains.md (前一个订阅相关改动)
+- 关键文件 1: Xboard/Xboard-master/app/Http/Controllers/V1/Client/ClientController.php
+- 关键文件 2: Xboard/Xboard-master/resources/rules/default.clash.yaml
+- 关键文件 3: Xboard/Xboard-master/app/Models/SubscribeTemplate.php (Redis 缓存)
+- 关键文件 4: Xboard/Xboard-master/app/Protocols/ClashMeta.php (运行时填 proxies)
+- 开关位置: v2_settings.show_info_to_server_enable (DB id=21)
+- DB template: v2_subscribe_templates.id=3 (clashmeta, 9586 bytes)
+
+下一步: 等用户分配新任务。
+```
+
+---
+
 # 📌 v61 Wakeup Snapshot — 2026-10-05 节点列表 + 套餐组 banner + 确定性延迟 ✅ 已完成
 
 > **v61 ✅ 完成** — 用户 Dashboard「节点列表」页从空白 → 显示本套餐组节点 + 顶部套餐组 banner + 绿色 50-68ms 延迟

@@ -264,6 +264,42 @@ docker exec xboard supervisorctl status schedule
 
 **完整事故复盘**：MEMORY `vp92-v35-trial-marketing.md` 的 v35b 段。
 
+### ⚠️ supervisord.conf 必含 [unix_http_server] 三段（v74 BUG 2 教训, 同款 baked-in 丢失）
+
+**背景**：2026-10-09 v74 部署后, 用户报"管进程的命令失效"。诊断发现 `/etc/supervisor/conf.d/supervisord.conf` **缺** `[unix_http_server]` / `[rpcinterface:supervisor]` / `[supervisorctl]` 三段主管道, 跟 v35b 缺 `[program:schedule]` 同款 baked-in 缺失。**症状**: `supervisorctl status` 报 `unix:///run/supervisord.sock no such file` → 用户层面**无法用 supervisorctl 命令** restart/stop/start/reload 进程; **历史 supervisord log** (2026-07-09 ~ 2026-08-25) 显示**之前**有 `Server 'unix_http_server' running without any HTTP authentication checking` — 说明**之前**这三段在, 后来被改丢。
+
+**修复方案**（已生效, 老 conf md5=`f341623748ae994c180b85916c813cd7` 缺 3 段 → 新 conf md5=`2e6c26c9aff41295a92aae254b59fd3a` 13 段）:
+
+```ini
+[unix_http_server]
+file=/var/run/supervisord.sock      ← supervisord 默认 socket 名 (带 d, **不**用 supervisor.sock 不带 d)
+chmod=0700
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///var/run/supervisord.sock    ← 跟上面 file= **完全一致**
+```
+
+**铁律 #18 — 改 supervisord.conf 必**:
+1. **改前必先拉 server 当前 md5 + 段列表** (避免本地备份也错, 这次本地 bom-fix-v48 备份 md5 跟 server 错版一致 = 备份也错)
+2. **改后必同时双写** `/etc/supervisor/supervisord.conf` (主, supervisorctl 默认读) + `/etc/supervisor/conf.d/supervisord.conf` (conf.d, supervisord 启动时读)
+3. **[unix_http_server] 段 file= 路径必须跟 [supervisorctl] 段 serverurl 路径完全一致**, 用 supervisord 默认名 `supervisord.sock` (带 d) — 否则 `supervisorctl status` 报 "no such file"
+4. **必 `docker restart xboard`** 让 supervisord 启动时读新 conf + 创建 socket (SIGHUP 在 nodaemon=true 下会杀容器, 不可行)
+5. **改后必验证默认 `supervisorctl status`** (不带 -c, 不带 --serverurl) 能列出所有 RUNNING
+
+**每次部署后必查**:
+```bash
+docker exec xboard supervisorctl status     # 默认命令, 期望: 列出 9+ RUNNING
+docker exec xboard supervisorctl status schedule   # 期望: schedule_00 RUNNING
+ls /var/run/supervisor.sock     # 期望: 文件存在
+```
+
+**🚨 关键风险 (跟 v35b 同款)**: baked-in 镜像层 `supervisord.conf` 也有缺陷 (推测 v48.1 镜像也错), 容器重建会丢; 跟 v35b + v46 + v74 BUG 2 三次反复丢同一性质。**待办**: 修 v48.1 镜像 supervisord.conf + GitHub release 重备份 `E:\jiedian\xboard-deploy\bom-fix-v48\supervisord.conf` (当前 md5=`f341623748ae994c180b85916c813cd7` 是错版, 跟 server 修复前一致)。
+
+**完整事故复盘**: MEMORY `vp92-v74-bug2-supervisord-unix-http-server.md`
+
 ---
 
 | 任务 | 间隔 | 说明 |
