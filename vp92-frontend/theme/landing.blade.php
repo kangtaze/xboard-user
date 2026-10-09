@@ -739,7 +739,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <header class="fixed top-0 z-50 w-full h-16 bg-surface/90 backdrop-blur-md border-b border-outline-variant flex items-center px-6 md:px-12">
 <div class="flex items-center gap-2 shrink-0">
 <img src="/img/logo.svg" alt="VP92极速加速器" style="height:64px;width:auto;object-fit:contain;" data-i18n-alt="nav.brand_alt"/>
-<span style="font-size:16px;font-weight:700;color:var(--color-on-surface);" data-i18n="nav.brand_name">VP92极速加速器</span>
+<span style="font-size:24px;font-weight:700;color:var(--color-on-surface);" data-i18n="nav.brand_name">VP92极速加速器</span>
 </div>
 <nav class="hidden md:flex items-center gap-4 flex-1 justify-center">
 <a class="font-label-md text-label-md text-primary transition-colors duration-200" href="#" data-i18n="nav.home">首页</a>
@@ -1473,7 +1473,7 @@ faq:{'zh-CN':'{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{
 <div class="max-w-xs">
 <div class="flex items-center gap-stack-sm mb-stack-md">
 <img src="/img/logo.svg" alt="VP92极速加速器" style="height:64px;width:auto;object-fit:contain;" data-i18n-alt="nav.brand_alt">
-<span class="font-headline-md text-headline-md font-bold text-on-surface">VP92极速</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface" style="font-size:24px;">VP92极速</span>
 </div>
 <p class="font-body-md text-on-surface-variant" data-i18n="footer.description">为极致速度而生，致力于提供全球最稳定、最安全的加速体验。</p>
 </div>
