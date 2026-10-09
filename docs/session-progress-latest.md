@@ -1,3 +1,27 @@
+# 📌 v74+BUG1+BUG2 + ✅ logo 修复 v74c — 2026-10-09 v74 全闭环, 蓝盾+白闪电招牌 logo 已部署, 等用户浏览器实测
+
+> **v74 状态**: ✅ 部署完成 (commit `323b25c` push my master) + ✅ BUG 1 修复 (view:clear) + ✅ BUG 2 修复 (supervisord.conf 补 3 段主管道 + docker restart + 双写, commit `fea3e2b` 本地不 push)
+> **v74c ✅ logo 修复 (2026-10-09 19:58)**: 用户拍板"用 APP 招牌 logo = 蓝盾+白闪电(透明底,无 v61f 圆角方块底)"。处理: 桌面 `icon-512x512.png` → PIL floodfill 去白底(4 角, thresh=10, 保留边缘抗锯齿+白闪电) → base64 嵌入 → 生成新 `logo.svg` (131657 bytes md5 `9a72459674e18d4c5d9e6e2fdb7606d8`) → scp+docker cp+docker exec cp 覆盖容器 /www/public/img/logo.svg → 旧版备份 logo.svg.bak.v74logo (v61f md5 `117281a561c1cbbb23c85a583bb43f08`) → cache:clear + curl 200 OK (131657 bytes content-length 匹配)。**未 commit** (logo.svg 在 vp92-frontend 仓库, 等用户浏览器实测确认显示效果后 commit + push)
+> **本 session 闭环**: v74 BUG 2 修复 + 全部 memory/CLAUDE.md/MEMORY.md/session-progress 更新 + 本地 commit fea3e2b
+> **新铁律 #18** (v74 BUG 2 教训): 改 supervisord.conf 必双写+docker restart
+
+## 第一件事 (新 session 必做)
+
+```
+读取 E:\jiedian\docs\session-progress-latest.md (本文件)
+读取 C:\Users\Administrator\.claude\projects\E--jiedian\memory\MEMORY.md (索引)
+读取 C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-logo-investigation-pending-2026-10-09.md (logo 待办)
+读取 C:\Users\Administrator\.claude\projects\E--jiedian\memory\vp92-v74-bug2-supervisord-unix-http-server.md (BUG 2 修复)
+```
+
+**优先级**:
+1. ⚠️ logo 待办 — 等用户确认"招牌" 是哪个
+2. TG bot E2E 实测 (用户手动 @VP92jisu_bot)
+3. baked-in 镜像 supervisord.conf 修复 (v35b 同款, 重建会丢)
+4. v74 措辞优化草稿待用户拍板 (本地已改, 未部署)
+
+---
+
 # 📌 v75 Wakeup Snapshot — 2026-10-09 yaml 借鉴铁律 + v75.b AI 话术场景区分铁律 ✅ v74 方向对, 措辞待优化
 
 > **v75 ✅ 教训沉淀 + v75.b 铁律 #16 修正** — v65 借鉴别人 yaml 埋 v66-v70 整条事故链 = 铁律 #15;v74 AI 话术方向**对的**(用户已澄清 + 进一步解释"重启清上游 ISP DNS 缓存,域名解析干净"机制),铁律 #16 必须场景区分(用户侧 ISP 劫持 ✅ 允许引导重启光猫+路由+换 DNS;VP92 服务侧 ❌ 禁止推给用户)

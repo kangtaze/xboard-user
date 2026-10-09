@@ -204,7 +204,7 @@ onUnmounted(() => {
 .globe-canvas { width: 100%; height: 100%; }
 .globe-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: linear-gradient(to top, #0a1628, transparent); pointer-events: none; }
 .globe-brand { position: absolute; top: 32px; left: 40px; display: flex; align-items: center; gap: 12px; z-index: 10; }
-.globe-brand-logo { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; object-fit: contain; }
+.globe-brand-logo { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; object-fit: contain; } /* v74d: 42→64 (用户反馈 logo 小) */
 .globe-brand-logo span { color: #fff; font-weight: 800; font-size: 16px; }
 .globe-brand-name { font-size: 22px; font-weight: 800; color: #fff; }
 .globe-brand-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
