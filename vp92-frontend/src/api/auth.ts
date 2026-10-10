@@ -44,8 +44,11 @@ export function token2Login(token: string) {
   return client.get('/passport/auth/token2Login', { params: { token } })
 }
 
-export function sendEmailVerify(email: string) {
-  return client.post('/passport/comm/sendEmailVerify', toFormData({ email }))
+export function sendEmailVerify(email: string, purpose: 'register' | 'forget' = 'register') {
+  // v75: purpose 用于后端判断是否要检查邮箱已注册
+  //   register: 已注册则拒绝 (避免浪费 Brevo 邮件)
+  //   forget:   未注册则拒绝 (避免未注册用户发验证码)
+  return client.post('/passport/comm/sendEmailVerify', toFormData({ email, purpose }))
 }
 
 export function trackInvitePv(code: string) {

@@ -27,10 +27,6 @@
         <span class="material-symbols-outlined">support_agent</span>
         <span>{{ t('nav.tickets') }}</span>
       </router-link>
-      <a class="nav-item ai-chat-btn" @click.prevent="openAiChat">
-        <span class="material-symbols-outlined">smart_toy</span>
-        <span>{{ t('nav.aiChat') }}</span>
-      </a>
       <router-link to="/dashboard/invite" class="nav-item" :class="{ active: $route.path === '/dashboard/invite' }" @click="$emit('navigate')">
         <span class="material-symbols-outlined">card_giftcard</span>
         <span>{{ t('nav.invite') }}</span>
@@ -107,22 +103,5 @@ function handleLogout() {
   removeToken()
   router.push('/auth/login')
 }
-
-function openAiChat() {
-  const btn = document.getElementById('vp92-chat-btn') as HTMLButtonElement | null
-  const box = document.getElementById('vp92-chat-box') as HTMLElement | null
-  if (btn) btn.click()
-  else if (box) box.classList.add('open')
-}
 </script>
 
-<style scoped>
-.ai-chat-btn {
-  cursor: pointer;
-  background: rgba(0, 102, 255, 0.08);
-  border-left: 3px solid #0066ff;
-}
-.ai-chat-btn:hover {
-  background: rgba(0, 102, 255, 0.15);
-}
-</style>

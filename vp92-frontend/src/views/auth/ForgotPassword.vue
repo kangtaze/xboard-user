@@ -93,7 +93,7 @@ async function handleSendCode() {
     if (codeCooldown.value <= 0) clearInterval(timer)
   }, 1000)
   try {
-    await sendEmailVerify(form.email)
+    await sendEmailVerify(form.email, 'forget')
     showToast(t('common.codeSent'))
   } catch (e: any) {
     errorMsg.value = e?.message || t('common.codeSendFailed')
